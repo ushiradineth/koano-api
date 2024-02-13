@@ -1,7 +1,9 @@
 package main
 
 import (
-	"fmt"
+	"database/sql"
+	"event"
+	"mysql"
 	"net/http"
 	"user"
 
@@ -9,6 +11,9 @@ import (
 )
 
 func main() {
+	godotenv.Load(".env")
+	mysql.Configure()
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /event/{event_id}/", event.GetEventHandler)
