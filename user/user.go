@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
