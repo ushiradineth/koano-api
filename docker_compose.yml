@@ -27,5 +27,18 @@ services:
     depends_on:
       - mysql
 
+  # cron-be:
+  #   image: cron-be:prod
+  #   restart: unless-stopped
+  #   platform: linux/arm64
+  #   env_file:
+  #     - .env.production
+  #   environment:
+  #     MYSQL_URL: "mysql:3306"
+  #   ports:
+  #     - "8080:8080"
+  #   expose:
+  #     - "8080"
+
 volumes:
   cron:
