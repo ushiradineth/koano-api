@@ -1,9 +1,8 @@
 package main
 
 import (
-	"database/sql"
+	"db"
 	"event"
-	"mysql"
 	"net/http"
 	"user"
 
@@ -12,7 +11,7 @@ import (
 
 func main() {
 	godotenv.Load(".env")
-	mysql.Configure()
+	db.Configure()
 
 	mux := http.NewServeMux()
 
