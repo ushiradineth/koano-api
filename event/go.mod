@@ -1,4 +1,4 @@
-module event
+module github.com/ushiradineth/cron-be/event
 
 go 1.22.0
 

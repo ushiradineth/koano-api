@@ -1,4 +1,4 @@
-module auth
+module github.com/ushiradineth/cron-be/auth
 
 go 1.22.0
 

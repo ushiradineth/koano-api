@@ -1,14 +1,14 @@
-package db
+package database
 
 import (
-	"event"
 	"fmt"
 	"log"
 	"os"
-	"user"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"github.com/ushiradineth/cron-be/event"
+	"github.com/ushiradineth/cron-be/user"
 )
 
 func Configure() {

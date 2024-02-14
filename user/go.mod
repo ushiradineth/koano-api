@@ -1,4 +1,4 @@
-module user
+module github.com/ushiradineth/cron-be/user
 
 go 1.22.0
 

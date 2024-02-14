@@ -1,19 +1,19 @@
 package main
 
 import (
-	"db"
-	"event"
 	"fmt"
 	"net/http"
 	"os"
-	"user"
 
 	"github.com/joho/godotenv"
+	"github.com/ushiradineth/cron-be/database"
+	"github.com/ushiradineth/cron-be/event"
+	"github.com/ushiradineth/cron-be/user"
 )
 
 func main() {
 	godotenv.Load(".env")
-	db.Configure()
+	database.Configure()
 
 	mux := http.NewServeMux()
 

@@ -1,4 +1,4 @@
-module db
+module github.com/ushiradineth/cron-be/database
 
 go 1.22.0
 

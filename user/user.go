@@ -1,12 +1,12 @@
 package user
 
 import (
-	"auth"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/ushiradineth/cron-be/auth"
 )
 
 var DB *sqlx.DB
