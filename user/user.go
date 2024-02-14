@@ -5,7 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
+
+var DB *sqlx.DB
 
 func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("user_id")

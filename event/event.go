@@ -3,7 +3,11 @@ package event
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/jmoiron/sqlx"
 )
+
+var DB *sqlx.DB
 
 func GetEventHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("event_id")
