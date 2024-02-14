@@ -3,7 +3,9 @@ package main
 import (
 	"db"
 	"event"
+	"fmt"
 	"net/http"
+	"os"
 	"user"
 
 	"github.com/joho/godotenv"
@@ -25,5 +27,5 @@ func main() {
 	mux.HandleFunc("PUT /user/{user_id}/", user.UpdateUserHandler)
 	mux.HandleFunc("PUT /user/{user_id}/password/", user.UpdateUserPasswordHandler)
 
-	http.ListenAndServe("localhost:5000", mux)
+	http.ListenAndServe(fmt.Sprintf(":%s", os.Getenv("PORT")), mux)
 }
