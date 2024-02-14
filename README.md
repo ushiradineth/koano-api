@@ -15,7 +15,7 @@
 
 ### Start the MySQL Database
 
-- Run `docker-compose up -d` to start the and database container in the background.
+- Run `docker-compose -f docker_compose.yml up -d` to start the and database container in the background.
 
 ### Connect to the database
 
