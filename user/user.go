@@ -74,7 +74,7 @@ func PutUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !user {
-		http.Error(w, fmt.Sprintf("User doesn't exist"), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("User does not exist"), http.StatusBadRequest)
 		return
 	}
 
@@ -102,18 +102,18 @@ func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := DB.Exec("DELETE FROM user WHERE id=(?)", id)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("User doesn't exist"), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("User does not exist"), http.StatusBadRequest)
 		return
 	}
 
 	count, err := res.RowsAffected()
 	if err != nil {
-		http.Error(w, fmt.Sprintf("User doesn't exist"), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("User does not exist"), http.StatusBadRequest)
 		return
 	}
 
 	if count == 0 {
-		http.Error(w, fmt.Sprintf("User doesn't exist"), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("User does not exist"), http.StatusBadRequest)
 		return
 	}
 
