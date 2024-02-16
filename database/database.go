@@ -12,7 +12,7 @@ import (
 )
 
 func Configure() {
-	dataSource := fmt.Sprintf("%s:%s@tcp(%s)/%s", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_URL"), os.Getenv("MYSQL_DATABASE"))
+	dataSource := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_URL"), os.Getenv("MYSQL_DATABASE"))
 
 	DB, err := sqlx.Connect("mysql", dataSource)
 	if err != nil {
