@@ -3,11 +3,11 @@ module github.com/ushiradineth/cron-be/main
 go 1.22.0
 
 require (
-	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/jmoiron/sqlx v1.3.5 // indirect
-	golang.org/x/crypto v0.19.0 // indirect
 	github.com/joho/godotenv v1.5.1
+	github.com/lib/pq v1.10.9 // indirect
+	golang.org/x/crypto v0.19.0 // indirect
 )
 
 require (

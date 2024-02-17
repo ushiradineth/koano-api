@@ -1,21 +1,19 @@
 version: "3"
 services:
-  mysql:
-    image: mysql:8.3.0
+  postgres:
+    image: postgres:16-alpine
     restart: unless-stopped
     platform: linux/arm64
-    command: --default-authentication-plugin=mysql_native_password
     environment:
-      MYSQL_DATABASE: $MYSQL_DATABASE
-      MYSQL_USER: $MYSQL_USER
-      MYSQL_PASSWORD: $MYSQL_PASSWORD
-      MYSQL_ROOT_PASSWORD: $MYSQL_PASSWORD
+      POSTGRES_DB: $PG_DATABASE
+      POSTGRES_USER: $PG_USER
+      POSTGRES_PASSWORD: $PG_PASSWORD
     ports:
-      - "3306:3306"
+      - 5432:5432
     expose:
-      - "3306"
+      - "5432"
     volumes:
-      - cron:/var/lib/mysql
+      - cron:/var/lib/postgres
 
   adminer:
     image: adminer
@@ -25,7 +23,7 @@ services:
     environment:
       - ADMINER_DEFAULT_SERVER=cron
     depends_on:
-      - mysql
+      - postgres
 
   # cron-be:
   #   image: cron-be:prod
@@ -34,7 +32,7 @@ services:
   #   env_file:
   #     - .env.production
   #   environment:
-  #     MYSQL_URL: "mysql:3306"
+  #     PG_URL: "postgres:5432"
   #   ports:
   #     - "8080:8080"
   #   expose:
