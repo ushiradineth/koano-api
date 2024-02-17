@@ -17,18 +17,19 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /user/{user_id}", user.GetUserHandler)
+	mux.HandleFunc("GET /user", user.GetUserHandler)
 	mux.HandleFunc("POST /user", user.PostUserHandler)
-	mux.HandleFunc("PUT /user/{user_id}", user.PutUserHandler)
-	mux.HandleFunc("PUT /user/password/{user_id}", user.PutUserPasswordHandler)
-	mux.HandleFunc("DELETE /user/{user_id}", user.DeleteUserHandler)
+	mux.HandleFunc("PUT /user", user.PutUserHandler)
+	mux.HandleFunc("DELETE /user", user.DeleteUserHandler)
 	mux.HandleFunc("GET /user/auth", user.AuthenticateUserHandler)
+	mux.HandleFunc("GET /user/auth/refresh", user.RefreshTokenHandler)
+	mux.HandleFunc("PUT /user/auth/password", user.PutUserPasswordHandler)
 
 	mux.HandleFunc("GET /event/{event_id}", event.GetEventHandler)
 	mux.HandleFunc("POST /event", event.PostEventHandler)
 	mux.HandleFunc("PUT /event/{event_id}", event.PutEventHandler)
 	mux.HandleFunc("DELETE /event/{event_id}", event.DeleteEventHandler)
-	mux.HandleFunc("GET /event/user/{user_id}", event.GetUserEventsHandler)
+	mux.HandleFunc("GET /event/user", event.GetUserEventsHandler)
 
 	http.ListenAndServe(fmt.Sprintf(":%s", os.Getenv("PORT")), mux)
 }

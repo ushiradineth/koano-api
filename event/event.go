@@ -8,14 +8,21 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/ushiradineth/cron-be/user"
 )
 
 var DB *sqlx.DB
 
 func GetEventHandler(w http.ResponseWriter, r *http.Request) {
+	user, err := user.GetUserFromJWT(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
+		return
+	}
+
 	id := r.PathValue("event_id")
 
-	event, err := GetEvent(id)
+	event, err := GetEvent(id, user.ID.String())
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get event data: %v", err), http.StatusInternalServerError)
 		return
@@ -32,14 +39,19 @@ func GetEventHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func PostEventHandler(w http.ResponseWriter, r *http.Request) {
-	user_id := r.FormValue("user_id")
+	user, err := user.GetUserFromJWT(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
+		return
+	}
+
 	title := r.FormValue("title")
 	start_time := r.FormValue("start_time")
 	end_time := r.FormValue("end_time")
 	timezone := r.FormValue("timezone")
 	repeated := r.FormValue("repeated")
 
-	event, err := DoesEventExist("", start_time, end_time, user_id)
+	event, err := DoesEventExist("", start_time, end_time, user.ID.String())
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get event data: %v", err), http.StatusInternalServerError)
 		return
@@ -62,7 +74,7 @@ func PostEventHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = DB.Exec("INSERT INTO events (id, title, start_time, end_time, user_id, timezone, repeated) VALUES ($1, $2, $3, $4, $5, $6, $7)", uuid.New(), title, parsed_start, parsed_end, user_id, timezone, repeated)
+	_, err = DB.Exec("INSERT INTO events (id, title, start_time, end_time, user_id, timezone, repeated) VALUES ($1, $2, $3, $4, $5, $6, $7)", uuid.New(), title, parsed_start, parsed_end, user.ID, timezone, repeated)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert event data: %v", err), http.StatusInternalServerError)
 		return
@@ -72,15 +84,20 @@ func PostEventHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func PutEventHandler(w http.ResponseWriter, r *http.Request) {
+	user, err := user.GetUserFromJWT(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
+		return
+	}
+
 	id := r.PathValue("event_id")
 	title := r.FormValue("title")
 	start_time := r.FormValue("start_time")
 	end_time := r.FormValue("end_time")
-	user_id := r.FormValue("user_id")
 	timezone := r.FormValue("timezone")
 	repeated := r.FormValue("repeated")
 
-	event, err := DoesEventExist(id, start_time, end_time, user_id)
+	event, err := DoesEventExist(id, start_time, end_time, user.ID.String())
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get event data: %v", err), http.StatusInternalServerError)
 		return
@@ -103,7 +120,7 @@ func PutEventHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = DB.Exec("UPDATE events SET title=$1, start_time=$2, end_time=$3, timezone=$4, repeated=$5 WHERE id=$6", title, parsed_start, parsed_end, timezone, repeated, id)
+	_, err = DB.Exec("UPDATE events SET title=$1, start_time=$2, end_time=$3, timezone=$4, repeated=$5 WHERE id=$6 AND user_id=$7", title, parsed_start, parsed_end, timezone, repeated, id, user.ID.String())
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert event data: %v", err), http.StatusInternalServerError)
 		return
@@ -113,9 +130,15 @@ func PutEventHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteEventHandler(w http.ResponseWriter, r *http.Request) {
+	user, err := user.GetUserFromJWT(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
+		return
+	}
+
 	id := r.PathValue("event_id")
 
-	res, err := DB.Exec("DELETE FROM events WHERE id=$1", id)
+	res, err := DB.Exec("DELETE FROM events WHERE id=$1 AND user_id=$2", id, user.ID.String())
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Event does not exist"), http.StatusBadRequest)
 		return
@@ -136,14 +159,14 @@ func DeleteEventHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUserEventsHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("user_id")
-
-	events := []Event{}
-	err := DB.Select(&events, "SELECT * FROM events WHERE user_id=$1", id)
+	user, err := user.GetUserFromJWT(r)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get user event data: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
 		return
 	}
+
+	events := []Event{}
+	DB.Select(&events, "SELECT * FROM events WHERE user_id=$1", user.ID)
 
 	response, err := json.Marshal(events)
 	if err != nil {
@@ -152,5 +175,6 @@ func GetUserEventsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(response)
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }

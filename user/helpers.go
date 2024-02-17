@@ -1,7 +1,12 @@
 package user
 
 import (
+	"errors"
+	"fmt"
+	"net/http"
+
 	"github.com/google/uuid"
+	"github.com/ushiradineth/cron-be/auth"
 )
 
 func GetUser(idOrEmail string) (*User, error) {
@@ -62,4 +67,24 @@ func DoesUserExist(idStr string, email string) (bool, int, error) {
 	}
 
 	return userCount != 0, userCount, nil
+}
+
+func GetUserFromJWT(r *http.Request) (*User, error) {
+	accessToken, err := auth.GetJWT(r)
+	if err != nil {
+		return nil, err
+	}
+
+	JWT := auth.ParseAccessToken(accessToken)
+
+	if JWT.StandardClaims.Valid() != nil {
+		return nil, errors.New(fmt.Sprint("Access Token is invalid or expired"))
+	}
+
+	user, err := GetUser(JWT.Id.String())
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("%v", err))
+	}
+
+	return user, nil
 }

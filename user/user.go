@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/ushiradineth/cron-be/auth"
@@ -14,9 +16,7 @@ import (
 var DB *sqlx.DB
 
 func GetUserHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("user_id")
-
-	user, err := GetUser(id)
+	user, err := GetUserFromJWT(r)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
 		return
@@ -31,6 +31,7 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(response)
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -66,18 +67,18 @@ func PostUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func PutUserHandler(w http.ResponseWriter, r *http.Request) {
-	user_id := r.PathValue("user_id")
-	name := r.FormValue("name")
-	email := r.FormValue("email")
-
-	user, count, err := DoesUserExist(user_id, email)
+	user, err := GetUserFromJWT(r)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	if !user {
-		http.Error(w, fmt.Sprintf("User does not exist"), http.StatusBadRequest)
+	name := r.FormValue("name")
+	email := r.FormValue("email")
+
+	_, count, err := DoesUserExist(user.ID.String(), email)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
 		return
 	}
 
@@ -86,7 +87,7 @@ func PutUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = DB.Exec("UPDATE users SET name=$1, email=$2 WHERE id=$3", name, email, user_id)
+	_, err = DB.Exec("UPDATE users SET name=$1, email=$2 WHERE id=$3", name, email, user.ID.String())
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), http.StatusInternalServerError)
 		return
@@ -96,17 +97,9 @@ func PutUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func PutUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
-	user_id := r.PathValue("user_id")
-	email := r.FormValue("email")
-
-	user, _, err := DoesUserExist(user_id, email)
+	user, err := GetUserFromJWT(r)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	if !user {
-		http.Error(w, fmt.Sprintf("User does not exist"), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), http.StatusInternalServerError)
 		return
 	}
 
@@ -115,7 +108,7 @@ func PutUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatalln(err)
 	}
 
-	_, err = DB.Exec("UPDATE users SET password=$1 WHERE id=$2", password, user_id)
+	_, err = DB.Exec("UPDATE users SET password=$1 WHERE id=$2", password, user.ID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to update user password: %v", err), http.StatusInternalServerError)
 		return
@@ -125,17 +118,21 @@ func PutUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("user_id")
-
-	res, err := DB.Exec("DELETE FROM users WHERE id=$1", id)
+	user, err := GetUserFromJWT(r)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("User does not exist"), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("Failed to delete user data: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	res, err := DB.Exec("DELETE FROM users WHERE id=$1", user.ID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to delete user: %v", err), http.StatusBadRequest)
 		return
 	}
 
 	count, err := res.RowsAffected()
 	if err != nil {
-		http.Error(w, fmt.Sprintf("User does not exist"), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("Failed to delete user: %v", err), http.StatusBadRequest)
 		return
 	}
 
@@ -145,6 +142,12 @@ func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+type AuthenticateUserResponse struct {
+	User
+	AccessToken  string
+	RefreshToken string
 }
 
 func AuthenticateUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -160,16 +163,108 @@ func AuthenticateUserHandler(w http.ResponseWriter, r *http.Request) {
 	valid := auth.CheckPasswordHash(password, user.Password)
 
 	if !valid {
-		http.Error(w, fmt.Sprintf("Unauthorized"), http.StatusUnauthorized)
+		http.Error(w, fmt.Sprintf("Invalid Credentials"), http.StatusUnauthorized)
 		return
 	}
 
-	response, err := json.Marshal(user)
+	accessTokenClaim := auth.UserClaim{
+		Id:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
+		StandardClaims: jwt.StandardClaims{
+			IssuedAt:  time.Now().Unix(),
+			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
+		},
+	}
+
+	accessToken, err := auth.NewAccessToken(accessTokenClaim)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to generate access token: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	refreshTokenClaim := jwt.StandardClaims{
+		IssuedAt:  time.Now().Unix(),
+		ExpiresAt: time.Now().Add(time.Hour * 48).Unix(),
+	}
+
+	refreshToken, err := auth.NewRefreshToken(refreshTokenClaim)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to generate refresh token: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	user.Password = ""
+
+	response := AuthenticateUserResponse{
+		User:         *user,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+
+	jsonResponse, err := json.Marshal(response)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to marshal user data: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	w.Write(response)
+	w.Write(jsonResponse)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+}
+
+type RefreshTokenResponse struct {
+	AccessToken string
+}
+
+func RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+	accessToken, err := auth.GetJWT(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
+		return
+	}
+
+	refreshToken := r.FormValue("refresh_token")
+
+	accessTokenClaim := auth.ParseAccessToken(accessToken)
+	refreshTokenClaim := auth.ParseRefreshToken(refreshToken)
+
+	if refreshTokenClaim.Valid() != nil {
+		http.Error(w, fmt.Sprintf("Refresh Token has expired, Please Log in again"), http.StatusUnauthorized)
+		return
+	}
+
+	if accessTokenClaim.StandardClaims.Valid() == nil {
+		http.Error(w, fmt.Sprint("Access Token is valid"), http.StatusBadRequest)
+		return
+	}
+
+	newAccessTokenClaim := auth.UserClaim{
+		Id:    accessTokenClaim.Id,
+		Name:  accessTokenClaim.Name,
+		Email: accessTokenClaim.Email,
+		StandardClaims: jwt.StandardClaims{
+			IssuedAt:  time.Now().Unix(),
+			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
+		},
+	}
+
+	newAccessToken, err := auth.NewAccessToken(newAccessTokenClaim)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to create Access Token: %v", err), http.StatusInternalServerError)
+	}
+
+	response := RefreshTokenResponse{
+		AccessToken: newAccessToken,
+	}
+
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to marshal user data: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(jsonResponse)
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }

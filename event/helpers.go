@@ -2,10 +2,10 @@ package event
 
 import "github.com/google/uuid"
 
-func GetEvent(id string) (*Event, error) {
+func GetEvent(id string, user_id string) (*Event, error) {
 	event := Event{}
 
-	err := DB.Get(&event, "SELECT * FROM events WHERE id=$1", id)
+	err := DB.Get(&event, "SELECT * FROM events WHERE id=$1 AND user_id=$2", id, user_id)
 	if err != nil {
 		return nil, err
 	}
