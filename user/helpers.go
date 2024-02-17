@@ -8,8 +8,6 @@ func GetUser(id_or_email string) (*User, error) {
 		return nil, err
 	}
 
-	user.Password = ""
-
 	return &user, nil
 }
 

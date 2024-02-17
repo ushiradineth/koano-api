@@ -22,6 +22,8 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user.Password = ""
+
 	response, err := json.Marshal(user)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to marshal user data: %v", err), http.StatusInternalServerError)
@@ -50,7 +52,8 @@ func PostUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	hashedPassword, err := auth.HashPassword(password)
 	if err != nil {
-		log.Fatalln(err)
+		http.Error(w, fmt.Sprintf("Failed to hash password: %v", err), http.StatusInternalServerError)
+		return
 	}
 
 	_, err = DB.Exec("INSERT INTO user (id, name, email, password) VALUES (?, ?, ?, ?)", uuid.New(), name, email, hashedPassword)
@@ -63,11 +66,11 @@ func PostUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func PutUserHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("user_id")
+	user_id := r.PathValue("user_id")
 	name := r.FormValue("name")
 	email := r.FormValue("email")
 
-	user, count, err := DoesUserExist(id, email)
+	user, count, err := DoesUserExist(user_id, email)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
 		return
@@ -88,7 +91,7 @@ func PutUserHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatalln(err)
 	}
 
-	_, err = DB.Exec("UPDATE user SET name=(?), email=(?), password=(?) WHERE id=(?)", name, email, password, id)
+	_, err = DB.Exec("UPDATE user SET name=(?), email=(?), password=(?) WHERE id=(?)", name, email, password, user_id)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert user data: %v", err), http.StatusInternalServerError)
 		return
@@ -120,7 +123,7 @@ func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func AuthenticateUser(w http.ResponseWriter, r *http.Request) {
+func AuthenticateUserHandler(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
