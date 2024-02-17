@@ -1,0 +1,60 @@
+package auth
+
+import (
+	"errors"
+	"net/http"
+	"os"
+	"strings"
+
+	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
+)
+
+type UserClaim struct {
+	Id    uuid.UUID `json:"id"`
+	Name  string    `json:"name"`
+	Email string    `json:"email"`
+	jwt.StandardClaims
+}
+
+func NewAccessToken(claims UserClaim) (string, error) {
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	return accessToken.SignedString([]byte(os.Getenv("JWT_SECRET")))
+}
+
+func NewRefreshToken(claims jwt.StandardClaims) (string, error) {
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	return refreshToken.SignedString([]byte(os.Getenv("JWT_SECRET")))
+}
+
+func ParseAccessToken(accessToken string) *UserClaim {
+	parsedAccessToken, _ := jwt.ParseWithClaims(accessToken, &UserClaim{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+
+	return parsedAccessToken.Claims.(*UserClaim)
+}
+
+func ParseRefreshToken(refreshToken string) *jwt.StandardClaims {
+	parsedRefreshToken, _ := jwt.ParseWithClaims(refreshToken, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+
+	return parsedRefreshToken.Claims.(*jwt.StandardClaims)
+}
+
+func GetJWT(r *http.Request) (string, error) {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		return "", errors.New("Authorization header is missing")
+	}
+
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return "", errors.New("Invalid Authorization header format")
+	}
+
+	return parts[1], nil
+}

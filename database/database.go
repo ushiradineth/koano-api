@@ -5,16 +5,16 @@ import (
 	"log"
 	"os"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"github.com/ushiradineth/cron-be/event"
 	"github.com/ushiradineth/cron-be/user"
 )
 
 func Configure() {
-	dataSource := fmt.Sprintf("%s:%s@tcp(%s)/%s", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_URL"), os.Getenv("MYSQL_DATABASE"))
+	dataSource := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", os.Getenv("PG_USER"), os.Getenv("PG_PASSWORD"), os.Getenv("PG_URL"), os.Getenv("PG_DATABASE"))
 
-	DB, err := sqlx.Connect("mysql", dataSource)
+	DB, err := sqlx.Connect("postgres", dataSource)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -25,7 +25,7 @@ func Configure() {
 		log.Fatal(pingErr)
 	}
 
-	fmt.Println("Connected to MySQL Database")
+	fmt.Println("Connected to Postgres Database")
 
 	user.DB = DB
 	event.DB = DB
