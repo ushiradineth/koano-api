@@ -27,6 +27,10 @@
   - Password: password
   - Database: cron
 
+### Run Database Migrations
+
+- Run `make db_up` to run the latest Database Migration.
+
 ### Run the Go Server
 
 - Run `go run .` to start the Cron Go HTTP Server.
