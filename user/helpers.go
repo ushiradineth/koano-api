@@ -1,9 +1,28 @@
 package user
 
-func GetUser(id_or_email string) (*User, error) {
-	user := User{}
+import (
+	"github.com/google/uuid"
+)
 
-	err := DB.Get(&user, "SELECT * FROM user WHERE id=(?) OR email=(?)", id_or_email, id_or_email)
+func GetUser(idOrEmail string) (*User, error) {
+	user := User{}
+	var query string
+	var args []interface{}
+
+	id, err := uuid.Parse(idOrEmail)
+	if err != nil {
+		id = uuid.Nil
+	}
+
+	if id == uuid.Nil {
+		query = "SELECT * FROM users WHERE email=$1"
+		args = append(args, idOrEmail)
+	} else {
+		query = "SELECT * FROM users WHERE id=$1"
+		args = append(args, id)
+	}
+
+	err = DB.Get(&user, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -11,13 +30,36 @@ func GetUser(id_or_email string) (*User, error) {
 	return &user, nil
 }
 
-func DoesUserExist(id string, email string) (bool, int, error) {
-	user := 0
+func DoesUserExist(idStr string, email string) (bool, int, error) {
+	var id uuid.UUID
 
-	err := DB.Get(&user, "SELECT COUNT(*) FROM user WHERE id=(?) OR email=(?)", id, email)
+	if idStr != "" {
+		parsedID, err := uuid.Parse(idStr)
+
+		if err != nil {
+			return false, 0, err
+		}
+
+		id = parsedID
+	}
+
+	var userCount int
+	var query string
+	var args []interface{}
+
+	if idStr != "" {
+		query = "SELECT COUNT(*) FROM users WHERE id=$1 OR email=$2"
+		args = append(args, id)
+	} else {
+		query = "SELECT COUNT(*) FROM users WHERE email=$1"
+	}
+
+	args = append(args, email)
+
+	err := DB.Get(&userCount, query, args...)
 	if err != nil {
 		return false, 0, err
 	}
 
-	return user != 0, user, nil
+	return userCount != 0, userCount, nil
 }

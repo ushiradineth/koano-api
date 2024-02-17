@@ -56,7 +56,7 @@ func PostUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = DB.Exec("INSERT INTO user (id, name, email, password) VALUES (?, ?, ?, ?)", uuid.New(), name, email, hashedPassword)
+	_, err = DB.Exec("INSERT INTO users (id, name, email, password) VALUES ($1, $2, $3, $4)", uuid.New(), name, email, hashedPassword)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert user data: %v", err), http.StatusInternalServerError)
 		return
@@ -86,14 +86,38 @@ func PutUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, err = DB.Exec("UPDATE users SET name=$1, email=$2 WHERE id=$3", name, email, user_id)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func PutUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	user_id := r.PathValue("user_id")
+	email := r.FormValue("email")
+
+	user, _, err := DoesUserExist(user_id, email)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	if !user {
+		http.Error(w, fmt.Sprintf("User does not exist"), http.StatusBadRequest)
+		return
+	}
+
 	password, err := auth.HashPassword(r.FormValue("password"))
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	_, err = DB.Exec("UPDATE user SET name=(?), email=(?), password=(?) WHERE id=(?)", name, email, password, user_id)
+	_, err = DB.Exec("UPDATE users SET password=$1 WHERE id=$2", password, user_id)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to insert user data: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to update user password: %v", err), http.StatusInternalServerError)
 		return
 	}
 
@@ -103,7 +127,7 @@ func PutUserHandler(w http.ResponseWriter, r *http.Request) {
 func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("user_id")
 
-	res, err := DB.Exec("DELETE FROM user WHERE id=(?)", id)
+	res, err := DB.Exec("DELETE FROM users WHERE id=$1", id)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("User does not exist"), http.StatusBadRequest)
 		return

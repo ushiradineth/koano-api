@@ -20,6 +20,7 @@ func main() {
 	mux.HandleFunc("GET /user/{user_id}", user.GetUserHandler)
 	mux.HandleFunc("POST /user", user.PostUserHandler)
 	mux.HandleFunc("PUT /user/{user_id}", user.PutUserHandler)
+	mux.HandleFunc("PUT /user/password/{user_id}", user.PutUserPasswordHandler)
 	mux.HandleFunc("DELETE /user/{user_id}", user.DeleteUserHandler)
 	mux.HandleFunc("GET /user/auth", user.AuthenticateUserHandler)
 

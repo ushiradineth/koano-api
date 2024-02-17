@@ -11,8 +11,8 @@ type Event struct {
 	UserID    uuid.UUID `db:"user_id"`
 	CreatedAt time.Time `db:"created_at"`
 	Title     string    `db:"title"`
-	Start     time.Time `db:"start"`
-	End       time.Time `db:"end"`
-	Timezone  string    `db:"tz"`
+	Start     time.Time `db:"start_time"`
+	End       time.Time `db:"end_time"`
+	Timezone  string    `db:"timezone"`
 	Repeated  string    `db:"repeated"`
 }

@@ -34,12 +34,12 @@ func GetEventHandler(w http.ResponseWriter, r *http.Request) {
 func PostEventHandler(w http.ResponseWriter, r *http.Request) {
 	user_id := r.FormValue("user_id")
 	title := r.FormValue("title")
-	start := r.FormValue("start")
-	end := r.FormValue("end")
-	tz := r.FormValue("tz")
+	start_time := r.FormValue("start_time")
+	end_time := r.FormValue("end_time")
+	timezone := r.FormValue("timezone")
 	repeated := r.FormValue("repeated")
 
-	event, err := DoesEventExist("", start, end, user_id)
+	event, err := DoesEventExist("", start_time, end_time, user_id)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get event data: %v", err), http.StatusInternalServerError)
 		return
@@ -50,19 +50,19 @@ func PostEventHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	parsedStart, err := time.Parse(time.RFC3339, start)
+	parsed_start, err := time.Parse(time.RFC3339, start_time)
 	if err != nil {
 		fmt.Println("Error parsing time:", err)
 		return
 	}
 
-	parsedEnd, err := time.Parse(time.RFC3339, end)
+	parsed_end, err := time.Parse(time.RFC3339, end_time)
 	if err != nil {
 		fmt.Println("Error parsing time:", err)
 		return
 	}
 
-	_, err = DB.Exec("INSERT INTO event (id, title, start, end, user_id, tz, repeated) VALUES (?, ?, ?, ?, ?, ?, ?)", uuid.New(), title, parsedStart, parsedEnd, user_id, tz, repeated)
+	_, err = DB.Exec("INSERT INTO events (id, title, start_time, end_time, user_id, timezone, repeated) VALUES ($1, $2, $3, $4, $5, $6, $7)", uuid.New(), title, parsed_start, parsed_end, user_id, timezone, repeated)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert event data: %v", err), http.StatusInternalServerError)
 		return
@@ -74,13 +74,13 @@ func PostEventHandler(w http.ResponseWriter, r *http.Request) {
 func PutEventHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("event_id")
 	title := r.FormValue("title")
-	start := r.FormValue("start")
-	end := r.FormValue("end")
+	start_time := r.FormValue("start_time")
+	end_time := r.FormValue("end_time")
 	user_id := r.FormValue("user_id")
-	tz := r.FormValue("tz")
+	timezone := r.FormValue("timezone")
 	repeated := r.FormValue("repeated")
 
-	event, err := DoesEventExist(id, start, end, user_id)
+	event, err := DoesEventExist(id, start_time, end_time, user_id)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get event data: %v", err), http.StatusInternalServerError)
 		return
@@ -91,19 +91,19 @@ func PutEventHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	parsedStart, err := time.Parse(time.RFC3339, start)
+	parsed_start, err := time.Parse(time.RFC3339, start_time)
 	if err != nil {
 		fmt.Println("Error parsing time:", err)
 		return
 	}
 
-	parsedEnd, err := time.Parse(time.RFC3339, end)
+	parsed_end, err := time.Parse(time.RFC3339, end_time)
 	if err != nil {
 		fmt.Println("Error parsing time:", err)
 		return
 	}
 
-	_, err = DB.Exec("UPDATE event SET title=(?), start=(?), end=(?), tz=(?), repeated=(?) WHERE id=(?)", title, parsedStart, parsedEnd, tz, repeated, id)
+	_, err = DB.Exec("UPDATE events SET title=$1, start_time=$2, end_time=$3, timezone=$4, repeated=$5 WHERE id=$6", title, parsed_start, parsed_end, timezone, repeated, id)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert event data: %v", err), http.StatusInternalServerError)
 		return
@@ -115,7 +115,7 @@ func PutEventHandler(w http.ResponseWriter, r *http.Request) {
 func DeleteEventHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("event_id")
 
-	res, err := DB.Exec("DELETE FROM event WHERE id=(?)", id)
+	res, err := DB.Exec("DELETE FROM events WHERE id=$1", id)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Event does not exist"), http.StatusBadRequest)
 		return
@@ -139,7 +139,7 @@ func GetUserEventsHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("user_id")
 
 	events := []Event{}
-	err := DB.Select(&events, "SELECT * FROM event WHERE user_id=(?)", id)
+	err := DB.Select(&events, "SELECT * FROM events WHERE user_id=$1", id)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user event data: %v", err), http.StatusInternalServerError)
 		return
