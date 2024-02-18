@@ -19,5 +19,6 @@ require (
 
 replace (
 	github.com/ushiradineth/cron-be/auth => ../auth
+	github.com/ushiradineth/cron-be/database => ../database
 	github.com/ushiradineth/cron-be/user => ../user
 )

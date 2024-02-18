@@ -6,10 +6,11 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 	"github.com/ushiradineth/cron-be/auth"
 )
 
-func GetUser(idOrEmail string) (*User, error) {
+func GetUser(idOrEmail string, db *sqlx.DB) (*User, error) {
 	user := User{}
 	var query string
 	var args []interface{}
@@ -27,7 +28,7 @@ func GetUser(idOrEmail string) (*User, error) {
 		args = append(args, id)
 	}
 
-	err = DB.Get(&user, query, args...)
+	err = db.Get(&user, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +36,7 @@ func GetUser(idOrEmail string) (*User, error) {
 	return &user, nil
 }
 
-func DoesUserExist(idStr string, email string) (bool, int, error) {
+func DoesUserExist(idStr string, email string, db *sqlx.DB) (bool, int, error) {
 	var id uuid.UUID
 
 	if idStr != "" {
@@ -61,7 +62,7 @@ func DoesUserExist(idStr string, email string) (bool, int, error) {
 
 	args = append(args, email)
 
-	err := DB.Get(&userCount, query, args...)
+	err := db.Get(&userCount, query, args...)
 	if err != nil {
 		return false, 0, err
 	}
@@ -69,7 +70,7 @@ func DoesUserExist(idStr string, email string) (bool, int, error) {
 	return userCount != 0, userCount, nil
 }
 
-func GetUserFromJWT(r *http.Request) (*User, error) {
+func GetUserFromJWT(r *http.Request, db *sqlx.DB) (*User, error) {
 	accessToken, err := auth.GetJWT(r)
 	if err != nil {
 		return nil, err
@@ -81,7 +82,7 @@ func GetUserFromJWT(r *http.Request) (*User, error) {
 		return nil, errors.New(fmt.Sprint("Access Token is invalid or expired"))
 	}
 
-	user, err := GetUser(JWT.Id.String())
+	user, err := GetUser(JWT.Id.String(), db)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("%v", err))
 	}
