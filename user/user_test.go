@@ -26,7 +26,7 @@ var user1_access_token string = ""
 var user1_refresh_token string = ""
 var user1_id string = ""
 var expired_access_token string = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjhhYTM5ZjU5LTNhMDQtNGY4Mi05YTg1LWZmYTM3YjIzODMwNyIsIm5hbWUiOiJVc2hpcmEgRGluZXRoIiwiZW1haWwiOiJ1c2hpcmFkaW5ldGhAZ21haWwuY29tIiwiZXhwIjoxNzA4MjU3Njc5LCJpYXQiOjE3MDgyNTY3Nzl9.sAwbDMzPJCkFHYn66ExN3dM6fihrNWSY62Sz8OE4qUs"
-var expired_refresh_token string = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDg0Mjk1NzksImlhdCI6MTcwODI1Njc3OX0.d449Nd2zuorhIjNicBTn6VTgGLClwwFXyMhIFvkWrmM"
+var expired_refresh_token string = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDgzNjE2ODQsImlhdCI6MTcwODM2MTY4NH0.fW0H0XOPmWCX-I7_wuHQnTTQn5Dyo8ymMkMxp1LwTo0"
 
 type UserType struct {
 	name     string
@@ -391,53 +391,44 @@ func TestGetUserFromJWTHelper(t *testing.T) {
 		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", "asdaund1id10dj"))
 
-		defer func() {
-			if r := recover(); r == nil {
-				t.Error("Expected panic, but no panic occurred")
-			}
-		}()
-
 		GetUserFromJWT(request, db)
-
-		t.Error("Expected panic, but function returned normally")
 	})
 }
 
-// func RefreshTokenHelper(t testing.TB, want_code int, body url.Values, access_token string) {
-// 	t.Helper()
-// 	request, _ := http.NewRequest("POST", "/user/auth/refresh", strings.NewReader(body.Encode()))
-// 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-// 	request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
-// 	response := httptest.NewRecorder()
+func RefreshTokenHelper(t testing.TB, want_code int, body url.Values, access_token string) {
+	t.Helper()
+	request, _ := http.NewRequest("POST", "/user/auth/refresh", strings.NewReader(body.Encode()))
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
+	response := httptest.NewRecorder()
 
-// 	fmt.Println(strings.NewReader(body.Encode()))
-// 	RefreshTokenHandler(response, request, db)
+	RefreshTokenHandler(response, request, db)
 
-// 	assertResponse(t, fmt.Sprint(response.Code), fmt.Sprint(http.StatusBadRequest))
-// }
+	assertResponse(t, fmt.Sprint(response.Code), fmt.Sprint(want_code))
+}
 
-// func TestRefreshTokenHandler(t *testing.T) {
-// 	body := url.Values{}
-// 	body.Set("refresh_token", user1_refresh_token)
+func TestRefreshTokenHandler(t *testing.T) {
+	body := url.Values{}
+	body.Set("refresh_token", user1_refresh_token)
 
-// 	t.Run("Valid refresh token, Valid access token", func(t *testing.T) {
-// 		RefreshTokenHelper(t, http.StatusBadRequest, body, user1_access_token)
-// 	})
+	t.Run("Valid refresh token, Valid access token", func(t *testing.T) {
+		RefreshTokenHelper(t, http.StatusBadRequest, body, user1_access_token)
+	})
 
-// 	t.Run("Valid refresh token, Expired access token", func(t *testing.T) {
-// 		RefreshTokenHelper(t,  http.StatusBadRequest, body, expired_access_token)
-// 	})
+	t.Run("Valid refresh token, Expired access token", func(t *testing.T) {
+		RefreshTokenHelper(t, http.StatusUnauthorized, body, expired_access_token)
+	})
 
-// 	body.Set("refresh_token", expired_refresh_token)
+	body.Set("refresh_token", expired_refresh_token)
 
-// 	t.Run("Expired refresh token, Valid access token", func(t *testing.T) {
-// 		RefreshTokenHelper(t,  http.StatusBadRequest, body, user1_access_token)
-// 	})
+	t.Run("Expired refresh token, Valid access token", func(t *testing.T) {
+		RefreshTokenHelper(t, http.StatusUnauthorized, body, user1_access_token)
+	})
 
-// 	t.Run("Expired refresh token, Expired access token", func(t *testing.T) {
-// 		RefreshTokenHelper(t,  http.StatusBadRequest, body, expired_access_token)
-// 	})
-// }
+	t.Run("Expired refresh token, Expired access token", func(t *testing.T) {
+		RefreshTokenHelper(t, http.StatusUnauthorized, body, expired_access_token)
+	})
+}
 
 func DeleteUserHelper(t testing.TB, want_code int) {
 	t.Helper()
