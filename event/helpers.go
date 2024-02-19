@@ -1,11 +1,14 @@
 package event
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+)
 
-func GetEvent(id string, user_id string) (*Event, error) {
+func GetEvent(id string, user_id string, db *sqlx.DB) (*Event, error) {
 	event := Event{}
 
-	err := DB.Get(&event, "SELECT * FROM events WHERE id=$1 AND user_id=$2", id, user_id)
+	err := db.Get(&event, "SELECT * FROM events WHERE id=$1 AND user_id=$2", id, user_id)
 	if err != nil {
 		return nil, err
 	}
@@ -13,7 +16,7 @@ func GetEvent(id string, user_id string) (*Event, error) {
 	return &event, nil
 }
 
-func DoesEventExist(id string, start_time string, end_time string, user_id string) (bool, error) {
+func DoesEventExist(id string, start_time string, end_time string, user_id string, db *sqlx.DB) (bool, error) {
 	event := 0
 	var query string
 	var args []interface{}
@@ -36,7 +39,7 @@ func DoesEventExist(id string, start_time string, end_time string, user_id strin
 		args = append(args, start_time, end_time, user_id_uuid)
 	}
 
-	DB.Get(&event, query, args...)
+	db.Get(&event, query, args...)
 
 	return event != 0, nil
 }

@@ -13,10 +13,8 @@ import (
 	"github.com/ushiradineth/cron-be/auth"
 )
 
-var DB *sqlx.DB
-
-func GetUserHandler(w http.ResponseWriter, r *http.Request) {
-	user, err := GetUserFromJWT(r)
+func GetUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+	user, err := GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
 		return
@@ -35,12 +33,12 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func PostUserHandler(w http.ResponseWriter, r *http.Request) {
+func PostUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	name := r.FormValue("name")
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	user, _, err := DoesUserExist("", email)
+	user, _, err := DoesUserExist("", email, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
 		return
@@ -57,7 +55,7 @@ func PostUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = DB.Exec("INSERT INTO users (id, name, email, password) VALUES ($1, $2, $3, $4)", uuid.New(), name, email, hashedPassword)
+	_, err = db.Exec("INSERT INTO users (id, name, email, password) VALUES ($1, $2, $3, $4)", uuid.New(), name, email, hashedPassword)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert user data: %v", err), http.StatusInternalServerError)
 		return
@@ -66,8 +64,8 @@ func PostUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func PutUserHandler(w http.ResponseWriter, r *http.Request) {
-	user, err := GetUserFromJWT(r)
+func PutUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+	user, err := GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), http.StatusInternalServerError)
 		return
@@ -76,7 +74,7 @@ func PutUserHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	email := r.FormValue("email")
 
-	_, count, err := DoesUserExist(user.ID.String(), email)
+	_, count, err := DoesUserExist(user.ID.String(), email, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
 		return
@@ -87,7 +85,7 @@ func PutUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = DB.Exec("UPDATE users SET name=$1, email=$2 WHERE id=$3", name, email, user.ID.String())
+	_, err = db.Exec("UPDATE users SET name=$1, email=$2 WHERE id=$3", name, email, user.ID.String())
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), http.StatusInternalServerError)
 		return
@@ -96,8 +94,8 @@ func PutUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func PutUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
-	user, err := GetUserFromJWT(r)
+func PutUserPasswordHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+	user, err := GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), http.StatusInternalServerError)
 		return
@@ -108,7 +106,7 @@ func PutUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatalln(err)
 	}
 
-	_, err = DB.Exec("UPDATE users SET password=$1 WHERE id=$2", password, user.ID)
+	_, err = db.Exec("UPDATE users SET password=$1 WHERE id=$2", password, user.ID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to update user password: %v", err), http.StatusInternalServerError)
 		return
@@ -117,14 +115,14 @@ func PutUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
-	user, err := GetUserFromJWT(r)
+func DeleteUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+	user, err := GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to delete user data: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	res, err := DB.Exec("DELETE FROM users WHERE id=$1", user.ID)
+	res, err := db.Exec("DELETE FROM users WHERE id=$1", user.ID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to delete user: %v", err), http.StatusBadRequest)
 		return
@@ -150,11 +148,11 @@ type AuthenticateUserResponse struct {
 	RefreshToken string
 }
 
-func AuthenticateUserHandler(w http.ResponseWriter, r *http.Request) {
+func AuthenticateUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	user, err := GetUser(email)
+	user, err := GetUser(email, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
 		return
@@ -217,7 +215,7 @@ type RefreshTokenResponse struct {
 	AccessToken string
 }
 
-func RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+func RefreshTokenHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	accessToken, err := auth.GetJWT(r)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
@@ -226,16 +224,15 @@ func RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 
 	refreshToken := r.FormValue("refresh_token")
 
-	accessTokenClaim := auth.ParseAccessToken(accessToken)
-	refreshTokenClaim := auth.ParseRefreshToken(refreshToken)
-
-	if refreshTokenClaim.Valid() != nil {
-		http.Error(w, fmt.Sprintf("Refresh Token has expired, Please Log in again"), http.StatusUnauthorized)
+	accessTokenClaim, err := auth.ParseExpiredAccessToken(accessToken)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error parsing access token: %v", err), http.StatusBadRequest)
 		return
 	}
 
-	if accessTokenClaim.StandardClaims.Valid() == nil {
-		http.Error(w, fmt.Sprint("Access Token is valid"), http.StatusBadRequest)
+	_, errr := auth.ParseRefreshToken(refreshToken)
+	if errr != nil {
+		http.Error(w, fmt.Sprintf("Error parsing refresh token: %v", errr), http.StatusBadRequest)
 		return
 	}
 

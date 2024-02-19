@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
@@ -29,20 +30,52 @@ func NewRefreshToken(claims jwt.StandardClaims) (string, error) {
 	return refreshToken.SignedString([]byte(os.Getenv("JWT_SECRET")))
 }
 
-func ParseAccessToken(accessToken string) *UserClaim {
-	parsedAccessToken, _ := jwt.ParseWithClaims(accessToken, &UserClaim{}, func(token *jwt.Token) (interface{}, error) {
+func ParseAccessToken(accessToken string) (*UserClaim, error) {
+	parsedAccessToken, err := jwt.ParseWithClaims(accessToken, &UserClaim{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
-	return parsedAccessToken.Claims.(*UserClaim)
+	if parsedAccessToken == nil {
+		return nil, errors.New("unable to parse access token")
+	}
+
+	claims, ok := parsedAccessToken.Claims.(*UserClaim)
+	if !ok || !parsedAccessToken.Valid {
+		return nil, errors.New("invalid access token")
+	}
+
+	if claims.ExpiresAt < time.Now().Unix() {
+		return nil, errors.New("access token has expired")
+	}
+
+	return claims, nil
 }
 
-func ParseRefreshToken(refreshToken string) *jwt.StandardClaims {
-	parsedRefreshToken, _ := jwt.ParseWithClaims(refreshToken, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+func ParseRefreshToken(refreshToken string) (*jwt.StandardClaims, error) {
+	parsedRefreshToken, err := jwt.ParseWithClaims(refreshToken, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
-	return parsedRefreshToken.Claims.(*jwt.StandardClaims)
+	if parsedRefreshToken == nil {
+		return nil, errors.New("unable to parse refresh token")
+	}
+
+	claims, ok := parsedRefreshToken.Claims.(*jwt.StandardClaims)
+	if !ok || !parsedRefreshToken.Valid {
+		return nil, errors.New("invalid refresh token")
+	}
+
+	if claims.ExpiresAt < time.Now().Unix() {
+		return nil, errors.New("refresh token has expired")
+	}
+
+	return claims, nil
 }
 
 func GetJWT(r *http.Request) (string, error) {
@@ -57,4 +90,20 @@ func GetJWT(r *http.Request) (string, error) {
 	}
 
 	return parts[1], nil
+}
+
+func ParseExpiredAccessToken(accessToken string) (*UserClaim, error) {
+	parsedAccessToken, err := jwt.ParseWithClaims(accessToken, &UserClaim{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+	if err == nil || !strings.Contains(err.Error(), "token is expired by") {
+		return nil, errors.New("Token is valid")
+	}
+
+	claims, ok := parsedAccessToken.Claims.(*UserClaim)
+	if !ok || parsedAccessToken.Valid {
+		return nil, errors.New("Token is valid")
+	}
+
+	return claims, nil
 }
