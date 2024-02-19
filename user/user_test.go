@@ -25,8 +25,8 @@ func assertResponse(t testing.TB, got string, want string) {
 var user1_access_token string = ""
 var user1_refresh_token string = ""
 var user1_id string = ""
-var expired_access_token string = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjhhYTM5ZjU5LTNhMDQtNGY4Mi05YTg1LWZmYTM3YjIzODMwNyIsIm5hbWUiOiJVc2hpcmEgRGluZXRoIiwiZW1haWwiOiJ1c2hpcmFkaW5ldGhAZ21haWwuY29tIiwiZXhwIjoxNzA4MjU3Njc5LCJpYXQiOjE3MDgyNTY3Nzl9.sAwbDMzPJCkFHYn66ExN3dM6fihrNWSY62Sz8OE4qUs"
-var expired_refresh_token string = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDgzNjE2ODQsImlhdCI6MTcwODM2MTY4NH0.fW0H0XOPmWCX-I7_wuHQnTTQn5Dyo8ymMkMxp1LwTo0"
+var expired_access_token string = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImIxYzJhYjRiLTNiODEtNDAyOS1hZjU5LTdjNzhkODcyZDU1MSIsIm5hbWUiOiJVc2hpcmEgRGluZXRoIiwiZW1haWwiOiJ1c2hpcmFkaW5ldGhAZ21haWwuY29tIiwiZXhwIjoxNzA4MzY3NDcxLCJpYXQiOjE3MDgzNjc0NzF9.Zr54CJPw_7s_L-h2yVSEUtHzRi4uVII8CJ6SsJp4I8E"
+var expired_refresh_token string = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDgzNjc1NDIsImlhdCI6MTcwODM2NzU0Mn0.LSBFevNUnXbFZ5a0yXMbR5tmA6j3GssDFCkkH262Jag"
 
 type UserType struct {
 	name     string
@@ -416,17 +416,17 @@ func TestRefreshTokenHandler(t *testing.T) {
 	})
 
 	t.Run("Valid refresh token, Expired access token", func(t *testing.T) {
-		RefreshTokenHelper(t, http.StatusUnauthorized, body, expired_access_token)
+		RefreshTokenHelper(t, http.StatusOK, body, expired_access_token)
 	})
 
 	body.Set("refresh_token", expired_refresh_token)
 
 	t.Run("Expired refresh token, Valid access token", func(t *testing.T) {
-		RefreshTokenHelper(t, http.StatusUnauthorized, body, user1_access_token)
+		RefreshTokenHelper(t, http.StatusBadRequest, body, user1_access_token)
 	})
 
 	t.Run("Expired refresh token, Expired access token", func(t *testing.T) {
-		RefreshTokenHelper(t, http.StatusUnauthorized, body, expired_access_token)
+		RefreshTokenHelper(t, http.StatusBadRequest, body, expired_access_token)
 	})
 }
 

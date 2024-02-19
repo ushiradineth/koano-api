@@ -91,3 +91,19 @@ func GetJWT(r *http.Request) (string, error) {
 
 	return parts[1], nil
 }
+
+func ParseExpiredAccessToken(accessToken string) (*UserClaim, error) {
+	parsedAccessToken, err := jwt.ParseWithClaims(accessToken, &UserClaim{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+	if err == nil || !strings.Contains(err.Error(), "token is expired by") {
+		return nil, errors.New("Token is valid")
+	}
+
+	claims, ok := parsedAccessToken.Claims.(*UserClaim)
+	if !ok || parsedAccessToken.Valid {
+		return nil, errors.New("Token is valid")
+	}
+
+	return claims, nil
+}

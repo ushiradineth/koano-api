@@ -224,25 +224,15 @@ func RefreshTokenHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	refreshToken := r.FormValue("refresh_token")
 
-	accessTokenClaim, err := auth.ParseAccessToken(accessToken)
+	accessTokenClaim, err := auth.ParseExpiredAccessToken(accessToken)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error parsing access token: %v", err), http.StatusUnauthorized)
+		http.Error(w, fmt.Sprintf("Error parsing access token: %v", err), http.StatusBadRequest)
 		return
 	}
 
-	refreshTokenClaim, err := auth.ParseRefreshToken(refreshToken)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error parsing refresh token: %v", err), http.StatusUnauthorized)
-		return
-	}
-
-	if refreshTokenClaim.ExpiresAt < time.Now().Unix() {
-		http.Error(w, fmt.Sprintf("Refresh Token has expired, Please Log in again"), http.StatusUnauthorized)
-		return
-	}
-
-	if accessTokenClaim.StandardClaims.Valid() == nil {
-		http.Error(w, fmt.Sprint("Access Token is valid"), http.StatusBadRequest)
+	_, errr := auth.ParseRefreshToken(refreshToken)
+	if errr != nil {
+		http.Error(w, fmt.Sprintf("Error parsing refresh token: %v", errr), http.StatusBadRequest)
 		return
 	}
 
