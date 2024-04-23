@@ -15,7 +15,7 @@
 
 ### Start the Postgres Database
 
-- Run `docker-compose -f docker-compose.yml up -d` to start the Postgres Database and Adminer.
+- Run `docker compose -f docker-compose.yml up -d` to start the Postgres Database and Adminer.
 - Wait for a moment for the database to initialize.
 
 ### Connect to the database
