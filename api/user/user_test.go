@@ -50,11 +50,9 @@ var user2 UserType = UserType{
 
 var db *sqlx.DB
 
-func TestInit(t *testing.T) {
-	t.Run("Creates user", func(t *testing.T) {
-		godotenv.Load("../.env")
-
-		// Harded coded so I don't delete main DB :)
+func TestInitDB(t *testing.T) {
+	t.Run("Initiate DB Connetion", func(t *testing.T) {
+		godotenv.Load("../../.env")
 		db = database.Configure()
 	})
 }
