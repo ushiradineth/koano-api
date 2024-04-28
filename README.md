@@ -15,7 +15,7 @@
 
 ### Start the Postgres Database
 
-- Run `docker compose -f docker-compose.yml up -d` to start the Postgres Database and Adminer.
+- Run `docker-compose -f deployments/docker-compose.yml up -d` to start the Postgres Database and Adminer.
 - Wait for a moment for the database to initialize.
 
 ### Connect to the database
@@ -33,7 +33,7 @@
 
 ### Run the Go Server
 
-- Run `go run .` to start the Cron Go HTTP Server.
+- Run `go run cmd/api/main.go` to start the Cron Go HTTP Server.
 
 ## Build Docker Image
 
@@ -44,9 +44,9 @@
 
 ### Build the image
 
-- Run `docker build -t cron-be:prod -f Dockerfile .` to build the image.
+- Run `docker build -t cron-be:prod -f deployments/Dockerfile .` to build the image.
 
 ### Run the image using Docker Compose
 
 - Uncomment the `cron-be` service in `docker-compose.yml`.
-- Run `docker-compose -f docker-compose.yml up -d` to start the Postgres Database, Adminer, and the Cron Go HTTP Server.
+- Run `docker-compose -f deployments/docker-compose.yml up -d` to start the Postgres Database, Adminer, and the Cron Go HTTP Server.
