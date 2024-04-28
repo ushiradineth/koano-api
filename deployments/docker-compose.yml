@@ -30,7 +30,7 @@ services:
   #   restart: unless-stopped
   #   platform: linux/arm64
   #   env_file:
-  #     - .env.production
+  #     - .env
   #   environment:
   #     PG_URL: "postgres:5432"
   #   ports:

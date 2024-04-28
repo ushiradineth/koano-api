@@ -9,15 +9,21 @@ FROM golang:1.22 AS builder
 WORKDIR /app
 
 # Copy local code to the container image.
-COPY . ./
+COPY ../ ./
 
 # Retrieve application dependencies.
 # This allows the container build to reuse cached dependencies.
 # Expecting to copy go.mod and if present go.sum.
 RUN go mod download
 
+# Set environment variables
+RUN cp .env.example .env
+
+## Manually set PG_URL to local PG server
+ENV PG_URL="host.docker.internal:5432"
+
 # Build the binary.
-RUN go build -v -o server
+RUN go build -v -o server cmd/api/main.go
 
 # Run the tests in the container
 RUN go test -v -cover ./...
