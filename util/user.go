@@ -1,4 +1,4 @@
-package user
+package util
 
 import (
 	"errors"
@@ -7,11 +7,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/ushiradineth/cron-be/auth"
+
+	"github.com/ushiradineth/cron-be/models"
 )
 
-func GetUser(idOrEmail string, db *sqlx.DB) (*User, error) {
-	user := User{}
+func GetUser(idOrEmail string, db *sqlx.DB) (*models.User, error) {
+	user := models.User{}
 	var query string
 	var args []interface{}
 
@@ -70,13 +71,13 @@ func DoesUserExist(idStr string, email string, db *sqlx.DB) (bool, int, error) {
 	return userCount != 0, userCount, nil
 }
 
-func GetUserFromJWT(r *http.Request, db *sqlx.DB) (*User, error) {
-	accessToken, err := auth.GetJWT(r)
+func GetUserFromJWT(r *http.Request, db *sqlx.DB) (*models.User, error) {
+	accessToken, err := GetJWT(r)
 	if err != nil {
 		return nil, err
 	}
 
-	JWT, err := auth.ParseAccessToken(accessToken)
+	JWT, err := ParseAccessToken(accessToken)
 	if err != nil {
 		return nil, errors.New(fmt.Sprint("Access Token is invalid or expired"))
 	}

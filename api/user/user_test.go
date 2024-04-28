@@ -13,6 +13,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"github.com/ushiradineth/cron-be/database"
+	"github.com/ushiradineth/cron-be/models"
+	"github.com/ushiradineth/cron-be/util"
 )
 
 func assertResponse(t testing.TB, got string, want string) {
@@ -53,7 +55,7 @@ func TestInit(t *testing.T) {
 		godotenv.Load("../.env")
 
 		// Harded coded so I don't delete main DB :)
-		db = database.Configure(fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", "cron", "password", "localhost:5432", "cron"))
+		db = database.Configure()
 	})
 }
 
@@ -166,7 +168,7 @@ func TestGetUserHandler(t *testing.T) {
 
 		assertResponse(t, fmt.Sprint(response.Code), fmt.Sprint(http.StatusOK))
 
-		var responseBody User
+		var responseBody models.User
 		if err := json.NewDecoder(response.Body).Decode(&responseBody); err != nil {
 			t.Errorf("Failed to decode response body: %v", err)
 		}
@@ -284,7 +286,7 @@ func TestPutUserPasswordHandler(t *testing.T) {
 
 func TestGetUserHelper(t *testing.T) {
 	t.Run("Get User", func(t *testing.T) {
-		user, err := GetUser(user1.email, db)
+		user, err := util.GetUser(user1.email, db)
 		if err != nil {
 			t.Errorf("Error getting user: %s", err)
 		}
@@ -301,7 +303,7 @@ func TestGetUserHelper(t *testing.T) {
 	})
 
 	t.Run("Fail getting non existant user", func(t *testing.T) {
-		user, err := GetUser("iamanonexistantuser@email.com", db)
+		user, err := util.GetUser("iamanonexistantuser@email.com", db)
 		if err == nil {
 			t.Error("There should be an error when trying to get a non existant user")
 		}
@@ -314,7 +316,7 @@ func TestGetUserHelper(t *testing.T) {
 
 func TestDoesUserExistHelper(t *testing.T) {
 	t.Run("Get User with email", func(t *testing.T) {
-		exists, count, err := DoesUserExist("", user1.email, db)
+		exists, count, err := util.DoesUserExist("", user1.email, db)
 		if err != nil {
 			t.Errorf("Error getting user: %s", err)
 		}
@@ -327,7 +329,7 @@ func TestDoesUserExistHelper(t *testing.T) {
 	})
 
 	t.Run("Fail getting non existant user with email", func(t *testing.T) {
-		exists, count, err := DoesUserExist("", "iamanonexistantuser@email.com", db)
+		exists, count, err := util.DoesUserExist("", "iamanonexistantuser@email.com", db)
 		if err != nil {
 			t.Errorf("Error getting user: %s", err)
 		}
@@ -340,7 +342,7 @@ func TestDoesUserExistHelper(t *testing.T) {
 	})
 
 	t.Run("Get User with id", func(t *testing.T) {
-		exists, count, err := DoesUserExist(user1_id, user1.email, db)
+		exists, count, err := util.DoesUserExist(user1_id, user1.email, db)
 		if err != nil {
 			t.Errorf("Error getting user: %s", err)
 		}
@@ -353,7 +355,7 @@ func TestDoesUserExistHelper(t *testing.T) {
 	})
 
 	t.Run("Fail getting non existant user with id", func(t *testing.T) {
-		exists, count, err := DoesUserExist(uuid.New().String(), "iamanonexistantuser@email.com", db)
+		exists, count, err := util.DoesUserExist(uuid.New().String(), "iamanonexistantuser@email.com", db)
 		if err != nil {
 			t.Errorf("Error getting user: %s", err)
 		}
@@ -372,7 +374,7 @@ func TestGetUserFromJWTHelper(t *testing.T) {
 		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", user1_access_token))
 
-		user, err := GetUserFromJWT(request, db)
+		user, err := util.GetUserFromJWT(request, db)
 		if err != nil {
 			t.Errorf("Error getting user: %s", err)
 		}
@@ -391,7 +393,7 @@ func TestGetUserFromJWTHelper(t *testing.T) {
 		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", "asdaund1id10dj"))
 
-		GetUserFromJWT(request, db)
+		util.GetUserFromJWT(request, db)
 	})
 }
 

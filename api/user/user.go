@@ -10,11 +10,12 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/ushiradineth/cron-be/auth"
+	"github.com/ushiradineth/cron-be/models"
+	"github.com/ushiradineth/cron-be/util"
 )
 
 func GetUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, err := GetUserFromJWT(r, db)
+	user, err := util.GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
 		return
@@ -38,7 +39,7 @@ func PostUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	user, _, err := DoesUserExist("", email, db)
+	user, _, err := util.DoesUserExist("", email, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
 		return
@@ -49,7 +50,7 @@ func PostUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
-	hashedPassword, err := auth.HashPassword(password)
+	hashedPassword, err := util.HashPassword(password)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to hash password: %v", err), http.StatusInternalServerError)
 		return
@@ -65,7 +66,7 @@ func PostUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 }
 
 func PutUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, err := GetUserFromJWT(r, db)
+	user, err := util.GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), http.StatusInternalServerError)
 		return
@@ -74,7 +75,7 @@ func PutUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	name := r.FormValue("name")
 	email := r.FormValue("email")
 
-	_, count, err := DoesUserExist(user.ID.String(), email, db)
+	_, count, err := util.DoesUserExist(user.ID.String(), email, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
 		return
@@ -95,13 +96,13 @@ func PutUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 }
 
 func PutUserPasswordHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, err := GetUserFromJWT(r, db)
+	user, err := util.GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	password, err := auth.HashPassword(r.FormValue("password"))
+	password, err := util.HashPassword(r.FormValue("password"))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -116,7 +117,7 @@ func PutUserPasswordHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB)
 }
 
 func DeleteUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, err := GetUserFromJWT(r, db)
+	user, err := util.GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to delete user data: %v", err), http.StatusInternalServerError)
 		return
@@ -143,7 +144,7 @@ func DeleteUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 }
 
 type AuthenticateUserResponse struct {
-	User
+	models.User
 	AccessToken  string
 	RefreshToken string
 }
@@ -152,20 +153,20 @@ func AuthenticateUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	user, err := GetUser(email, db)
+	user, err := util.GetUser(email, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	valid := auth.CheckPasswordHash(password, user.Password)
+	valid := util.CheckPasswordHash(password, user.Password)
 
 	if !valid {
 		http.Error(w, fmt.Sprintf("Invalid Credentials"), http.StatusUnauthorized)
 		return
 	}
 
-	accessTokenClaim := auth.UserClaim{
+	accessTokenClaim := util.UserClaim{
 		Id:    user.ID,
 		Name:  user.Name,
 		Email: user.Email,
@@ -175,7 +176,7 @@ func AuthenticateUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB
 		},
 	}
 
-	accessToken, err := auth.NewAccessToken(accessTokenClaim)
+	accessToken, err := util.NewAccessToken(accessTokenClaim)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to generate access token: %v", err), http.StatusInternalServerError)
 		return
@@ -186,7 +187,7 @@ func AuthenticateUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB
 		ExpiresAt: time.Now().Add(time.Hour * 48).Unix(),
 	}
 
-	refreshToken, err := auth.NewRefreshToken(refreshTokenClaim)
+	refreshToken, err := util.NewRefreshToken(refreshTokenClaim)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to generate refresh token: %v", err), http.StatusInternalServerError)
 		return
@@ -216,7 +217,7 @@ type RefreshTokenResponse struct {
 }
 
 func RefreshTokenHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	accessToken, err := auth.GetJWT(r)
+	accessToken, err := util.GetJWT(r)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
 		return
@@ -224,19 +225,19 @@ func RefreshTokenHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	refreshToken := r.FormValue("refresh_token")
 
-	accessTokenClaim, err := auth.ParseExpiredAccessToken(accessToken)
+	accessTokenClaim, err := util.ParseExpiredAccessToken(accessToken)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error parsing access token: %v", err), http.StatusBadRequest)
 		return
 	}
 
-	_, errr := auth.ParseRefreshToken(refreshToken)
+	_, errr := util.ParseRefreshToken(refreshToken)
 	if errr != nil {
 		http.Error(w, fmt.Sprintf("Error parsing refresh token: %v", errr), http.StatusBadRequest)
 		return
 	}
 
-	newAccessTokenClaim := auth.UserClaim{
+	newAccessTokenClaim := util.UserClaim{
 		Id:    accessTokenClaim.Id,
 		Name:  accessTokenClaim.Name,
 		Email: accessTokenClaim.Email,
@@ -246,7 +247,7 @@ func RefreshTokenHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		},
 	}
 
-	newAccessToken, err := auth.NewAccessToken(newAccessTokenClaim)
+	newAccessToken, err := util.NewAccessToken(newAccessTokenClaim)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to create Access Token: %v", err), http.StatusInternalServerError)
 	}

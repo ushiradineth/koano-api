@@ -1,12 +1,14 @@
-package event
+package util
 
 import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	
+	"github.com/ushiradineth/cron-be/models"
 )
 
-func GetEvent(id string, user_id string, db *sqlx.DB) (*Event, error) {
-	event := Event{}
+func GetEvent(id string, user_id string, db *sqlx.DB) (*models.Event, error) {
+	event := models.Event{}
 
 	err := db.Get(&event, "SELECT * FROM events WHERE id=$1 AND user_id=$2", id, user_id)
 	if err != nil {
