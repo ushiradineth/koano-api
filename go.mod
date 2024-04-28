@@ -1,26 +1,17 @@
-module github.com/ushiradineth/cron-be/main
+module github.com/ushiradineth/cron-be
 
-go 1.22.0
+go 1.22.2
 
 require (
-	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
-	github.com/google/uuid v1.6.0 // indirect
-	github.com/jmoiron/sqlx v1.3.5 // indirect
+	github.com/go-faker/faker/v4 v4.4.1
+	github.com/google/uuid v1.6.0
+	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
-	github.com/lib/pq v1.10.9 // indirect
-	golang.org/x/crypto v0.19.0 // indirect
 )
 
 require (
-	github.com/ushiradineth/cron-be/auth v1.0.0 // indirect
-	github.com/ushiradineth/cron-be/database v1.0.0
-	github.com/ushiradineth/cron-be/event v1.0.0
-	github.com/ushiradineth/cron-be/user v1.0.0
-)
-
-replace (
-	github.com/ushiradineth/cron-be/auth => ./auth
-	github.com/ushiradineth/cron-be/database => ./database
-	github.com/ushiradineth/cron-be/event => ./event
-	github.com/ushiradineth/cron-be/user => ./user
+	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/lib/pq v1.10.9
+	golang.org/x/crypto v0.22.0
+	golang.org/x/text v0.14.0 // indirect
 )
