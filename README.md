@@ -39,9 +39,14 @@
 
 - `go run cmd/api/main.go` or `gow run cmd/api/main.go`
 
-### Running Tests
+### Run Tests
 
 - `go test -v -cover ./...` or `gow test -v -cover ./...`
+
+### Run the Seeder
+
+- Note: Make sure the database is the development database
+- `go run cmd/seeder/main.go`
 
 ## Build Docker Image
 
