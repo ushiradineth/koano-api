@@ -3,7 +3,7 @@ package util
 import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	
+
 	"github.com/ushiradineth/cron-be/models"
 )
 
@@ -18,7 +18,7 @@ func GetEvent(id string, user_id string, db *sqlx.DB) (*models.Event, error) {
 	return &event, nil
 }
 
-func DoesEventExist(id string, start_time string, end_time string, user_id string, db *sqlx.DB) (bool, error) {
+func DoesEventExist(id string, start_time string, end_time string, user_id string, db *sqlx.DB) bool {
 	event := 0
 	var query string
 	var args []interface{}
@@ -34,8 +34,8 @@ func DoesEventExist(id string, start_time string, end_time string, user_id strin
 	}
 
 	if id_uuid == uuid.Nil {
-		query = "SELECT COUNT(*) FROM events WHERE id=$1"
-		args = append(args, id_uuid)
+		query = "SELECT COUNT(*) FROM events WHERE id=$1 AND user_id=$2"
+		args = append(args, id_uuid, user_id_uuid)
 	} else {
 		query = "SELECT COUNT(*) FROM events WHERE start_time=$1 AND end_time=$2 AND user_id=$3"
 		args = append(args, start_time, end_time, user_id_uuid)
@@ -43,5 +43,5 @@ func DoesEventExist(id string, start_time string, end_time string, user_id strin
 
 	db.Get(&event, query, args...)
 
-	return event != 0, nil
+	return event != 0
 }

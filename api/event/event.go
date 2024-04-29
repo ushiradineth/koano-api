@@ -50,11 +50,7 @@ func PostEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	timezone := r.FormValue("timezone")
 	repeated := r.FormValue("repeated")
 
-	event, err := util.DoesEventExist("", start_time, end_time, user.ID.String(), db)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get event data: %v", err), http.StatusInternalServerError)
-		return
-	}
+	event := util.DoesEventExist("", start_time, end_time, user.ID.String(), db)
 
 	if event {
 		http.Error(w, fmt.Sprintf("Event already exists"), http.StatusBadRequest)
@@ -96,11 +92,7 @@ func PutEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	timezone := r.FormValue("timezone")
 	repeated := r.FormValue("repeated")
 
-	event, err := util.DoesEventExist(id, start_time, end_time, user.ID.String(), db)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get event data: %v", err), http.StatusInternalServerError)
-		return
-	}
+	event := util.DoesEventExist(id, start_time, end_time, user.ID.String(), db)
 
 	if !event {
 		http.Error(w, fmt.Sprintf("Event does not exist"), http.StatusBadRequest)
