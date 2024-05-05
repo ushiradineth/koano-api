@@ -110,9 +110,9 @@ func TestUserHandlers(t *testing.T) {
 			err := json.NewDecoder(response.Body).Decode(&responseBody)
 			assert.NoError(t, err)
 
-			assert.Equal(t, user1.name, responseBody.Name, "Name in response does not match expected")
-			assert.Equal(t, user1.email, responseBody.Email, "Email in response does not match expected")
-			assert.Empty(t, responseBody.Password, "Password needs to be empty")
+			assert.Equal(t, user1.name, responseBody.Name)
+			assert.Equal(t, user1.email, responseBody.Email)
+			assert.Empty(t, responseBody.Password)
 
 			assert.Equal(t, http.StatusOK, response.Code)
 		})
@@ -259,8 +259,8 @@ func TestUserHelpers(t *testing.T) {
 
 			user1_id = user.ID.String()
 
-			assert.Equal(t, user1.name, user.Name, "Name in response does not match expected")
-			assert.Equal(t, user1.email, user.Email, "Email in response does not match expected")
+			assert.Equal(t, user1.name, user.Name)
+			assert.Equal(t, user1.email, user.Email)
 		})
 
 		t.Run("Email does not Exist", func(t *testing.T) {
@@ -314,8 +314,8 @@ func TestUserHelpers(t *testing.T) {
 			user, err := util.GetUserFromJWT(request, db)
 			assert.NoError(t, err, "Error getting user")
 
-			assert.Equal(t, user1.name, user.Name, "Name in response does not match expected")
-			assert.Equal(t, user1.email, user.Email, "Email in response does not match expected")
+			assert.Equal(t, user1.name, user.Name)
+			assert.Equal(t, user1.email, user.Email)
 
 		})
 
@@ -358,7 +358,7 @@ func AuthenticateUserHelper(t testing.TB, body url.Values, want_code int) {
 	err := json.NewDecoder(response.Body).Decode(&responseBody)
 	assert.NoError(t, err)
 
-	assert.Equal(t, body.Get("email"), responseBody.User.Email, "Email in response does not match expected")
+	assert.Equal(t, body.Get("email"), responseBody.User.Email)
 	assert.Equal(t, "", responseBody.User.Password, "Password in response should be empty")
 	assert.NotEmpty(t, responseBody.AccessToken, "Access Token is missing")
 	assert.NotEmpty(t, responseBody.RefreshToken, "Refresh Token is missing")
