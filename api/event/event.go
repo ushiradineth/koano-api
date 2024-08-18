@@ -33,8 +33,14 @@ func GetEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
-	w.Write(response)
 	w.WriteHeader(http.StatusOK)
+
+	_, err = w.Write(response)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		fmt.Printf("Error writing response: %v\n", err)
+		return
+	}
 }
 
 func PostEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
@@ -44,18 +50,8 @@ func PostEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
-	title := r.FormValue("title")
 	start_time := r.FormValue("start_time")
 	end_time := r.FormValue("end_time")
-	timezone := r.FormValue("timezone")
-	repeated := r.FormValue("repeated")
-
-	event := util.DoesEventExist("", start_time, end_time, user.ID.String(), db)
-
-	if event {
-		http.Error(w, fmt.Sprintf("Event already exists"), http.StatusBadRequest)
-		return
-	}
 
 	parsed_start, err := time.Parse(time.RFC3339, start_time)
 	if err != nil {
@@ -69,13 +65,43 @@ func PostEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
-	_, err = db.Exec("INSERT INTO events (id, title, start_time, end_time, user_id, timezone, repeated) VALUES ($1, $2, $3, $4, $5, $6, $7)", uuid.New(), title, parsed_start, parsed_end, user.ID, timezone, repeated)
+	event := models.Event{
+		ID:       uuid.New(),
+		Title:    r.FormValue("title"),
+		Start:    parsed_start,
+		End:      parsed_end,
+		UserID:   user.ID,
+		Timezone: r.FormValue("timezone"),
+		Repeated: r.FormValue("repeated"),
+	}
+
+	eventExists := util.DoesEventExist("", start_time, end_time, event.UserID.String(), db)
+
+	if eventExists {
+		http.Error(w, "Event already exists", http.StatusBadRequest)
+		return
+	}
+
+	_, err = db.Exec("INSERT INTO events (id, title, start_time, end_time, user_id, timezone, repeated) VALUES ($1, $2, $3, $4, $5, $6, $7)", event.ID, event.Title, event.Start, event.End, event.UserID, event.Timezone, event.Repeated)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert event data: %v", err), http.StatusInternalServerError)
 		return
 	}
 
+	response, err := json.Marshal(event)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to marshal event data: %v", err), http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
+
+	_, err = w.Write(response)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		fmt.Printf("Error writing response: %v\n", err)
+		return
+	}
 }
 
 func PutEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
@@ -95,7 +121,7 @@ func PutEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	event := util.DoesEventExist(id, start_time, end_time, user.ID.String(), db)
 
 	if !event {
-		http.Error(w, fmt.Sprintf("Event does not exist"), http.StatusBadRequest)
+		http.Error(w, "Event does not exist", http.StatusBadRequest)
 		return
 	}
 
@@ -131,18 +157,18 @@ func DeleteEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	res, err := db.Exec("DELETE FROM events WHERE id=$1 AND user_id=$2", id, user.ID.String())
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Event does not exist"), http.StatusBadRequest)
+		http.Error(w, "Event does not exist", http.StatusBadRequest)
 		return
 	}
 
 	count, err := res.RowsAffected()
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Event does not exist"), http.StatusBadRequest)
+		http.Error(w, "Event does not exist", http.StatusBadRequest)
 		return
 	}
 
 	if count == 0 {
-		http.Error(w, fmt.Sprintf("Event does not exist"), http.StatusBadRequest)
+		http.Error(w, "Event does not exist", http.StatusBadRequest)
 		return
 	}
 
@@ -150,6 +176,20 @@ func DeleteEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 }
 
 func GetUserEventsHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+	startDay := r.PathValue("start_day")
+	endDay := r.PathValue("end_day")
+
+	startTime, err := time.Parse("2006-01-02", startDay)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to parse start day: %v", err), http.StatusBadRequest)
+		return
+	}
+	endTime, err := time.Parse("2006-01-02", endDay)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to parse end day: %v", err), http.StatusBadRequest)
+		return
+	}
+
 	user, err := util.GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
@@ -157,7 +197,11 @@ func GetUserEventsHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	events := []models.Event{}
-	db.Select(&events, "SELECT * FROM events WHERE user_id=$1", user.ID)
+
+	err = db.Select(&events, "SELECT * FROM events WHERE user_id=$1 AND start_time >= $2 AND start_time <= $3", user.ID, startTime, endTime)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get data: %v", err), http.StatusInternalServerError)
+	}
 
 	response, err := json.Marshal(events)
 	if err != nil {
@@ -165,7 +209,13 @@ func GetUserEventsHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
-	w.Write(response)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+
+	_, err = w.Write(response)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		fmt.Printf("Error writing response: %v\n", err)
+		return
+	}
 }

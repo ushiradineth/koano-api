@@ -45,8 +45,8 @@ var user2 UserType = UserType{
 var db *sqlx.DB
 
 func TestInitDB(t *testing.T) {
-	t.Run("Initiate DB Connetion", func(t *testing.T) {
-		godotenv.Load("../../.env")
+	t.Run("Initiate DB Connection", func(t *testing.T) {
+		assert.NoError(t, godotenv.Load("../../.env"), "Environment variables should be loaded in")
 		db = database.Configure()
 	})
 }
@@ -266,7 +266,7 @@ func TestUserHelpers(t *testing.T) {
 		t.Run("Email does not Exist", func(t *testing.T) {
 			user, err := util.GetUser("iamanonexistantuser@email.com", db)
 
-			assert.Error(t, err, "There should be an error when trying to get a non existant user")
+			assert.Error(t, err, "There should be an error when trying to get a non existent user")
 			assert.Nil(t, user, "User should be empty")
 		})
 	})
@@ -307,7 +307,7 @@ func TestUserHelpers(t *testing.T) {
 
 	t.Run("GetUserFromJWT Helper", func(t *testing.T) {
 		t.Run("Get User with JWT", func(t *testing.T) {
-			request, _ := http.NewRequest(http.MethodGet, "/non-existant-path", nil)
+			request, _ := http.NewRequest(http.MethodGet, "/non-existent-path", nil)
 			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
 
@@ -319,12 +319,13 @@ func TestUserHelpers(t *testing.T) {
 
 		})
 
-		t.Run("Fail getting non existant user with JWT", func(t *testing.T) {
-			request, _ := http.NewRequest(http.MethodGet, "/non-existant-path", nil)
+		t.Run("Fail getting non existent user with JWT", func(t *testing.T) {
+			request, _ := http.NewRequest(http.MethodGet, "/non-existent-path", nil)
 			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", "asdaund1id10dj"))
 
-			util.GetUserFromJWT(request, db)
+      _, err := util.GetUserFromJWT(request, db)
+			assert.Error(t, err, "This actio should fail as this JWT is not owned by a valid user")
 		})
 	})
 

@@ -29,7 +29,11 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
-	w.Write(response)
+	_, err = w.Write(response)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to write response: %v", err), http.StatusInternalServerError)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }
@@ -46,7 +50,7 @@ func PostUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if user {
-		http.Error(w, fmt.Sprintf("User already exists"), http.StatusBadRequest)
+    http.Error(w, "User already exists", http.StatusBadRequest)
 		return
 	}
 
@@ -82,7 +86,7 @@ func PutUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if count > 1 {
-		http.Error(w, fmt.Sprintf("Email already in use"), http.StatusBadRequest)
+		http.Error(w, "Email already in use", http.StatusBadRequest)
 		return
 	}
 
@@ -136,7 +140,7 @@ func DeleteUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if count == 0 {
-		http.Error(w, fmt.Sprintf("User does not exist"), http.StatusBadRequest)
+		http.Error(w, "User does not exist", http.StatusBadRequest)
 		return
 	}
 
@@ -162,7 +166,7 @@ func AuthenticateUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB
 	valid := util.CheckPasswordHash(password, user.Password)
 
 	if !valid {
-		http.Error(w, fmt.Sprintf("Invalid Credentials"), http.StatusUnauthorized)
+		http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
 		return
 	}
 
@@ -207,7 +211,11 @@ func AuthenticateUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB
 		return
 	}
 
-	w.Write(jsonResponse)
+		_, err = w.Write(jsonResponse)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to write response: %v", err), http.StatusInternalServerError)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }
@@ -262,7 +270,11 @@ func RefreshTokenHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
-	w.Write(jsonResponse)
-	w.Header().Set("Content-Type", "application/json")
+  _, err = w.Write(jsonResponse)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to write response: %v", err), http.StatusInternalServerError)
+	}
+
+  w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }
