@@ -25,7 +25,7 @@ services:
       - postgres
 
   # cron-be:
-  #   image: cron-be:prod
+  #   image: cron-be:go
   #   restart: unless-stopped
   #   platform: linux/arm64
   #   environment:

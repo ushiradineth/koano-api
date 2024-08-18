@@ -15,7 +15,7 @@
 
 ### Start the Postgres Database
 
-- Run `docker compose -f deployments/docker-compose.yml up -d` to start the Postgres Database and Adminer.
+- Run `docker compose -f deployments/docker-compose.yml --env-file .env up -d` to start the Postgres Database and Adminer.
 - Wait for a moment for the database to initialize.
 
 ### Connect to the database
@@ -48,14 +48,14 @@
 - Note: Make sure the database is the development database
 - `go run cmd/seeder/main.go`
 
-## Build Docker Image
+## Build the Cron API
 
 ### Build the image
 
-- Run `docker build -t cron-be:prod -f deployments/Dockerfile .` to build the image.
+- Run `docker build -t cron-be:go -f deployments/Dockerfile .` to build the image.
 
 ### Run the image using Docker Compose
 
 - Uncomment the `cron-be` service in `docker-compose.yml`.
 - Replace `PG_URL` in `.env` with `postgres:5432`
-- Run `docker compose -f deployments/docker-compose.yml up -d` to start the Postgres Database, Adminer, and the Cron Go HTTP Server.
+- Run `docker compose -f deployments/docker-compose.yml --env-file .env up -d` to start the Postgres Database, Adminer, and the Cron Go HTTP Server.
