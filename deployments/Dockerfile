@@ -1,6 +1,6 @@
 # https://github.com/GoogleCloudPlatform/golang-samples/blob/main/run/helloworld/Dockerfile
 
-# Use the offical golang image to create a binary.
+# Use the official golang image to create a binary.
 # This is based on Debian and sets the GOPATH to /go.
 # https://hub.docker.com/_/golang
 FROM golang:1.22 AS builder

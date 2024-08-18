@@ -15,7 +15,7 @@
 
 ### Start the Postgres Database
 
-- Run `docker-compose -f deployments/docker-compose.yml up -d` to start the Postgres Database and Adminer.
+- Run `docker compose -f deployments/docker-compose.yml up -d` to start the Postgres Database and Adminer.
 - Wait for a moment for the database to initialize.
 
 ### Connect to the database
@@ -58,4 +58,4 @@
 
 - Uncomment the `cron-be` service in `docker-compose.yml`.
 - Replace `PG_URL` in `.env` with `postgres:5432`
-- Run `docker-compose -f deployments/docker-compose.yml up -d` to start the Postgres Database, Adminer, and the Cron Go HTTP Server.
+- Run `docker compose -f deployments/docker-compose.yml up -d` to start the Postgres Database, Adminer, and the Cron Go HTTP Server.
