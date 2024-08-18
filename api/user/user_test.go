@@ -324,7 +324,7 @@ func TestUserHelpers(t *testing.T) {
 			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", "asdaund1id10dj"))
 
-      _, err := util.GetUserFromJWT(request, db)
+			_, err := util.GetUserFromJWT(request, db)
 			assert.Error(t, err, "This actio should fail as this JWT is not owned by a valid user")
 		})
 	})

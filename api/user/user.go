@@ -50,7 +50,7 @@ func PostUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if user {
-    http.Error(w, "User already exists", http.StatusBadRequest)
+		http.Error(w, "User already exists", http.StatusBadRequest)
 		return
 	}
 
@@ -211,7 +211,7 @@ func AuthenticateUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB
 		return
 	}
 
-		_, err = w.Write(jsonResponse)
+	_, err = w.Write(jsonResponse)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to write response: %v", err), http.StatusInternalServerError)
 	}
@@ -270,11 +270,11 @@ func RefreshTokenHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
-  _, err = w.Write(jsonResponse)
+	_, err = w.Write(jsonResponse)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to write response: %v", err), http.StatusInternalServerError)
 	}
 
-  w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }
