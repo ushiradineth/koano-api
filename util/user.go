@@ -79,16 +79,16 @@ func GetUserFromJWT(r *http.Request, db *sqlx.DB) (*models.User, error) {
 
 	JWT, err := ParseAccessToken(accessToken)
 	if err != nil {
-		return nil, errors.New(fmt.Sprint("Access Token is invalid or expired"))
+		return nil, errors.New("Access Token is invalid or expired")
 	}
 
 	if JWT.StandardClaims.Valid() != nil {
-		return nil, errors.New(fmt.Sprint("Access Token is invalid or expired"))
+		return nil, errors.New("Access Token is invalid or expired")
 	}
 
 	user, err := GetUser(JWT.Id.String(), db)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("%v", err))
+		return nil, errors.New(fmt.Sprint(err))
 	}
 
 	return user, nil

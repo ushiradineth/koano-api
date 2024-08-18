@@ -33,7 +33,7 @@ func DoesEventExist(id string, start_time string, end_time string, user_id strin
 		user_id_uuid = uuid.Nil
 	}
 
-	if id_uuid == uuid.Nil {
+	if id_uuid != uuid.Nil {
 		query = "SELECT COUNT(*) FROM events WHERE id=$1 AND user_id=$2"
 		args = append(args, id_uuid, user_id_uuid)
 	} else {
