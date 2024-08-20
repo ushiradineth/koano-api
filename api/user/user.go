@@ -14,7 +14,7 @@ import (
 	"github.com/ushiradineth/cron-be/util"
 )
 
-func GetUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	user, err := util.GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
@@ -38,7 +38,7 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func PostUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	name := r.FormValue("name")
 	email := r.FormValue("email")
 	password := r.FormValue("password")
@@ -69,7 +69,7 @@ func PostUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func PutUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	user, err := util.GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), http.StatusInternalServerError)
@@ -99,7 +99,7 @@ func PutUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func PutUserPasswordHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func PutPassword(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	user, err := util.GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), http.StatusInternalServerError)
@@ -120,7 +120,7 @@ func PutUserPasswordHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB)
 	w.WriteHeader(http.StatusOK)
 }
 
-func DeleteUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	user, err := util.GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to delete user data: %v", err), http.StatusInternalServerError)
@@ -153,7 +153,7 @@ type AuthenticateUserResponse struct {
 	RefreshToken string
 }
 
-func AuthenticateUserHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func Authenticate(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
@@ -224,7 +224,7 @@ type RefreshTokenResponse struct {
 	AccessToken string
 }
 
-func RefreshTokenHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func RefreshToken(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	accessToken, err := util.GetJWT(r)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)

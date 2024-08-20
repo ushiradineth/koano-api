@@ -92,7 +92,7 @@ func TestUserHandlers(t *testing.T) {
 			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			response := httptest.NewRecorder()
 
-			AuthenticateUserHandler(response, request, db)
+			Authenticate(response, request, db)
 
 			assert.Equal(t, http.StatusUnauthorized, response.Code)
 		})
@@ -104,7 +104,7 @@ func TestUserHandlers(t *testing.T) {
 			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
 			response := httptest.NewRecorder()
-			GetUserHandler(response, request, db)
+			Get(response, request, db)
 
 			var responseBody models.User
 			err := json.NewDecoder(response.Body).Decode(&responseBody)
@@ -122,7 +122,7 @@ func TestUserHandlers(t *testing.T) {
 			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", "invalid token"))
 			response := httptest.NewRecorder()
-			GetUserHandler(response, request, db)
+			Get(response, request, db)
 
 			assert.Equal(t, http.StatusInternalServerError, response.Code)
 		})
@@ -172,7 +172,7 @@ func TestUserHandlers(t *testing.T) {
 			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			response := httptest.NewRecorder()
 
-			AuthenticateUserHandler(response, request, db)
+			Authenticate(response, request, db)
 
 			assert.Equal(t, http.StatusUnauthorized, response.Code)
 		})
@@ -342,7 +342,7 @@ func CreateUserHelper(t testing.TB, body url.Values, want_code int) {
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	response := httptest.NewRecorder()
 
-	PostUserHandler(response, request, db)
+	Post(response, request, db)
 
 	assert.Equal(t, want_code, response.Code)
 }
@@ -353,7 +353,7 @@ func AuthenticateUserHelper(t testing.TB, body url.Values, want_code int) {
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	response := httptest.NewRecorder()
 
-	AuthenticateUserHandler(response, request, db)
+	Authenticate(response, request, db)
 
 	var responseBody AuthenticateUserResponse
 	err := json.NewDecoder(response.Body).Decode(&responseBody)
@@ -377,7 +377,7 @@ func UpdateUserHelper(t testing.TB, body url.Values, want_code int) {
 	request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
 	response := httptest.NewRecorder()
 
-	PutUserHandler(response, request, db)
+	Put(response, request, db)
 
 	assert.Equal(t, want_code, response.Code)
 }
@@ -389,7 +389,7 @@ func UpdateUserPasswordHelper(t testing.TB, body url.Values, want_code int) {
 	request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
 	response := httptest.NewRecorder()
 
-	PutUserPasswordHandler(response, request, db)
+	PutPassword(response, request, db)
 
 	assert.Equal(t, want_code, response.Code)
 }
@@ -401,7 +401,7 @@ func RefreshTokenHelper(t testing.TB, want_code int, body url.Values, access_tok
 	request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
 	response := httptest.NewRecorder()
 
-	RefreshTokenHandler(response, request, db)
+	RefreshToken(response, request, db)
 
 	assert.Equal(t, want_code, response.Code)
 }
@@ -413,7 +413,7 @@ func DeleteUserHelper(t testing.TB, want_code int) {
 	request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
 	response := httptest.NewRecorder()
 
-	DeleteUserHandler(response, request, db)
+	Delete(response, request, db)
 
 	assert.Equal(t, want_code, response.Code)
 }

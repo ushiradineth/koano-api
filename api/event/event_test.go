@@ -99,7 +99,7 @@ func TestEventHandlers(t *testing.T) {
 			request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
 			response := httptest.NewRecorder()
 
-			GetEventHandler(response, request, db)
+			Get(response, request, db)
 
 			assert.Equal(t, http.StatusInternalServerError, response.Code)
 		})
@@ -111,7 +111,7 @@ func TestEventHandlers(t *testing.T) {
 			request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
 			response := httptest.NewRecorder()
 
-			GetEventHandler(response, request, db)
+			Get(response, request, db)
 
 			var responseBody models.Event
 
@@ -173,7 +173,7 @@ func CreateUserHelper(t testing.TB, body url.Values, want_code int) {
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	response := httptest.NewRecorder()
 
-	user.PostUserHandler(response, request, db)
+	user.Post(response, request, db)
 
 	assert.Equal(t, http.StatusOK, response.Code)
 }
@@ -184,7 +184,7 @@ func AuthenticateUserHelper(t testing.TB, body url.Values, wantCode int) {
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	response := httptest.NewRecorder()
 
-	user.AuthenticateUserHandler(response, request, db)
+	user.Authenticate(response, request, db)
 
 	var responseBody user.AuthenticateUserResponse
 	err := json.NewDecoder(response.Body).Decode(&responseBody)
@@ -208,7 +208,7 @@ func DeleteUserHelper(t testing.TB, want_code int) {
 	request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
 	response := httptest.NewRecorder()
 
-	user.DeleteUserHandler(response, request, db)
+	user.Delete(response, request, db)
 
 	assert.Equal(t, http.StatusOK, response.Code)
 }
@@ -220,7 +220,7 @@ func CreateEventHelper(t testing.TB, body url.Values, want_code int) {
 	request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
 	response := httptest.NewRecorder()
 
-	PostEventHandler(response, request, db)
+	Post(response, request, db)
 
 	assert.Equal(t, want_code, response.Code)
 

@@ -12,7 +12,7 @@ import (
 	"github.com/ushiradineth/cron-be/util"
 )
 
-func GetEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	user, err := util.GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
@@ -43,7 +43,7 @@ func GetEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 }
 
-func PostEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	user, err := util.GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
@@ -104,7 +104,7 @@ func PostEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 }
 
-func PutEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	user, err := util.GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
@@ -146,7 +146,7 @@ func PutEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func DeleteEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	user, err := util.GetUserFromJWT(r, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
@@ -175,7 +175,7 @@ func DeleteEventHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func GetUserEventsHandler(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func GetUserEvents(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	startDay := r.PathValue("start_day")
 	endDay := r.PathValue("end_day")
 
