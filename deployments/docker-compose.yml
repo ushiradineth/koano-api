@@ -1,5 +1,7 @@
+name: cron
 services:
   postgres:
+    container_name: postgres
     image: postgres:16-alpine
     restart: unless-stopped
     platform: linux/arm64
@@ -12,9 +14,10 @@ services:
     expose:
       - "5432"
     volumes:
-      - cron:/var/lib/postgres
+      - postgres:/var/lib/postgres
 
   adminer:
+    container_name: adminer
     image: adminer
     restart: unless-stopped
     ports:
@@ -25,6 +28,7 @@ services:
       - postgres
 
   # cron-be:
+  #   container_name: cron_be
   #   image: cron-be:go
   #   restart: unless-stopped
   #   platform: linux/arm64
@@ -36,4 +40,4 @@ services:
   #     - "8080"
 
 volumes:
-  cron:
+  postgres:
