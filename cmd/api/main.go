@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -23,16 +23,21 @@ import (
 func main() {
 	ctx := context.Background()
 	if err := run(ctx, os.Stdout, os.Args); err != nil {
+	if err := run(ctx); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context, w io.Writer, args []string) error {
+func run(ctx context.Context) error {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
 
-	godotenv.Load(".env")
+	err := godotenv.Load(".env")
+	if err != nil {
+		return errors.New("Failed to load env")
+	}
+
 	db := database.Configure()
 
 	routes := routes(db)
