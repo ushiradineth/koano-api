@@ -22,7 +22,6 @@ import (
 
 func main() {
 	ctx := context.Background()
-	if err := run(ctx, os.Stdout, os.Args); err != nil {
 	if err := run(ctx); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
@@ -49,7 +48,9 @@ func run(ctx context.Context) error {
 
 	go func() {
 		log.Printf("Listening on %s\n", httpServer.Addr)
-		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		err := httpServer.ListenAndServe()
+
+		if err != nil && err != http.ErrServerClosed {
 			fmt.Fprintf(os.Stderr, "Error listening and serving: %s\n", err)
 		}
 	}()

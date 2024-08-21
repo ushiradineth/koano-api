@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -9,7 +11,18 @@ import (
 )
 
 func main() {
-	godotenv.Load(".env")
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+	err := godotenv.Load(".env")
+	if err != nil {
+		return errors.New("Failed to load env")
+	}
+
 	db := database.Configure()
 
 	for i := 0; i < 100; i++ {
@@ -20,5 +33,5 @@ func main() {
 		}
 	}
 
-	os.Exit(0)
+	return nil
 }
