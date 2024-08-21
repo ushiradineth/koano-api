@@ -1,6 +1,7 @@
 package util
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -15,15 +16,17 @@ func GetUser(idOrEmail string, db *sqlx.DB) (*models.User, error) {
 	user := models.User{}
 	var query string
 	var args []interface{}
+	var email string
 
 	id, err := uuid.Parse(idOrEmail)
 	if err != nil {
 		id = uuid.Nil
+		email = idOrEmail
 	}
 
 	if id == uuid.Nil {
 		query = "SELECT * FROM users WHERE email=$1"
-		args = append(args, idOrEmail)
+		args = append(args, email)
 	} else {
 		query = "SELECT * FROM users WHERE id=$1"
 		args = append(args, id)
@@ -31,6 +34,9 @@ func GetUser(idOrEmail string, db *sqlx.DB) (*models.User, error) {
 
 	err = db.Get(&user, query, args...)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("User not found")
+		}
 		return nil, err
 	}
 
@@ -71,25 +77,25 @@ func DoesUserExist(idStr string, email string, db *sqlx.DB) (bool, int, error) {
 	return userCount != 0, userCount, nil
 }
 
-func GetUserFromJWT(r *http.Request, db *sqlx.DB) (*models.User, error) {
+func GetUserFromJWT(r *http.Request, db *sqlx.DB) (*models.User, int, error) {
 	accessToken, err := GetJWT(r)
 	if err != nil {
-		return nil, err
+		return nil, http.StatusInternalServerError, err
 	}
 
 	JWT, err := ParseAccessToken(accessToken)
 	if err != nil {
-		return nil, errors.New("Access Token is invalid or expired")
+		return nil, http.StatusUnauthorized, errors.New("Access Token is invalid or expired")
 	}
 
 	if JWT.StandardClaims.Valid() != nil {
-		return nil, errors.New("Access Token is invalid or expired")
+		return nil, http.StatusUnauthorized, errors.New("Access Token is invalid or expired")
 	}
 
 	user, err := GetUser(JWT.Id.String(), db)
 	if err != nil {
-		return nil, errors.New(fmt.Sprint(err))
+		return nil, http.StatusBadRequest, errors.New(fmt.Sprint(err))
 	}
 
-	return user, nil
+	return user, http.StatusOK, nil
 }

@@ -13,9 +13,9 @@ import (
 )
 
 func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, err := util.GetUserFromJWT(r, db)
+	user, code, err := util.GetUserFromJWT(r, db)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), code)
 		return
 	}
 
@@ -44,14 +44,20 @@ func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 }
 
 func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, err := util.GetUserFromJWT(r, db)
+	user, code, err := util.GetUserFromJWT(r, db)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), code)
 		return
 	}
 
 	start_time := r.FormValue("start_time")
 	end_time := r.FormValue("end_time")
+
+	eventExists := util.DoesEventExist("", start_time, end_time, user.ID.String(), db)
+	if eventExists {
+		http.Error(w, "Event already exists", http.StatusBadRequest)
+		return
+	}
 
 	parsed_start, err := time.Parse(time.RFC3339, start_time)
 	if err != nil {
@@ -73,13 +79,6 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		UserID:   user.ID,
 		Timezone: r.FormValue("timezone"),
 		Repeated: r.FormValue("repeated"),
-	}
-
-	eventExists := util.DoesEventExist("", start_time, end_time, event.UserID.String(), db)
-
-	if eventExists {
-		http.Error(w, "Event already exists", http.StatusBadRequest)
-		return
 	}
 
 	_, err = db.Exec("INSERT INTO events (id, title, start_time, end_time, user_id, timezone, repeated) VALUES ($1, $2, $3, $4, $5, $6, $7)", event.ID, event.Title, event.Start, event.End, event.UserID, event.Timezone, event.Repeated)
@@ -105,9 +104,9 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 }
 
 func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, err := util.GetUserFromJWT(r, db)
+	user, code, err := util.GetUserFromJWT(r, db)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), code)
 		return
 	}
 
@@ -147,9 +146,9 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 }
 
 func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, err := util.GetUserFromJWT(r, db)
+	user, code, err := util.GetUserFromJWT(r, db)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), code)
 		return
 	}
 
@@ -190,9 +189,9 @@ func GetUserEvents(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
-	user, err := util.GetUserFromJWT(r, db)
+	user, code, err := util.GetUserFromJWT(r, db)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), code)
 		return
 	}
 

@@ -1,6 +1,9 @@
 package util
 
 import (
+	"database/sql"
+	"errors"
+
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
@@ -12,6 +15,9 @@ func GetEvent(id string, user_id string, db *sqlx.DB) (*models.Event, error) {
 
 	err := db.Get(&event, "SELECT * FROM events WHERE id=$1 AND user_id=$2", id, user_id)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("Event not found")
+		}
 		return nil, err
 	}
 

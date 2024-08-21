@@ -15,9 +15,9 @@ import (
 )
 
 func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, err := util.GetUserFromJWT(r, db)
+	user, code, err := util.GetUserFromJWT(r, db)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), code)
 		return
 	}
 
@@ -43,13 +43,13 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	user, _, err := util.DoesUserExist("", email, db)
+	userExists, _, err := util.DoesUserExist("", email, db)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	if user {
+	if userExists {
 		http.Error(w, "User already exists", http.StatusBadRequest)
 		return
 	}
@@ -60,19 +60,42 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
-	_, err = db.Exec("INSERT INTO users (id, name, email, password) VALUES ($1, $2, $3, $4)", uuid.New(), name, email, hashedPassword)
+	user := models.User{
+		ID:        uuid.New(),
+		Name:      name,
+		Email:     email,
+		Password:  hashedPassword,
+		CreatedAt: time.Now(),
+	}
+
+	_, err = db.Exec("INSERT INTO users (id, name, email, password) VALUES ($1, $2, $3, $4)", user.ID, user.Name, user.Email, user.Password)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert user data: %v", err), http.StatusInternalServerError)
 		return
 	}
 
+  user.Password = ""
+
+	response, err := json.Marshal(user)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to marshal user data: %v", err), http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
+
+	_, err = w.Write(response)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		fmt.Printf("Error writing response: %v\n", err)
+		return
+	}
 }
 
 func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, err := util.GetUserFromJWT(r, db)
+	user, code, err := util.GetUserFromJWT(r, db)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), code)
 		return
 	}
 
@@ -100,9 +123,9 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 }
 
 func PutPassword(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, err := util.GetUserFromJWT(r, db)
+	user, code, err := util.GetUserFromJWT(r, db)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), code)
 		return
 	}
 
@@ -121,9 +144,9 @@ func PutPassword(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 }
 
 func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, err := util.GetUserFromJWT(r, db)
+	user, code, err := util.GetUserFromJWT(r, db)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to delete user data: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to delete user data: %v", err), code)
 		return
 	}
 

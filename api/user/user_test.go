@@ -124,7 +124,7 @@ func TestUserHandlers(t *testing.T) {
 			response := httptest.NewRecorder()
 			Get(response, request, db)
 
-			assert.Equal(t, http.StatusInternalServerError, response.Code)
+      assert.Equal(t, http.StatusUnauthorized, response.Code)
 		})
 	})
 
@@ -221,7 +221,7 @@ func TestUserHandlers(t *testing.T) {
 		})
 
 		t.Run("Doesnt delete user as user doesnt exist", func(t *testing.T) {
-			DeleteUserHelper(t, http.StatusInternalServerError)
+			DeleteUserHelper(t, http.StatusBadRequest)
 		})
 
 		body := url.Values{}
@@ -311,12 +311,12 @@ func TestUserHelpers(t *testing.T) {
 			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
 
-			user, err := util.GetUserFromJWT(request, db)
+			user, code, err := util.GetUserFromJWT(request, db)
 			assert.NoError(t, err, "Error getting user")
 
+      assert.Equal(t, code, http.StatusOK)
 			assert.Equal(t, user1.name, user.Name)
 			assert.Equal(t, user1.email, user.Email)
-
 		})
 
 		t.Run("Fail getting non existent user with JWT", func(t *testing.T) {
@@ -324,8 +324,10 @@ func TestUserHelpers(t *testing.T) {
 			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", "asdaund1id10dj"))
 
-			_, err := util.GetUserFromJWT(request, db)
-			assert.Error(t, err, "This actio should fail as this JWT is not owned by a valid user")
+			_, code, err := util.GetUserFromJWT(request, db)
+
+      assert.Equal(t, code, http.StatusUnauthorized)
+			assert.Error(t, err, "This action should fail as this JWT is not owned by a valid user")
 		})
 	})
 
