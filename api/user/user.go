@@ -1,12 +1,10 @@
 package user
 
 import (
-	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -14,198 +12,274 @@ import (
 	"github.com/ushiradineth/cron-be/util"
 )
 
+var validate = validator.New()
+
+// @Summary		Get User
+//
+// @Description	Get authenticated user based on the JWT sent with the request
+//
+// @Tags			User
+//
+// @Produce		json
+//
+// @Success		200	{object}	util.Response{data=models.User}
+//
+// @Failure		400	{object}	util.Error
+// @Failure		401	{object}	util.Error
+// @Failure		500	{object}	util.Error
+// @Security		BearerAuth
+// @Router			/user [get]
 func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, code, err := util.GetUserFromJWT(r, db)
+	user, code, status, err := util.GetUserFromJWT(r, db)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), code)
+		util.HTTPError(w, code, err.Error(), status)
 		return
 	}
 
-	user.Password = ""
+	user.Password = "redacted"
 
-	response, err := json.Marshal(user)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to marshal user data: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	_, err = w.Write(response)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to write response: %v", err), http.StatusInternalServerError)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	util.HTTPResponse(w, user)
 }
 
+// @Summary		Create User
+// @Description	Create User with the parameters sent with the request
+// @Tags			User
+// @Accept			json
+// @Produce		json
+// @Param			Form	query		PostForm	true "PostForm"
+// @Success		200		{object}	util.Response{data=models.User}
+// @Failure		400		{object}	util.Error
+// @Failure		401		{object}	util.Error
+// @Failure		500		{object}	util.Error
+// @Router			/user [post]
 func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	name := r.FormValue("name")
-	email := r.FormValue("email")
-	password := r.FormValue("password")
+	form := PostForm{
+		Name:     r.FormValue("name"),
+		Email:    r.FormValue("email"),
+		Password: r.FormValue("password"),
+	}
 
-	userExists, _, err := util.DoesUserExist("", email, db)
+	if err := validate.Struct(form); err != nil {
+		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
+		return
+	}
+
+	userExists, _, err := util.DoesUserExist("", form.Email, db)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
+		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 		return
 	}
 
 	if userExists {
-		http.Error(w, "User already exists", http.StatusBadRequest)
+		util.HTTPError(w, http.StatusBadRequest, "User already exists", util.StatusFail)
 		return
 	}
 
-	hashedPassword, err := util.HashPassword(password)
+	hashedPassword, err := util.HashPassword(form.Password)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to hash password: %v", err), http.StatusInternalServerError)
+		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 		return
 	}
 
 	user := models.User{
 		ID:        uuid.New(),
-		Name:      name,
-		Email:     email,
+		Name:      form.Name,
+		Email:     form.Email,
 		Password:  hashedPassword,
 		CreatedAt: time.Now(),
 	}
 
 	_, err = db.Exec("INSERT INTO users (id, name, email, password) VALUES ($1, $2, $3, $4)", user.ID, user.Name, user.Email, user.Password)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to insert user data: %v", err), http.StatusInternalServerError)
+		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 		return
 	}
 
-  user.Password = ""
+	user.Password = "redacted"
 
-	response, err := json.Marshal(user)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to marshal user data: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-
-	_, err = w.Write(response)
-	if err != nil {
-		http.Error(w, "Failed to write response", http.StatusInternalServerError)
-		fmt.Printf("Error writing response: %v\n", err)
-		return
-	}
+	util.HTTPResponse(w, user)
 }
 
+// @Summary		Update User
+// @Description	Update authenticated User with the parameters sent with the request based on the JWT
+// @Tags			User
+//
+// @Accept			json
+// @Produce		json
+// @Param			Form	query		PutForm	true "PutForm"
+// @Success		200		{object}	util.Response{data=models.User}
+// @Success		200		{object}	models.User
+// @Failure		400		{object}	util.Error
+// @Failure		401		{object}	util.Error
+// @Failure		500		{object}	util.Error
+// @Security		BearerAuth
+// @Router			/user [put]
 func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, code, err := util.GetUserFromJWT(r, db)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), code)
+	form := PutForm{
+		Name:  r.FormValue("name"),
+		Email: r.FormValue("email"),
+	}
+
+	if err := validate.Struct(form); err != nil {
+		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
 		return
 	}
 
-	name := r.FormValue("name")
-	email := r.FormValue("email")
-
-	_, count, err := util.DoesUserExist(user.ID.String(), email, db)
+	existingUser, code, status, err := util.GetUserFromJWT(r, db)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
+		util.HTTPError(w, code, err.Error(), status)
+		return
+	}
+
+	user := models.User{
+		ID:        existingUser.ID,
+		Name:      form.Name,
+		Email:     form.Email,
+		CreatedAt: existingUser.CreatedAt,
+		Password:  "redacted",
+	}
+
+	_, count, err := util.DoesUserExist(user.ID.String(), user.Email, db)
+	if err != nil {
+		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 		return
 	}
 
 	if count > 1 {
-		http.Error(w, "Email already in use", http.StatusBadRequest)
+		util.HTTPError(w, http.StatusBadRequest, "Email already in use", util.StatusFail)
 		return
 	}
 
-	_, err = db.Exec("UPDATE users SET name=$1, email=$2 WHERE id=$3", name, email, user.ID.String())
+	_, err = db.Exec("UPDATE users SET name=$1, email=$2 WHERE id=$3", user.Name, user.Email, user.ID.String())
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), http.StatusInternalServerError)
+		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	util.HTTPResponse(w, user)
 }
 
+// @Summary		Update User Password
+// @Description	Update authenticated User Password with the parameters sent with the request based on the JWT
+// @Tags			User
+// @Accept			json
+// @Produce		json
+// @Param			Form	query		PutPasswordForm	true "PutPasswordForm"
+// @Success		200		{object}	util.Response{data=string}
+// @Failure		400		{object}	util.Error
+// @Failure		401		{object}	util.Error
+// @Failure		500		{object}	util.Error
+// @Security		BearerAuth
+// @Router			/user/auth/password [put]
 func PutPassword(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, code, err := util.GetUserFromJWT(r, db)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to update user data: %v", err), code)
+	form := PutPasswordForm{
+		Password: r.FormValue("password"),
+	}
+
+	if err := validate.Struct(form); err != nil {
+		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
 		return
 	}
 
-	password, err := util.HashPassword(r.FormValue("password"))
+	user, code, status, err := util.GetUserFromJWT(r, db)
 	if err != nil {
-		log.Fatalln(err)
+		util.HTTPError(w, code, err.Error(), status)
+		return
+	}
+
+	password, err := util.HashPassword(form.Password)
+	if err != nil {
+		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 	}
 
 	_, err = db.Exec("UPDATE users SET password=$1 WHERE id=$2", password, user.ID)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to update user password: %v", err), http.StatusInternalServerError)
+		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	util.HTTPResponse(w, "Password has being updated")
 }
 
+// @Summary		Delete User
+// @Description	Delete authenticated User based on the JWT
+// @Tags			User
+// @Accept			json
+// @Produce		json
+// @Success		200	{object}	util.Response{data=string}
+// @Failure		400	{object}	util.Error
+// @Failure		401	{object}	util.Error
+//
+// @Failure		500	{object}	util.Error
+//
+// @Security		BearerAuth
+//
+// @Router			/user [delete]
 func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, code, err := util.GetUserFromJWT(r, db)
+	user, code, status, err := util.GetUserFromJWT(r, db)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to delete user data: %v", err), code)
+		util.HTTPError(w, code, err.Error(), status)
 		return
 	}
 
 	res, err := db.Exec("DELETE FROM users WHERE id=$1", user.ID)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to delete user: %v", err), http.StatusBadRequest)
+		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
 		return
 	}
 
 	count, err := res.RowsAffected()
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to delete user: %v", err), http.StatusBadRequest)
+		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 		return
 	}
 
 	if count == 0 {
-		http.Error(w, "User does not exist", http.StatusBadRequest)
+		util.HTTPError(w, http.StatusBadRequest, "User does not exist", util.StatusError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	util.HTTPResponse(w, "User has been successfully deleted")
 }
 
-type AuthenticateUserResponse struct {
-	models.User
-	AccessToken  string
-	RefreshToken string
-}
-
+// @Summary		Authenticate User
+// @Description	Authenticated User with the parameters sent with the request
+// @Tags			User
+// @Accept			json
+// @Produce		json
+// @Param			Form	query		AuthenticateForm	true "AuthenticateForm"
+// @Success		200		{object}	util.Response{data=AuthenticateResponse}
+// @Failure		400		{object}	util.Error
+// @Failure		401		{object}	util.Error
+// @Failure		500		{object}	util.Error
+// @Router			/user/auth [post]
 func Authenticate(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	email := r.FormValue("email")
-	password := r.FormValue("password")
+	form := AuthenticateForm{
+		Email:    r.FormValue("email"),
+		Password: r.FormValue("password"),
+	}
 
-	user, err := util.GetUser(email, db)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get user data: %v", err), http.StatusInternalServerError)
+	if err := validate.Struct(form); err != nil {
+		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
 		return
 	}
 
-	valid := util.CheckPasswordHash(password, user.Password)
+	user, err := util.GetUser(form.Email, db)
+	if err != nil {
+		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		return
+	}
+
+	valid := util.CheckPasswordHash(form.Password, user.Password)
 
 	if !valid {
-		http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
+		util.HTTPError(w, http.StatusUnauthorized, "Invalid Credentials", util.StatusFail)
 		return
 	}
 
-	accessTokenClaim := util.UserClaim{
-		Id:    user.ID,
-		Name:  user.Name,
-		Email: user.Email,
-		StandardClaims: jwt.StandardClaims{
-			IssuedAt:  time.Now().Unix(),
-			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
-		},
-	}
-
-	accessToken, err := util.NewAccessToken(accessTokenClaim)
+	accessToken, err := util.NewAccessToken(user.ID, user.Name, user.Email)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to generate access token: %v", err), http.StatusInternalServerError)
+		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 		return
 	}
 
@@ -216,88 +290,70 @@ func Authenticate(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	refreshToken, err := util.NewRefreshToken(refreshTokenClaim)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to generate refresh token: %v", err), http.StatusInternalServerError)
+		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 		return
 	}
 
-	user.Password = ""
+	user.Password = "redacted"
 
-	response := AuthenticateUserResponse{
+	response := AuthenticateResponse{
 		User:         *user,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}
 
-	jsonResponse, err := json.Marshal(response)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to marshal user data: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	_, err = w.Write(jsonResponse)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to write response: %v", err), http.StatusInternalServerError)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	util.HTTPResponse(w, response)
 }
 
-type RefreshTokenResponse struct {
-	AccessToken string
-}
-
+// @Summary		Refresh Access Token
+// @Description	Refresh Access Token User with the parameters sent with the request based on the request based on the JWT
+// @Tags			User
+// @Accept			json
+// @Produce		json
+// @Param			Form	query		RefreshTokenForm	true "RefreshTokenForm"
+// @Success		200		{object}	util.Response{data=RefreshTokenResponse}
+// @Failure		400		{object}	util.Error
+// @Failure		401		{object}	util.Error
+// @Failure		500		{object}	util.Error
+// @Security		BearerAuth
+// @Router			/user/auth/refresh [post]
 func RefreshToken(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	accessToken, err := util.GetJWT(r)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
+		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 		return
 	}
 
-	refreshToken := r.FormValue("refresh_token")
+	form := RefreshTokenForm{
+		RefreshToken: r.FormValue("refresh_token"),
+	}
+
+	if err := validate.Struct(form); err != nil {
+		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
+		return
+	}
 
 	accessTokenClaim, err := util.ParseExpiredAccessToken(accessToken)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error parsing access token: %v", err), http.StatusBadRequest)
+		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 		return
 	}
 
-	_, errr := util.ParseRefreshToken(refreshToken)
+	_, errr := util.ParseRefreshToken(form.RefreshToken)
 	if errr != nil {
-		http.Error(w, fmt.Sprintf("Error parsing refresh token: %v", errr), http.StatusBadRequest)
+		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 		return
 	}
 
-	newAccessTokenClaim := util.UserClaim{
-		Id:    accessTokenClaim.Id,
-		Name:  accessTokenClaim.Name,
-		Email: accessTokenClaim.Email,
-		StandardClaims: jwt.StandardClaims{
-			IssuedAt:  time.Now().Unix(),
-			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
-		},
-	}
-
-	newAccessToken, err := util.NewAccessToken(newAccessTokenClaim)
+	newAccessToken, err := util.NewAccessToken(accessTokenClaim.Id, accessTokenClaim.Name, accessTokenClaim.Email)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to create Access Token: %v", err), http.StatusInternalServerError)
+		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		return
 	}
 
 	response := RefreshTokenResponse{
 		AccessToken: newAccessToken,
 	}
 
-	jsonResponse, err := json.Marshal(response)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to marshal user data: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	_, err = w.Write(jsonResponse)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to write response: %v", err), http.StatusInternalServerError)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	util.HTTPResponse(w, response)
 }

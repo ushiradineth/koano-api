@@ -77,25 +77,25 @@ func DoesUserExist(idStr string, email string, db *sqlx.DB) (bool, int, error) {
 	return userCount != 0, userCount, nil
 }
 
-func GetUserFromJWT(r *http.Request, db *sqlx.DB) (*models.User, int, error) {
+func GetUserFromJWT(r *http.Request, db *sqlx.DB) (*models.User, int, string, error) {
 	accessToken, err := GetJWT(r)
 	if err != nil {
-		return nil, http.StatusInternalServerError, err
+		return nil, http.StatusBadRequest, StatusFail, err
 	}
 
 	JWT, err := ParseAccessToken(accessToken)
 	if err != nil {
-		return nil, http.StatusUnauthorized, errors.New("Access Token is invalid or expired")
+		return nil, http.StatusUnauthorized, StatusFail, errors.New("Access Token is invalid or expired")
 	}
 
 	if JWT.StandardClaims.Valid() != nil {
-		return nil, http.StatusUnauthorized, errors.New("Access Token is invalid or expired")
+		return nil, http.StatusUnauthorized, StatusFail, errors.New("Access Token is invalid or expired")
 	}
 
 	user, err := GetUser(JWT.Id.String(), db)
 	if err != nil {
-		return nil, http.StatusBadRequest, errors.New(fmt.Sprint(err))
+		return nil, http.StatusBadRequest, StatusFail, errors.New(fmt.Sprint(err))
 	}
 
-	return user, http.StatusOK, nil
+	return user, http.StatusOK, StatusSuccess, nil
 }

@@ -18,8 +18,16 @@ type UserClaim struct {
 	jwt.StandardClaims
 }
 
-func NewAccessToken(claims UserClaim) (string, error) {
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+func NewAccessToken(id uuid.UUID, name string, email string) (string, error) {
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaim{
+		Id:    id,
+		Name:  name,
+		Email: email,
+		StandardClaims: jwt.StandardClaims{
+			IssuedAt:  time.Now().Unix(),
+			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
+		},
+	})
 
 	return accessToken.SignedString([]byte(os.Getenv("JWT_SECRET")))
 }

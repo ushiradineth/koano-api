@@ -13,13 +13,26 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
+	"github.com/swaggo/http-swagger/v2"
 	"github.com/ushiradineth/cron-be/api/event"
 	"github.com/ushiradineth/cron-be/api/user"
 	"github.com/ushiradineth/cron-be/database"
+	_ "github.com/ushiradineth/cron-be/docs"
 )
 
 // Graceful shutdowns based on https://grafana.com/blog/2024/02/09/how-i-write-http-services-in-go-after-13-years/
 
+//	@title			Cron
+//	@version		1.0
+//	@description	Backend for Cron calendar management app.
+
+//	@contact.name	Ushira Dineth
+//	@contact.url	https://ushira.com
+//	@contact.email	ushiradineth@gmail.com
+
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
 func main() {
 	ctx := context.Background()
 	if err := run(ctx); err != nil {
@@ -89,6 +102,10 @@ func routes(db *sqlx.DB) http.Handler {
 	mux.HandleFunc("PUT /event/{event_id}", func(w http.ResponseWriter, r *http.Request) { event.Put(w, r, db) })
 	mux.HandleFunc("DELETE /event/{event_id}", func(w http.ResponseWriter, r *http.Request) { event.Delete(w, r, db) })
 	mux.HandleFunc("GET /event/user", func(w http.ResponseWriter, r *http.Request) { event.GetUserEvents(w, r, db) })
+
+	mux.HandleFunc("GET /swagger/", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 
 	return mux
 }
