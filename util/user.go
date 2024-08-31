@@ -3,7 +3,6 @@ package util
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -12,7 +11,7 @@ import (
 	"github.com/ushiradineth/cron-be/models"
 )
 
-func GetUser(idOrEmail string, db *sqlx.DB) (*models.User, error) {
+func GetUser(w http.ResponseWriter, idOrEmail string, db *sqlx.DB) *models.User {
 	user := models.User{}
 	var query string
 	var args []interface{}
@@ -35,12 +34,16 @@ func GetUser(idOrEmail string, db *sqlx.DB) (*models.User, error) {
 	err = db.Get(&user, query, args...)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("User not found")
+			HTTPError(w, http.StatusBadRequest, "User not found", StatusFail)
+			return nil
+
 		}
-		return nil, err
+
+		HTTPError(w, http.StatusInternalServerError, err.Error(), StatusError)
+		return nil
 	}
 
-	return &user, nil
+	return &user
 }
 
 func DoesUserExist(idStr string, email string, db *sqlx.DB) (bool, int, error) {
@@ -77,25 +80,28 @@ func DoesUserExist(idStr string, email string, db *sqlx.DB) (bool, int, error) {
 	return userCount != 0, userCount, nil
 }
 
-func GetUserFromJWT(r *http.Request, db *sqlx.DB) (*models.User, int, string, error) {
+func GetUserFromJWT(r *http.Request, w http.ResponseWriter, db *sqlx.DB) *models.User {
 	accessToken, err := GetJWT(r)
 	if err != nil {
-		return nil, http.StatusBadRequest, StatusFail, err
+		HTTPError(w, http.StatusBadRequest, err.Error(), StatusFail)
+		return nil
 	}
 
 	JWT, err := ParseAccessToken(accessToken)
 	if err != nil {
-		return nil, http.StatusUnauthorized, StatusFail, errors.New("Access Token is invalid or expired")
+		HTTPError(w, http.StatusUnauthorized, "Access Token is invalid or expired", StatusFail)
+		return nil
 	}
 
 	if JWT.StandardClaims.Valid() != nil {
-		return nil, http.StatusUnauthorized, StatusFail, errors.New("Access Token is invalid or expired")
+		HTTPError(w, http.StatusUnauthorized, "Access Token is invalid or expired", StatusFail)
+		return nil
 	}
 
-	user, err := GetUser(JWT.Id.String(), db)
+	user := GetUser(w, JWT.Id.String(), db)
 	if err != nil {
-		return nil, http.StatusBadRequest, StatusFail, errors.New(fmt.Sprint(err))
+		HTTPError(w, http.StatusBadRequest, err.Error(), StatusFail)
 	}
 
-	return user, http.StatusOK, StatusSuccess, nil
+	return user
 }

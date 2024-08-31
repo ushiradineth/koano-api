@@ -1,4 +1,23 @@
 definitions:
+  models.Event:
+    properties:
+      createdAt:
+        type: string
+      end:
+        type: string
+      id:
+        type: string
+      repeated:
+        type: string
+      start:
+        type: string
+      timezone:
+        type: string
+      title:
+        type: string
+      userID:
+        type: string
+    type: object
   models.User:
     properties:
       createdAt:
@@ -60,6 +79,240 @@ info:
   title: Cron
   version: "1.0"
 paths:
+  /event:
+    post:
+      consumes:
+      - application/json
+      description: Create Event based on the parameters sent with the request
+      parameters:
+      - in: query
+        name: end_time
+        required: true
+        type: string
+      - in: query
+        name: repeated
+        required: true
+        type: string
+      - in: query
+        name: start_time
+        required: true
+        type: string
+      - in: query
+        name: timezone
+        required: true
+        type: string
+      - in: query
+        name: title
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Event'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/util.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/util.Error'
+      security:
+      - BearerAuth: []
+      summary: Create Event
+      tags:
+      - Event
+  /event/{event_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Event based on the parameters sent with the request
+      parameters:
+      - in: path
+        name: event_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/util.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/util.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete Event
+      tags:
+      - Event
+    get:
+      description: Get authenticated user's event based on the JWT and parameters
+        sent with the request
+      parameters:
+      - in: path
+        name: event_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Event'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/util.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/util.Error'
+      security:
+      - BearerAuth: []
+      summary: Get Event
+      tags:
+      - Event
+    put:
+      consumes:
+      - application/json
+      description: Update Event based on the parameters sent with the request
+      parameters:
+      - in: path
+        name: event_id
+        required: true
+        type: string
+      - in: query
+        name: end_time
+        required: true
+        type: string
+      - in: query
+        name: repeated
+        required: true
+        type: string
+      - in: query
+        name: start_time
+        required: true
+        type: string
+      - in: query
+        name: timezone
+        required: true
+        type: string
+      - in: query
+        name: title
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Event'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/util.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/util.Error'
+      security:
+      - BearerAuth: []
+      summary: Update Event
+      tags:
+      - Event
+  /event/user:
+    get:
+      consumes:
+      - application/json
+      description: Get authenticated user's event based on the JWT sent with the request
+      parameters:
+      - in: query
+        name: end_day
+        required: true
+        type: string
+      - in: query
+        name: start_day
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.Event'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/util.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/util.Error'
+      security:
+      - BearerAuth: []
+      summary: Get User Events
+      tags:
+      - Event
   /user:
     delete:
       consumes:
@@ -191,7 +444,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.User'
+            allOf:
+            - $ref: '#/definitions/util.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.User'
+              type: object
         "400":
           description: Bad Request
           schema:

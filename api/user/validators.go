@@ -1,26 +1,25 @@
 package user
 
-type PostForm struct {
+type PostQueryParams struct {
 	Name     string `form:"name" validate:"required"`
 	Email    string `form:"email" validate:"required,email"`
-  Password string `form:"password" validate:"required,min=8,max=20"`
+	Password string `form:"password" validate:"required,min=8,max=20"`
 }
 
-type PutForm struct {
+type PutQueryParams struct {
 	Name  string `form:"name" validate:"required"`
 	Email string `form:"email" validate:"required,email"`
 }
 
-type PutPasswordForm struct {
-  Password string `form:"password" validate:"required,password"`
+type PutPasswordQueryParams struct {
+	Password string `form:"password" validate:"required,password"`
 }
 
-type AuthenticateForm struct {
+type AuthenticateQueryParams struct {
 	Email    string `form:"email" validate:"required,email"`
 	Password string `form:"password" validate:"required,min=8"`
 }
 
-type RefreshTokenForm struct {
+type RefreshTokenQueryParams struct {
 	RefreshToken string `form:"refresh_token" validate:"required,jwt"`
 }
-

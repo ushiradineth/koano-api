@@ -30,9 +30,9 @@ import (
 //	@contact.url	https://ushira.com
 //	@contact.email	ushiradineth@gmail.com
 
-//	@securityDefinitions.apikey	BearerAuth
-//	@in							header
-//	@name						Authorization
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
 func main() {
 	ctx := context.Background()
 	if err := run(ctx); err != nil {

@@ -11,4 +11,3 @@ type AuthenticateResponse struct {
 type RefreshTokenResponse struct {
 	AccessToken string
 }
-

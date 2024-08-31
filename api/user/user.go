@@ -14,68 +14,55 @@ import (
 
 var validate = validator.New()
 
-// @Summary		Get User
-//
-// @Description	Get authenticated user based on the JWT sent with the request
-//
-// @Tags			User
-//
-// @Produce		json
-//
-// @Success		200	{object}	util.Response{data=models.User}
-//
-// @Failure		400	{object}	util.Error
-// @Failure		401	{object}	util.Error
-// @Failure		500	{object}	util.Error
-// @Security		BearerAuth
-// @Router			/user [get]
+//	@Summary		Get User
+//	@Description	Get authenticated user based on the JWT sent with the request
+//	@Tags			User
+//	@Produce		json
+//	@Success		200	{object}	util.Response{data=models.User}
+//	@Failure		400	{object}	util.Error
+//	@Failure		401	{object}	util.Error
+//	@Failure		500	{object}	util.Error
+//	@Security		BearerAuth
+//	@Router			/user [get]
 func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, code, status, err := util.GetUserFromJWT(r, db)
-	if err != nil {
-		util.HTTPError(w, code, err.Error(), status)
-		return
-	}
+	user := util.GetUserFromJWT(r, w, db)
 
 	user.Password = "redacted"
 
 	util.HTTPResponse(w, user)
 }
 
-// @Summary		Create User
-// @Description	Create User with the parameters sent with the request
-// @Tags			User
-// @Accept			json
-// @Produce		json
-// @Param			Form	query		PostForm	true "PostForm"
-// @Success		200		{object}	util.Response{data=models.User}
-// @Failure		400		{object}	util.Error
-// @Failure		401		{object}	util.Error
-// @Failure		500		{object}	util.Error
-// @Router			/user [post]
+//	@Summary		Create User
+//	@Description	Create User with the parameters sent with the request
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Param			Query	query		PostQueryParams	true	"PostQueryParams"
+//	@Success		200		{object}	util.Response{data=models.User}
+//	@Failure		400		{object}	util.Error
+//	@Failure		401		{object}	util.Error
+//	@Failure		500		{object}	util.Error
+//	@Router			/user [post]
 func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	form := PostForm{
+	query := PostQueryParams{
 		Name:     r.FormValue("name"),
 		Email:    r.FormValue("email"),
 		Password: r.FormValue("password"),
 	}
 
-	if err := validate.Struct(form); err != nil {
+	if err := validate.Struct(query); err != nil {
 		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
 		return
 	}
 
-	userExists, _, err := util.DoesUserExist("", form.Email, db)
-	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
-		return
-	}
+	userExists, _, err := util.DoesUserExist("", query.Email, db)
 
 	if userExists {
 		util.HTTPError(w, http.StatusBadRequest, "User already exists", util.StatusFail)
 		return
 	}
 
-	hashedPassword, err := util.HashPassword(form.Password)
+	hashedPassword, err := util.HashPassword(query.Password)
 	if err != nil {
 		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 		return
@@ -83,8 +70,8 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	user := models.User{
 		ID:        uuid.New(),
-		Name:      form.Name,
-		Email:     form.Email,
+		Name:      query.Name,
+		Email:     query.Email,
 		Password:  hashedPassword,
 		CreatedAt: time.Now(),
 	}
@@ -100,41 +87,35 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	util.HTTPResponse(w, user)
 }
 
-// @Summary		Update User
-// @Description	Update authenticated User with the parameters sent with the request based on the JWT
-// @Tags			User
-//
-// @Accept			json
-// @Produce		json
-// @Param			Form	query		PutForm	true "PutForm"
-// @Success		200		{object}	util.Response{data=models.User}
-// @Success		200		{object}	models.User
-// @Failure		400		{object}	util.Error
-// @Failure		401		{object}	util.Error
-// @Failure		500		{object}	util.Error
-// @Security		BearerAuth
-// @Router			/user [put]
+//	@Summary		Update User
+//	@Description	Update authenticated User with the parameters sent with the request based on the JWT
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Param			Query	query		PutQueryParams	true	"PutQueryParams"
+//	@Success		200		{object}	util.Response{data=models.User}
+//	@Failure		400		{object}	util.Error
+//	@Failure		401		{object}	util.Error
+//	@Failure		500		{object}	util.Error
+//	@Security		BearerAuth
+//	@Router			/user [put]
 func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	form := PutForm{
+	query := PutQueryParams{
 		Name:  r.FormValue("name"),
 		Email: r.FormValue("email"),
 	}
 
-	if err := validate.Struct(form); err != nil {
+	if err := validate.Struct(query); err != nil {
 		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
 		return
 	}
 
-	existingUser, code, status, err := util.GetUserFromJWT(r, db)
-	if err != nil {
-		util.HTTPError(w, code, err.Error(), status)
-		return
-	}
+	existingUser := util.GetUserFromJWT(r, w, db)
 
 	user := models.User{
 		ID:        existingUser.ID,
-		Name:      form.Name,
-		Email:     form.Email,
+		Name:      query.Name,
+		Email:     query.Email,
 		CreatedAt: existingUser.CreatedAt,
 		Password:  "redacted",
 	}
@@ -159,35 +140,31 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	util.HTTPResponse(w, user)
 }
 
-// @Summary		Update User Password
-// @Description	Update authenticated User Password with the parameters sent with the request based on the JWT
-// @Tags			User
-// @Accept			json
-// @Produce		json
-// @Param			Form	query		PutPasswordForm	true "PutPasswordForm"
-// @Success		200		{object}	util.Response{data=string}
-// @Failure		400		{object}	util.Error
-// @Failure		401		{object}	util.Error
-// @Failure		500		{object}	util.Error
-// @Security		BearerAuth
-// @Router			/user/auth/password [put]
+//	@Summary		Update User Password
+//	@Description	Update authenticated User Password with the parameters sent with the request based on the JWT
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Param			Query	query		PutPasswordQueryParams	true	"PutPasswordQueryParams"
+//	@Success		200		{object}	util.Response{data=string}
+//	@Failure		400		{object}	util.Error
+//	@Failure		401		{object}	util.Error
+//	@Failure		500		{object}	util.Error
+//	@Security		BearerAuth
+//	@Router			/user/auth/password [put]
 func PutPassword(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	form := PutPasswordForm{
+	query := PutPasswordQueryParams{
 		Password: r.FormValue("password"),
 	}
 
-	if err := validate.Struct(form); err != nil {
+	if err := validate.Struct(query); err != nil {
 		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
 		return
 	}
 
-	user, code, status, err := util.GetUserFromJWT(r, db)
-	if err != nil {
-		util.HTTPError(w, code, err.Error(), status)
-		return
-	}
+	user := util.GetUserFromJWT(r, w, db)
 
-	password, err := util.HashPassword(form.Password)
+	password, err := util.HashPassword(query.Password)
 	if err != nil {
 		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 	}
@@ -201,26 +178,19 @@ func PutPassword(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	util.HTTPResponse(w, "Password has being updated")
 }
 
-// @Summary		Delete User
-// @Description	Delete authenticated User based on the JWT
-// @Tags			User
-// @Accept			json
-// @Produce		json
-// @Success		200	{object}	util.Response{data=string}
-// @Failure		400	{object}	util.Error
-// @Failure		401	{object}	util.Error
-//
-// @Failure		500	{object}	util.Error
-//
-// @Security		BearerAuth
-//
-// @Router			/user [delete]
+//	@Summary		Delete User
+//	@Description	Delete authenticated User based on the JWT
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	util.Response{data=string}
+//	@Failure		400	{object}	util.Error
+//	@Failure		401	{object}	util.Error
+//	@Failure		500	{object}	util.Error
+//	@Security		BearerAuth
+//	@Router			/user [delete]
 func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user, code, status, err := util.GetUserFromJWT(r, db)
-	if err != nil {
-		util.HTTPError(w, code, err.Error(), status)
-		return
-	}
+	user := util.GetUserFromJWT(r, w, db)
 
 	res, err := db.Exec("DELETE FROM users WHERE id=$1", user.ID)
 	if err != nil {
@@ -242,35 +212,31 @@ func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	util.HTTPResponse(w, "User has been successfully deleted")
 }
 
-// @Summary		Authenticate User
-// @Description	Authenticated User with the parameters sent with the request
-// @Tags			User
-// @Accept			json
-// @Produce		json
-// @Param			Form	query		AuthenticateForm	true "AuthenticateForm"
-// @Success		200		{object}	util.Response{data=AuthenticateResponse}
-// @Failure		400		{object}	util.Error
-// @Failure		401		{object}	util.Error
-// @Failure		500		{object}	util.Error
-// @Router			/user/auth [post]
+//	@Summary		Authenticate User
+//	@Description	Authenticated User with the parameters sent with the request
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Param			Query	query		AuthenticateQueryParams	true	"AuthenticateQueryParams"
+//	@Success		200		{object}	util.Response{data=AuthenticateResponse}
+//	@Failure		400		{object}	util.Error
+//	@Failure		401		{object}	util.Error
+//	@Failure		500		{object}	util.Error
+//	@Router			/user/auth [post]
 func Authenticate(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	form := AuthenticateForm{
+	query := AuthenticateQueryParams{
 		Email:    r.FormValue("email"),
 		Password: r.FormValue("password"),
 	}
 
-	if err := validate.Struct(form); err != nil {
+	if err := validate.Struct(query); err != nil {
 		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
 		return
 	}
 
-	user, err := util.GetUser(form.Email, db)
-	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
-		return
-	}
+	user := util.GetUser(w, query.Email, db)
 
-	valid := util.CheckPasswordHash(form.Password, user.Password)
+	valid := util.CheckPasswordHash(query.Password, user.Password)
 
 	if !valid {
 		util.HTTPError(w, http.StatusUnauthorized, "Invalid Credentials", util.StatusFail)
@@ -305,18 +271,18 @@ func Authenticate(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	util.HTTPResponse(w, response)
 }
 
-// @Summary		Refresh Access Token
-// @Description	Refresh Access Token User with the parameters sent with the request based on the request based on the JWT
-// @Tags			User
-// @Accept			json
-// @Produce		json
-// @Param			Form	query		RefreshTokenForm	true "RefreshTokenForm"
-// @Success		200		{object}	util.Response{data=RefreshTokenResponse}
-// @Failure		400		{object}	util.Error
-// @Failure		401		{object}	util.Error
-// @Failure		500		{object}	util.Error
-// @Security		BearerAuth
-// @Router			/user/auth/refresh [post]
+//	@Summary		Refresh Access Token
+//	@Description	Refresh Access Token User with the parameters sent with the request based on the request based on the JWT
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Param			Query	query		RefreshTokenQueryParams	true	"RefreshTokenQueryParams"
+//	@Success		200		{object}	util.Response{data=RefreshTokenResponse}
+//	@Failure		400		{object}	util.Error
+//	@Failure		401		{object}	util.Error
+//	@Failure		500		{object}	util.Error
+//	@Security		BearerAuth
+//	@Router			/user/auth/refresh [post]
 func RefreshToken(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	accessToken, err := util.GetJWT(r)
 	if err != nil {
@@ -324,11 +290,11 @@ func RefreshToken(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
-	form := RefreshTokenForm{
+	query := RefreshTokenQueryParams{
 		RefreshToken: r.FormValue("refresh_token"),
 	}
 
-	if err := validate.Struct(form); err != nil {
+	if err := validate.Struct(query); err != nil {
 		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
 		return
 	}
@@ -339,13 +305,15 @@ func RefreshToken(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
-	_, errr := util.ParseRefreshToken(form.RefreshToken)
+	user := util.GetUser(w, accessTokenClaim.Email, db)
+
+	_, errr := util.ParseRefreshToken(query.RefreshToken)
 	if errr != nil {
 		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 		return
 	}
 
-	newAccessToken, err := util.NewAccessToken(accessTokenClaim.Id, accessTokenClaim.Name, accessTokenClaim.Email)
+	newAccessToken, err := util.NewAccessToken(user.ID, user.Name, user.Email)
 	if err != nil {
 		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
 		return
