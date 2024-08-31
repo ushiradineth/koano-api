@@ -32,7 +32,7 @@ func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if err := validate.Struct(path); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
+		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
 		return
 	}
 
@@ -71,7 +71,7 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if err := validate.Struct(query); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
+		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
 		return
 	}
 
@@ -120,7 +120,6 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 // @Summary		Update Event
 // @Description	Update Event based on the parameters sent with the request
 // @Tags			Event
-//
 // @Accept			json
 // @Produce		json
 // @Param			Path	path		EventPathParams	true	"EventPathParams"
@@ -147,12 +146,12 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if err := validate.Struct(path); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
+		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
 		return
 	}
 
 	if err := validate.Struct(query); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
+		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
 		return
 	}
 
@@ -225,7 +224,7 @@ func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if err := validate.Struct(path); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
+		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
 		return
 	}
 
@@ -270,7 +269,7 @@ func GetUserEvents(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if err := validate.Struct(query); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
+		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
 		return
 	}
 
