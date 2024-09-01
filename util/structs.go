@@ -1,9 +1,9 @@
 package util
 
 type Error struct {
-	Code    int    `json:"code"`
-	Status  string `json:"status"`
-	Error interface{} `json:"error"`
+	Code   int         `json:"code"`
+	Status string      `json:"status"`
+	Error  interface{} `json:"error"`
 }
 
 type Response struct {
