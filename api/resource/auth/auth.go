@@ -8,7 +8,9 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/jmoiron/sqlx"
 	"github.com/ushiradineth/cron-be/models"
-	"github.com/ushiradineth/cron-be/util"
+	"github.com/ushiradineth/cron-be/util/auth"
+	"github.com/ushiradineth/cron-be/util/response"
+	"github.com/ushiradineth/cron-be/util/user"
 )
 
 type API struct {
@@ -33,17 +35,17 @@ type RefreshTokenResponse struct {
 	AccessToken string
 }
 
-//	@Summary		Authenticate User
-//	@Description	Authenticate User with the parameters sent with the request
-//	@Tags			Auth
-//	@Accept			json
-//	@Produce		json
-//	@Param			Query	query		AuthenticateQueryParams	true	"AuthenticateQueryParams"
-//	@Success		200		{object}	util.Response{data=AuthenticateResponse}
-//	@Failure		400		{object}	util.Error
-//	@Failure		401		{object}	util.Error
-//	@Failure		500		{object}	util.Error
-//	@Router			/auth/login [post]
+// @Summary		Authenticate User
+// @Description	Authenticate User with the parameters sent with the request
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			Query	query		AuthenticateQueryParams	true	"AuthenticateQueryParams"
+// @Success		200		{object}	response.Response{data=AuthenticateResponse}
+// @Failure		400		{object}	response.Error
+// @Failure		401		{object}	response.Error
+// @Failure		500		{object}	response.Error
+// @Router			/auth/login [post]
 func (api *API) Authenticate(w http.ResponseWriter, r *http.Request) {
 	query := AuthenticateQueryParams{
 		Email:    r.FormValue("email"),
@@ -51,25 +53,25 @@ func (api *API) Authenticate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := api.validator.Struct(query); err != nil {
-		util.GenericValidationError(w, err)
+		response.GenericValidationError(w, err)
 		return
 	}
 
-	user := util.GetUser(w, query.Email, api.db)
+	user := user.GetUser(w, query.Email, api.db)
 	if user == nil {
 		return
 	}
 
-	valid := util.CheckPasswordHash(query.Password, user.Password)
+	valid := auth.CheckPasswordHash(query.Password, user.Password)
 
 	if !valid {
-		util.HTTPError(w, http.StatusUnauthorized, "Invalid Credentials", util.StatusFail)
+		response.HTTPError(w, http.StatusUnauthorized, "Invalid Credentials", response.StatusFail)
 		return
 	}
 
-	accessToken, err := util.NewAccessToken(user.ID, user.Name, user.Email)
+	accessToken, err := auth.NewAccessToken(user.ID, user.Name, user.Email)
 	if err != nil {
-		util.GenericServerError(w, err)
+		response.GenericServerError(w, err)
 		return
 	}
 
@@ -78,39 +80,39 @@ func (api *API) Authenticate(w http.ResponseWriter, r *http.Request) {
 		ExpiresAt: time.Now().Add(time.Hour * 48).Unix(),
 	}
 
-	refreshToken, err := util.NewRefreshToken(refreshTokenClaim)
+	refreshToken, err := auth.NewRefreshToken(refreshTokenClaim)
 	if err != nil {
-		util.GenericServerError(w, err)
+		response.GenericServerError(w, err)
 		return
 	}
 
 	user.Password = "redacted"
 
-	response := AuthenticateResponse{
+	authenticateResponse := AuthenticateResponse{
 		User:         *user,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}
 
-	util.HTTPResponse(w, response)
+	response.HTTPResponse(w, authenticateResponse)
 }
 
-//	@Summary		Refresh Access Token
-//	@Description	Refresh Access Token with the parameters sent with the request based on the request based on the JWT
-//	@Tags			Auth
-//	@Accept			json
-//	@Produce		json
-//	@Param			Query	query		RefreshTokenQueryParams	true	"RefreshTokenQueryParams"
-//	@Success		200		{object}	util.Response{data=RefreshTokenResponse}
-//	@Failure		400		{object}	util.Error
-//	@Failure		401		{object}	util.Error
-//	@Failure		500		{object}	util.Error
-//	@Security		BearerAuth
-//	@Router			/auth/refresh [post]
+// @Summary		Refresh Access Token
+// @Description	Refresh Access Token with the parameters sent with the request based on the request based on the JWT
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			Query	query		RefreshTokenQueryParams	true	"RefreshTokenQueryParams"
+// @Success		200		{object}	response.Response{data=RefreshTokenResponse}
+// @Failure		400		{object}	response.Error
+// @Failure		401		{object}	response.Error
+// @Failure		500		{object}	response.Error
+// @Security		BearerAuth
+// @Router			/auth/refresh [post]
 func (api *API) RefreshToken(w http.ResponseWriter, r *http.Request) {
-	accessToken, err := util.GetJWT(r)
+	accessToken, err := auth.GetJWT(r)
 	if err != nil {
-		util.GenericServerError(w, err)
+		response.GenericServerError(w, err)
 		return
 	}
 
@@ -119,79 +121,78 @@ func (api *API) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := api.validator.Struct(query); err != nil {
-		util.GenericValidationError(w, err)
+		response.GenericValidationError(w, err)
 		return
 	}
 
-	accessTokenClaim, err := util.ParseExpiredAccessToken(accessToken)
+	accessTokenClaim, err := auth.ParseExpiredAccessToken(accessToken)
 	if err != nil {
-		util.GenericServerError(w, err)
+		response.GenericServerError(w, err)
 		return
 	}
 
-	user := util.GetUser(w, accessTokenClaim.Email, api.db)
+	user := user.GetUser(w, accessTokenClaim.Email, api.db)
 	if user == nil {
 		return
 	}
 
-	_, errr := util.ParseRefreshToken(query.RefreshToken)
+	_, errr := auth.ParseRefreshToken(query.RefreshToken)
 	if errr != nil {
-		util.GenericServerError(w, err)
+		response.GenericServerError(w, err)
 		return
 	}
 
-	newAccessToken, err := util.NewAccessToken(user.ID, user.Name, user.Email)
+	newAccessToken, err := auth.NewAccessToken(user.ID, user.Name, user.Email)
 	if err != nil {
-		util.GenericServerError(w, err)
+		response.GenericServerError(w, err)
 		return
 	}
 
-	response := RefreshTokenResponse{
+	refreshTokenResponse := RefreshTokenResponse{
 		AccessToken: newAccessToken,
 	}
 
-	util.HTTPResponse(w, response)
+	response.HTTPResponse(w, refreshTokenResponse)
 }
 
-//	@Summary		Update User Password
-//	@Description	Update authenticated user's Password with the parameters sent with the request based on the JWT
-//	@Tags			Auth
-//	@Accept			json
-//	@Produce		json
-//	@Param			Query	query		PutPasswordQueryParams	true	"PutPasswordQueryParams"
-//	@Success		200		{object}	util.Response{data=string}
-//	@Failure		400		{object}	util.Error
-//	@Failure		401		{object}	util.Error
-//	@Failure		500		{object}	util.Error
-//	@Security		BearerAuth
-//	@Router			/auth/reset-password [put]
+// @Summary		Update User Password
+// @Description	Update authenticated user's Password with the parameters sent with the request based on the JWT
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			Query	query		PutPasswordQueryParams	true	"PutPasswordQueryParams"
+// @Success		200		{object}	response.Response{data=string}
+// @Failure		400		{object}	response.Error
+// @Failure		401		{object}	response.Error
+// @Failure		500		{object}	response.Error
+// @Security		BearerAuth
+// @Router			/auth/reset-password [put]
 func (api *API) PutPassword(w http.ResponseWriter, r *http.Request) {
 	query := PutPasswordQueryParams{
 		Password: r.FormValue("password"),
 	}
 
 	if err := api.validator.Struct(query); err != nil {
-		util.GenericValidationError(w, err)
+		response.GenericValidationError(w, err)
 		return
 	}
 
-	user := util.GetUserFromJWT(r, w, api.db)
+	user := user.GetUserFromJWT(r, w, api.db)
 	if user == nil {
 		return
 	}
 
-	password, err := util.HashPassword(query.Password)
+	password, err := auth.HashPassword(query.Password)
 	if err != nil {
-		util.GenericServerError(w, err)
+		response.GenericServerError(w, err)
 		return
 	}
 
 	_, err = api.db.Exec("UPDATE users SET password=$1 WHERE id=$2", password, user.ID)
 	if err != nil {
-		util.GenericServerError(w, err)
+		response.GenericServerError(w, err)
 		return
 	}
 
-	util.HTTPResponse(w, "Password has being updated")
+	response.HTTPResponse(w, "Password has being updated")
 }
-

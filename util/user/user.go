@@ -1,4 +1,4 @@
-package util
+package user
 
 import (
 	"database/sql"
@@ -9,6 +9,8 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	"github.com/ushiradineth/cron-be/models"
+	"github.com/ushiradineth/cron-be/util/auth"
+	"github.com/ushiradineth/cron-be/util/response"
 )
 
 func GetUser(w http.ResponseWriter, idOrEmail string, db *sqlx.DB) *models.User {
@@ -34,12 +36,12 @@ func GetUser(w http.ResponseWriter, idOrEmail string, db *sqlx.DB) *models.User 
 	err = db.Get(&user, query, args...)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			HTTPError(w, http.StatusBadRequest, "User not found", StatusFail)
+			response.HTTPError(w, http.StatusBadRequest, "User not found", response.StatusFail)
 			return nil
 
 		}
 
-		HTTPError(w, http.StatusInternalServerError, err.Error(), StatusError)
+		response.HTTPError(w, http.StatusInternalServerError, err.Error(), response.StatusError)
 		return nil
 	}
 
@@ -81,26 +83,26 @@ func DoesUserExist(idStr string, email string, db *sqlx.DB) (bool, int, error) {
 }
 
 func GetUserFromJWT(r *http.Request, w http.ResponseWriter, db *sqlx.DB) *models.User {
-	accessToken, err := GetJWT(r)
+	accessToken, err := auth.GetJWT(r)
 	if err != nil {
-		HTTPError(w, http.StatusBadRequest, err.Error(), StatusFail)
+		response.HTTPError(w, http.StatusBadRequest, err.Error(), response.StatusFail)
 		return nil
 	}
 
-	JWT, err := ParseAccessToken(accessToken)
+	JWT, err := auth.ParseAccessToken(accessToken)
 	if err != nil {
-		HTTPError(w, http.StatusUnauthorized, "Access Token is invalid or expired", StatusFail)
+		response.HTTPError(w, http.StatusUnauthorized, "Access Token is invalid or expired", response.StatusFail)
 		return nil
 	}
 
 	if JWT.StandardClaims.Valid() != nil {
-		HTTPError(w, http.StatusUnauthorized, "Access Token is invalid or expired", StatusFail)
+		response.HTTPError(w, http.StatusUnauthorized, "Access Token is invalid or expired", response.StatusFail)
 		return nil
 	}
 
 	user := GetUser(w, JWT.Id.String(), db)
 	if err != nil {
-		HTTPError(w, http.StatusBadRequest, err.Error(), StatusFail)
+		response.HTTPError(w, http.StatusBadRequest, err.Error(), response.StatusFail)
 	}
 
 	return user

@@ -1,10 +1,8 @@
-package util
+package response
 
 import (
 	"encoding/json"
 	"net/http"
-
-	validatorUtil "github.com/ushiradineth/cron-be/util/validator"
 )
 
 const (
@@ -12,6 +10,12 @@ const (
 	StatusFail    = "fail"    // 4XX
 	StatusError   = "error"   // 5XX
 )
+
+type Error struct {
+	Code   int         `json:"code"`
+	Status string      `json:"status"`
+	Error  interface{} `json:"error"`
+}
 
 func HTTPError(w http.ResponseWriter, code int, message interface{}, status string) {
 	var error Error
@@ -41,6 +45,12 @@ func HTTPError(w http.ResponseWriter, code int, message interface{}, status stri
 	}
 }
 
+type Response struct {
+	Code   int         `json:"code"`
+	Status string      `json:"status"`
+	Data   interface{} `json:"data"`
+}
+
 func HTTPResponse(w http.ResponseWriter, data interface{}) {
 	response := Response{
 		Code:   http.StatusOK,
@@ -55,12 +65,4 @@ func HTTPResponse(w http.ResponseWriter, data interface{}) {
 		http.Error(w, "Failed to generate the response", http.StatusInternalServerError)
 		return
 	}
-}
-
-func GenericServerError(w http.ResponseWriter, err error) {
-	HTTPError(w, http.StatusInternalServerError, err.Error(), StatusError)
-}
-
-func GenericValidationError(w http.ResponseWriter, err error) {
-	HTTPError(w, http.StatusBadRequest, validatorUtil.ValidationError(err), StatusFail)
 }
