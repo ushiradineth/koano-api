@@ -26,6 +26,9 @@ var validate = validator.New()
 // @Router			/event/{event_id} [get]
 func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	user := util.GetUserFromJWT(r, w, db)
+	if user == nil {
+		return
+	}
 
 	path := EventPathParams{
 		EventID: r.PathValue("event_id"),
@@ -61,6 +64,9 @@ func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 // @Router			/event [post]
 func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	user := util.GetUserFromJWT(r, w, db)
+	if user == nil {
+		return
+	}
 
 	query := PostQueryParams{
 		Title:    r.FormValue("title"),
@@ -132,6 +138,9 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 // @Router			/event/{event_id} [put]
 func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	user := util.GetUserFromJWT(r, w, db)
+	if user == nil {
+		return
+	}
 
 	path := EventPathParams{
 		EventID: r.PathValue("event_id"),
@@ -218,6 +227,9 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 // @Router			/event/{event_id} [delete]
 func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	user := util.GetUserFromJWT(r, w, db)
+	if user == nil {
+		return
+	}
 
 	path := EventPathParams{
 		EventID: r.PathValue("event_id"),
@@ -262,6 +274,9 @@ func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 // @Router			/event/user [get]
 func GetUserEvents(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	user := util.GetUserFromJWT(r, w, db)
+	if user == nil {
+		return
+	}
 
 	query := GetUserEventsQueryParams{
 		Start: r.FormValue("start_day"),

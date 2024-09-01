@@ -26,6 +26,9 @@ var validate = validator.New()
 // @Router			/user [get]
 func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	user := util.GetUserFromJWT(r, w, db)
+	if user == nil {
+		return
+	}
 
 	user.Password = "redacted"
 
@@ -56,6 +59,10 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	userExists, _, err := util.DoesUserExist("", query.Email, db)
+  if err != nil {
+    util.GenericServerError(w, err)
+    return
+  }
 
 	if userExists {
 		util.HTTPError(w, http.StatusBadRequest, "User already exists", util.StatusFail)
@@ -111,6 +118,9 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	existingUser := util.GetUserFromJWT(r, w, db)
+	if existingUser == nil {
+		return
+	}
 
 	user := models.User{
 		ID:        existingUser.ID,
@@ -163,10 +173,14 @@ func PutPassword(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	user := util.GetUserFromJWT(r, w, db)
+	if user == nil {
+		return
+	}
 
 	password, err := util.HashPassword(query.Password)
 	if err != nil {
 		util.GenericServerError(w, err)
+    return
 	}
 
 	_, err = db.Exec("UPDATE users SET password=$1 WHERE id=$2", password, user.ID)
@@ -191,6 +205,9 @@ func PutPassword(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 // @Router			/user [delete]
 func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	user := util.GetUserFromJWT(r, w, db)
+	if user == nil {
+		return
+	}
 
 	res, err := db.Exec("DELETE FROM users WHERE id=$1", user.ID)
 	if err != nil {
@@ -235,6 +252,9 @@ func Authenticate(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	user := util.GetUser(w, query.Email, db)
+	if user == nil {
+		return
+	}
 
 	valid := util.CheckPasswordHash(query.Password, user.Password)
 
@@ -306,6 +326,9 @@ func RefreshToken(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	user := util.GetUser(w, accessTokenClaim.Email, db)
+	if user == nil {
+		return
+	}
 
 	_, errr := util.ParseRefreshToken(query.RefreshToken)
 	if errr != nil {
