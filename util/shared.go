@@ -14,21 +14,21 @@ const (
 	StatusError   = "error"   // 5XX
 )
 
-func HTTPError(w http.ResponseWriter, code int, message string, status string) {
+func HTTPError(w http.ResponseWriter, code int, message interface{}, status string) {
 	var error Error
 
 	switch status {
 	case StatusFail, StatusError:
 		error = Error{
-			Code:    code,
-			Status:  status,
-			Message: message,
+			Code:   code,
+			Status: status,
+			Error:  message,
 		}
 	default:
 		error = Error{
-			Code:    http.StatusInternalServerError,
-			Status:  StatusError,
-			Message: "Failed to generate the error",
+			Code:   http.StatusInternalServerError,
+			Status: StatusError,
+			Error:  "Failed to generate the error",
 		}
 	}
 
@@ -43,9 +43,7 @@ func HTTPError(w http.ResponseWriter, code int, message string, status string) {
 }
 
 func HTTPResponse(w http.ResponseWriter, data interface{}) {
-	var response Response
-
-	response = Response{
+	response := Response{
 		Code:   http.StatusOK,
 		Status: StatusSuccess,
 		Data:   data,
@@ -60,37 +58,46 @@ func HTTPResponse(w http.ResponseWriter, data interface{}) {
 	}
 }
 
-func ValidationError(errors validator.ValidationErrors) string {
-	err := errors[0]
+func ValidationError(err error) []string {
+	if fieldErrors, ok := err.(validator.ValidationErrors); ok {
+		resp := make([]string, len(fieldErrors))
 
-	switch err.Tag() {
-	case "required":
-		return fmt.Sprintf("%s: field is required", err.Field())
-	case "oneof":
-		return fmt.Sprintf("%s: field can only be: %s", err.Field(), err.ActualTag())
-	case "min":
-		return fmt.Sprintf("%s must be at least %s characters length", err.Field(), err.ActualTag())
-	case "max":
-		return fmt.Sprintf("%s can't be more that %s characters length", err.Field(), err.ActualTag())
-	case "email":
-		return fmt.Sprintf("%s must be a valid email", err.Field())
-	case "jwt":
-		return fmt.Sprintf("%s must be a JWT token", err.Field())
-	case "uuid":
-		return fmt.Sprintf("%s must be a valid UUID", err.Field())
-	case "timezone":
-		return fmt.Sprintf("%s must be a valid Timezone", err.Field())
-	case "lowercase":
-		return fmt.Sprintf("%s must contain at least one lowercase character", err.Field())
-	case "uppercase":
-		return fmt.Sprintf("%s must contain at least one uppercase character", err.Field())
-	case "digitrequired":
-		return fmt.Sprintf("%s must contain at least one digit", err.Field())
-	case "specialsymbol":
-		return fmt.Sprintf("%s must contain at least one special symbol", err.Field())
-	default:
-		return fmt.Sprintf("%s is invalid", err.Field())
+		for i, err := range fieldErrors {
+			switch err.Tag() {
+			case "required":
+				resp[i] = fmt.Sprintf("%s: field is required", err.Field())
+			case "oneof":
+				resp[i] = fmt.Sprintf("%s: field can only be: %s", err.Field(), err.ActualTag())
+			case "min":
+				resp[i] = fmt.Sprintf("%s must be at least %s characters length", err.Field(), err.ActualTag())
+			case "max":
+				resp[i] = fmt.Sprintf("%s can't be more that %s characters length", err.Field(), err.ActualTag())
+			case "email":
+				resp[i] = fmt.Sprintf("%s must be a valid email", err.Field())
+			case "jwt":
+				resp[i] = fmt.Sprintf("%s must be a JWT token", err.Field())
+			case "uuid":
+				resp[i] = fmt.Sprintf("%s must be a valid UUID", err.Field())
+			case "timezone":
+				resp[i] = fmt.Sprintf("%s must be a valid Timezone", err.Field())
+			case "lowercase":
+				resp[i] = fmt.Sprintf("%s must contain at least one lowercase character", err.Field())
+			case "uppercase":
+				resp[i] = fmt.Sprintf("%s must contain at least one uppercase character", err.Field())
+			case "digitrequired":
+				resp[i] = fmt.Sprintf("%s must contain at least one digit", err.Field())
+			case "specialsymbol":
+				resp[i] = fmt.Sprintf("%s must contain at least one special symbol", err.Field())
+			case "datetime":
+				resp[i] = fmt.Sprintf("%s must follow `%s` format", err.Field(), err.Param())
+			default:
+				resp[i] = fmt.Sprintf("something wrong on %s; %s", err.Field(), err.Tag())
+			}
+		}
+
+		return resp
 	}
+	return nil
 }
 
 func GenericServerError(w http.ResponseWriter, err error) {
@@ -98,5 +105,5 @@ func GenericServerError(w http.ResponseWriter, err error) {
 }
 
 func GenericValidationError(w http.ResponseWriter, err error) {
-	HTTPError(w, http.StatusUnprocessableEntity, ValidationError(err.(validator.ValidationErrors)), StatusFail)
+	HTTPError(w, http.StatusBadRequest, ValidationError(err), StatusFail)
 }

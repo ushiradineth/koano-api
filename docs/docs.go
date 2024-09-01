@@ -950,9 +950,7 @@ const docTemplate = `{
                 "code": {
                     "type": "integer"
                 },
-                "message": {
-                    "type": "string"
-                },
+                "error": {},
                 "status": {
                     "type": "string"
                 }
