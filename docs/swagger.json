@@ -11,6 +11,209 @@
         "version": "1.0"
     },
     "paths": {
+        "/auth/login": {
+            "post": {
+                "description": "Authenticate User with the parameters sent with the request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Authenticate User",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "email",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "maxLength": 20,
+                        "minLength": 8,
+                        "type": "string",
+                        "name": "password",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/util.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/auth.AuthenticateResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/util.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/util.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/util.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Refresh Access Token with the parameters sent with the request based on the request based on the JWT",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Refresh Access Token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "refresh_token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/util.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/auth.RefreshTokenResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/util.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/util.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/util.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/reset-password": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update authenticated user's Password with the parameters sent with the request based on the JWT",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Update User Password",
+                "parameters": [
+                    {
+                        "maxLength": 20,
+                        "minLength": 8,
+                        "type": "string",
+                        "name": "password",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/util.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/util.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/util.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/util.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/event": {
             "post": {
                 "security": [
@@ -650,209 +853,43 @@
                     }
                 }
             }
-        },
-        "/user/auth": {
-            "post": {
-                "description": "Authenticated User with the parameters sent with the request",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Authenticate User",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "name": "email",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "minLength": 8,
-                        "type": "string",
-                        "name": "password",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/util.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/user.AuthenticateResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/util.Error"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/util.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/util.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/auth/password": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update authenticated User Password with the parameters sent with the request based on the JWT",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Update User Password",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "name": "password",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/util.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/util.Error"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/util.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/util.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/auth/refresh": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Refresh Access Token User with the parameters sent with the request based on the request based on the JWT",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Refresh Access Token",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "name": "refresh_token",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/util.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/user.RefreshTokenResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/util.Error"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/util.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/util.Error"
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
+        "auth.AuthenticateResponse": {
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "refreshToken": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.RefreshTokenResponse": {
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "type": "string"
+                }
+            }
+        },
         "models.Event": {
             "type": "object",
             "properties": {
@@ -898,40 +935,6 @@
                     "type": "string"
                 },
                 "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "user.AuthenticateResponse": {
-            "type": "object",
-            "properties": {
-                "accessToken": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "refreshToken": {
-                    "type": "string"
-                }
-            }
-        },
-        "user.RefreshTokenResponse": {
-            "type": "object",
-            "properties": {
-                "accessToken": {
                     "type": "string"
                 }
             }

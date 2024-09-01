@@ -1,4 +1,26 @@
 definitions:
+  auth.AuthenticateResponse:
+    properties:
+      accessToken:
+        type: string
+      createdAt:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      refreshToken:
+        type: string
+    type: object
+  auth.RefreshTokenResponse:
+    properties:
+      accessToken:
+        type: string
+    type: object
   models.Event:
     properties:
       createdAt:
@@ -31,28 +53,6 @@ definitions:
       password:
         type: string
     type: object
-  user.AuthenticateResponse:
-    properties:
-      accessToken:
-        type: string
-      createdAt:
-        type: string
-      email:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      password:
-        type: string
-      refreshToken:
-        type: string
-    type: object
-  user.RefreshTokenResponse:
-    properties:
-      accessToken:
-        type: string
-    type: object
   util.Error:
     properties:
       code:
@@ -78,6 +78,131 @@ info:
   title: Cron
   version: "1.0"
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate User with the parameters sent with the request
+      parameters:
+      - in: query
+        name: email
+        required: true
+        type: string
+      - in: query
+        maxLength: 20
+        minLength: 8
+        name: password
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/auth.AuthenticateResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/util.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/util.Error'
+      summary: Authenticate User
+      tags:
+      - Auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh Access Token with the parameters sent with the request
+        based on the request based on the JWT
+      parameters:
+      - in: query
+        name: refresh_token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/auth.RefreshTokenResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/util.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/util.Error'
+      security:
+      - BearerAuth: []
+      summary: Refresh Access Token
+      tags:
+      - Auth
+  /auth/reset-password:
+    put:
+      consumes:
+      - application/json
+      description: Update authenticated user's Password with the parameters sent with
+        the request based on the JWT
+      parameters:
+      - in: query
+        maxLength: 20
+        minLength: 8
+        name: password
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/util.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/util.Error'
+      security:
+      - BearerAuth: []
+      summary: Update User Password
+      tags:
+      - Auth
   /event:
     post:
       consumes:
@@ -464,128 +589,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Update User
-      tags:
-      - User
-  /user/auth:
-    post:
-      consumes:
-      - application/json
-      description: Authenticated User with the parameters sent with the request
-      parameters:
-      - in: query
-        name: email
-        required: true
-        type: string
-      - in: query
-        minLength: 8
-        name: password
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/util.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/user.AuthenticateResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/util.Error'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/util.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/util.Error'
-      summary: Authenticate User
-      tags:
-      - User
-  /user/auth/password:
-    put:
-      consumes:
-      - application/json
-      description: Update authenticated User Password with the parameters sent with
-        the request based on the JWT
-      parameters:
-      - in: query
-        name: password
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/util.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/util.Error'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/util.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/util.Error'
-      security:
-      - BearerAuth: []
-      summary: Update User Password
-      tags:
-      - User
-  /user/auth/refresh:
-    post:
-      consumes:
-      - application/json
-      description: Refresh Access Token User with the parameters sent with the request
-        based on the request based on the JWT
-      parameters:
-      - in: query
-        name: refresh_token
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/util.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/user.RefreshTokenResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/util.Error'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/util.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/util.Error'
-      security:
-      - BearerAuth: []
-      summary: Refresh Access Token
       tags:
       - User
 securityDefinitions:
