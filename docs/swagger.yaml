@@ -148,10 +148,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/response.Error'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.Error'
         "500":
           description: Internal Server Error
           schema:
@@ -203,7 +199,7 @@ paths:
       summary: Update User Password
       tags:
       - Auth
-  /event:
+  /events:
     post:
       consumes:
       - application/json
@@ -258,7 +254,7 @@ paths:
       summary: Create Event
       tags:
       - Event
-  /event/{event_id}:
+  /events/{event_id}:
     delete:
       consumes:
       - application/json
@@ -392,116 +388,7 @@ paths:
       summary: Update Event
       tags:
       - Event
-  /event/user:
-    get:
-      consumes:
-      - application/json
-      description: Get authenticated user's event based on the JWT sent with the request
-      parameters:
-      - in: query
-        name: end_day
-        required: true
-        type: string
-      - in: query
-        name: start_day
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/models.Event'
-                  type: array
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Error'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Error'
-      security:
-      - BearerAuth: []
-      summary: Get User Events
-      tags:
-      - Event
-  /user:
-    delete:
-      consumes:
-      - application/json
-      description: Delete authenticated User based on the JWT
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Error'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Error'
-      security:
-      - BearerAuth: []
-      summary: Delete User
-      tags:
-      - User
-    get:
-      description: Get authenticated user based on the JWT sent with the request
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/models.User'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Error'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Error'
-      security:
-      - BearerAuth: []
-      summary: Get User
-      tags:
-      - User
+  /users:
     post:
       consumes:
       - application/json
@@ -548,12 +435,91 @@ paths:
       summary: Create User
       tags:
       - User
+  /users/{user_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete authenticated User based on the JWT
+      parameters:
+      - in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete User
+      tags:
+      - User
+    get:
+      description: Get authenticated user based on the JWT sent with the request
+      parameters:
+      - in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.User'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
+      summary: Get User
+      tags:
+      - User
     put:
       consumes:
       - application/json
       description: Update authenticated User with the parameters sent with the request
         based on the JWT
       parameters:
+      - in: path
+        name: user_id
+        required: true
+        type: string
       - in: query
         name: email
         required: true
@@ -591,6 +557,55 @@ paths:
       summary: Update User
       tags:
       - User
+  /users/{user_id}/events:
+    get:
+      consumes:
+      - application/json
+      description: Get authenticated user's event based on the JWT sent with the request
+      parameters:
+      - in: path
+        name: user_id
+        required: true
+        type: string
+      - in: query
+        name: end_day
+        required: true
+        type: string
+      - in: query
+        name: start_day
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.Event'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
+      summary: Get User Events
+      tags:
+      - Event
 securityDefinitions:
   BearerAuth:
     in: header

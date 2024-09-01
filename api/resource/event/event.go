@@ -35,13 +35,8 @@ func New(db *sqlx.DB, validator *validator.Validate) *API {
 // @Failure		401		{object}	response.Error
 // @Failure		500		{object}	response.Error
 // @Security		BearerAuth
-// @Router			/event/{event_id} [get]
+// @Router			/events/{event_id} [get]
 func (api *API) Get(w http.ResponseWriter, r *http.Request) {
-	user := user.GetUserFromJWT(r, w, api.db)
-	if user == nil {
-		return
-	}
-
 	path := EventPathParams{
 		EventID: r.PathValue("event_id"),
 	}
@@ -51,9 +46,19 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user := user.GetUserFromJWT(r, w, api.db)
+	if user == nil {
+		return
+	}
+
 	event, err := event.GetEvent(path.EventID, user.ID.String(), api.db)
 	if err != nil {
 		response.GenericServerError(w, err)
+		return
+	}
+
+	if user.ID.String() != event.UserID.String() {
+		response.GenericUnauthenticatedError(w)
 		return
 	}
 
@@ -73,13 +78,8 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 // @Failure		401		{object}	response.Error
 // @Failure		500		{object}	response.Error
 // @Security		BearerAuth
-// @Router			/event [post]
+// @Router			/events [post]
 func (api *API) Post(w http.ResponseWriter, r *http.Request) {
-	user := user.GetUserFromJWT(r, w, api.db)
-	if user == nil {
-		return
-	}
-
 	query := PostQueryParams{
 		Title:     r.FormValue("title"),
 		Timezone:  r.FormValue("timezone"),
@@ -90,6 +90,11 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 
 	if err := api.validator.Struct(query); err != nil {
 		response.GenericValidationError(w, err)
+		return
+	}
+
+	user := user.GetUserFromJWT(r, w, api.db)
+	if user == nil {
 		return
 	}
 
@@ -106,6 +111,7 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	eventExists := event.DoesEventExist("", parsedStart.String(), parsedEnd.String(), user.ID.String(), api.db)
+
 	if eventExists {
 		response.HTTPError(w, http.StatusBadRequest, "Event already exists", response.StatusFail)
 		return
@@ -138,6 +144,7 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 // @Summary		Update Event
 // @Description	Update Event based on the parameters sent with the request
 // @Tags			Event
+//
 // @Accept			json
 // @Produce		json
 // @Param			Path	path		EventPathParams	true	"EventPathParams"
@@ -147,13 +154,8 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 // @Failure		401		{object}	response.Error
 // @Failure		500		{object}	response.Error
 // @Security		BearerAuth
-// @Router			/event/{event_id} [put]
+// @Router			/events/{event_id} [put]
 func (api *API) Put(w http.ResponseWriter, r *http.Request) {
-	user := user.GetUserFromJWT(r, w, api.db)
-	if user == nil {
-		return
-	}
-
 	path := EventPathParams{
 		EventID: r.PathValue("event_id"),
 	}
@@ -176,10 +178,15 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user := user.GetUserFromJWT(r, w, api.db)
+	if user == nil {
+		return
+	}
+
 	existingEvent := event.DoesEventExist(path.EventID, query.StartTime, query.EndTime, user.ID.String(), api.db)
 
 	if !existingEvent {
-		response.HTTPError(w, http.StatusBadRequest, "Event already exists", response.StatusFail)
+		response.HTTPError(w, http.StatusBadRequest, "Event does not exists", response.StatusFail)
 		return
 	}
 
@@ -226,6 +233,7 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary		Delete Event
+//
 // @Description	Delete Event based on the parameters sent with the request
 // @Tags			Event
 // @Accept			json
@@ -236,19 +244,19 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 // @Failure		401		{object}	response.Error
 // @Failure		500		{object}	response.Error
 // @Security		BearerAuth
-// @Router			/event/{event_id} [delete]
+// @Router			/events/{event_id} [delete]
 func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
-	user := user.GetUserFromJWT(r, w, api.db)
-	if user == nil {
-		return
-	}
-
 	path := EventPathParams{
 		EventID: r.PathValue("event_id"),
 	}
 
 	if err := api.validator.Struct(path); err != nil {
 		response.GenericValidationError(w, err)
+		return
+	}
+
+	user := user.GetUserFromJWT(r, w, api.db)
+	if user == nil {
 		return
 	}
 
@@ -277,17 +285,17 @@ func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 // @Tags			Event
 // @Accept			json
 // @Produce		json
+// @Param			Path	path		UserPathParams				true	"UserPathParams"
 // @Param			Query	query		GetUserEventsQueryParams	true	"GetUserEventsQueryParams"
 // @Success		200		{object}	response.Response{data=[]models.Event}
 // @Failure		400		{object}	response.Error
 // @Failure		401		{object}	response.Error
 // @Failure		500		{object}	response.Error
 // @Security		BearerAuth
-// @Router			/event/user [get]
+// @Router			/users/{user_id}/events [get]
 func (api *API) GetUserEvents(w http.ResponseWriter, r *http.Request) {
-	user := user.GetUserFromJWT(r, w, api.db)
-	if user == nil {
-		return
+	path := UserPathParams{
+		UserID: r.PathValue("user_id"),
 	}
 
 	query := GetUserEventsQueryParams{
@@ -295,8 +303,23 @@ func (api *API) GetUserEvents(w http.ResponseWriter, r *http.Request) {
 		EndDay:   r.FormValue("end_day"),
 	}
 
+	if err := api.validator.Struct(path); err != nil {
+		response.GenericValidationError(w, err)
+		return
+	}
+
 	if err := api.validator.Struct(query); err != nil {
 		response.GenericValidationError(w, err)
+		return
+	}
+
+	user := user.GetUserFromJWT(r, w, api.db)
+	if user == nil {
+		return
+	}
+
+	if user.ID.String() != path.UserID {
+		response.GenericUnauthenticatedError(w)
 		return
 	}
 

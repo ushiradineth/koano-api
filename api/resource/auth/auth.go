@@ -105,7 +105,6 @@ func (api *API) Authenticate(w http.ResponseWriter, r *http.Request) {
 // @Param			Query	query		RefreshTokenQueryParams	true	"RefreshTokenQueryParams"
 // @Success		200		{object}	response.Response{data=RefreshTokenResponse}
 // @Failure		400		{object}	response.Error
-// @Failure		401		{object}	response.Error
 // @Failure		500		{object}	response.Error
 // @Security		BearerAuth
 // @Router			/auth/refresh [post]

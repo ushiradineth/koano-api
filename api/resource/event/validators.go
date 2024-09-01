@@ -1,5 +1,9 @@
 package event
 
+type UserPathParams struct {
+	UserID string `form:"user_id" validate:"required,uuid"`
+}
+
 type EventPathParams struct {
 	EventID string `form:"event_id" validate:"required,uuid"`
 }

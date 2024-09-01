@@ -13,3 +13,7 @@ func GenericServerError(w http.ResponseWriter, err error) {
 func GenericValidationError(w http.ResponseWriter, err error) {
 	HTTPError(w, http.StatusBadRequest, validatorUtil.ValidationError(err), StatusFail)
 }
+
+func GenericUnauthenticatedError(w http.ResponseWriter) {
+	HTTPError(w, http.StatusUnauthorized, "Unauthorized", StatusFail)
+}

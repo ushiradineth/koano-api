@@ -101,9 +101,6 @@ func GetUserFromJWT(r *http.Request, w http.ResponseWriter, db *sqlx.DB) *models
 	}
 
 	user := GetUser(w, JWT.Id.String(), db)
-	if err != nil {
-		response.HTTPError(w, http.StatusBadRequest, err.Error(), response.StatusFail)
-	}
 
 	return user
 }

@@ -29,15 +29,30 @@ func New(db *sqlx.DB, validator *validator.Validate) *API {
 // @Description	Get authenticated user based on the JWT sent with the request
 // @Tags			User
 // @Produce		json
-// @Success		200	{object}	response.Response{data=models.User}
-// @Failure		400	{object}	response.Error
-// @Failure		401	{object}	response.Error
-// @Failure		500	{object}	response.Error
+// @Param			Path	path		UserPathParams	true	"UserPathParams"
+// @Success		200		{object}	response.Response{data=models.User}
+// @Failure		400		{object}	response.Error
+// @Failure		401		{object}	response.Error
+// @Failure		500		{object}	response.Error
 // @Security		BearerAuth
-// @Router			/user [get]
+// @Router			/users/{user_id} [get]
 func (api *API) Get(w http.ResponseWriter, r *http.Request) {
+	path := UserPathParams{
+		UserID: r.PathValue("user_id"),
+	}
+
+	if err := api.validator.Struct(path); err != nil {
+		response.GenericValidationError(w, err)
+		return
+	}
+
 	user := user.GetUserFromJWT(r, w, api.db)
 	if user == nil {
+		return
+	}
+
+	if user.ID.String() != path.UserID {
+		response.GenericUnauthenticatedError(w)
 		return
 	}
 
@@ -56,7 +71,7 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 // @Failure		400		{object}	response.Error
 // @Failure		401		{object}	response.Error
 // @Failure		500		{object}	response.Error
-// @Router			/user [post]
+// @Router			/users [post]
 func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 	query := PostQueryParams{
 		Name:     r.FormValue("name"),
@@ -110,17 +125,27 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 // @Tags			User
 // @Accept			json
 // @Produce		json
+// @Param			Path	path		UserPathParams	true	"UserPathParams"
 // @Param			Query	query		PutQueryParams	true	"PutQueryParams"
 // @Success		200		{object}	response.Response{data=models.User}
 // @Failure		400		{object}	response.Error
 // @Failure		401		{object}	response.Error
 // @Failure		500		{object}	response.Error
 // @Security		BearerAuth
-// @Router			/user [put]
+// @Router			/users/{user_id} [put]
 func (api *API) Put(w http.ResponseWriter, r *http.Request) {
+	path := UserPathParams{
+		UserID: r.PathValue("user_id"),
+	}
+
 	query := PutQueryParams{
 		Name:  r.FormValue("name"),
 		Email: r.FormValue("email"),
+	}
+
+	if err := api.validator.Struct(path); err != nil {
+		response.GenericValidationError(w, err)
+		return
 	}
 
 	if err := api.validator.Struct(query); err != nil {
@@ -130,6 +155,11 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 
 	existingUser := user.GetUserFromJWT(r, w, api.db)
 	if existingUser == nil {
+		return
+	}
+
+	if existingUser.ID.String() != path.UserID {
+		response.GenericUnauthenticatedError(w)
 		return
 	}
 
@@ -166,15 +196,30 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 // @Tags			User
 // @Accept			json
 // @Produce		json
-// @Success		200	{object}	response.Response{data=string}
-// @Failure		400	{object}	response.Error
-// @Failure		401	{object}	response.Error
-// @Failure		500	{object}	response.Error
+// @Param			Path	path		UserPathParams	true	"UserPathParams"
+// @Success		200		{object}	response.Response{data=string}
+// @Failure		400		{object}	response.Error
+// @Failure		401		{object}	response.Error
+// @Failure		500		{object}	response.Error
 // @Security		BearerAuth
-// @Router			/user [delete]
+// @Router			/users/{user_id} [delete]
 func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
+	path := UserPathParams{
+		UserID: r.PathValue("user_id"),
+	}
+
+	if err := api.validator.Struct(path); err != nil {
+		response.GenericValidationError(w, err)
+		return
+	}
+
 	user := user.GetUserFromJWT(r, w, api.db)
 	if user == nil {
+		return
+	}
+
+	if user.ID.String() != path.UserID {
+		response.GenericUnauthenticatedError(w)
 		return
 	}
 
