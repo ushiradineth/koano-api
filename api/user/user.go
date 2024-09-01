@@ -51,7 +51,7 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if err := validate.Struct(query); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
+		util.GenericValidationError(w, err)
 		return
 	}
 
@@ -64,7 +64,7 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	hashedPassword, err := util.HashPassword(query.Password)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -78,7 +78,7 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	_, err = db.Exec("INSERT INTO users (id, name, email, password) VALUES ($1, $2, $3, $4)", user.ID, user.Name, user.Email, user.Password)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -106,7 +106,7 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if err := validate.Struct(query); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
+		util.GenericValidationError(w, err)
 		return
 	}
 
@@ -122,7 +122,7 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	_, count, err := util.DoesUserExist(user.ID.String(), user.Email, db)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -133,7 +133,7 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	_, err = db.Exec("UPDATE users SET name=$1, email=$2 WHERE id=$3", user.Name, user.Email, user.ID.String())
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -158,7 +158,7 @@ func PutPassword(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if err := validate.Struct(query); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
+		util.GenericValidationError(w, err)
 		return
 	}
 
@@ -166,12 +166,12 @@ func PutPassword(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	password, err := util.HashPassword(query.Password)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 	}
 
 	_, err = db.Exec("UPDATE users SET password=$1 WHERE id=$2", password, user.ID)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -194,13 +194,13 @@ func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	res, err := db.Exec("DELETE FROM users WHERE id=$1", user.ID)
 	if err != nil {
-		util.HTTPError(w, http.StatusBadRequest, err.Error(), util.StatusFail)
+		util.GenericServerError(w, err)
 		return
 	}
 
 	count, err := res.RowsAffected()
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -230,7 +230,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if err := validate.Struct(query); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
+		util.GenericValidationError(w, err)
 		return
 	}
 
@@ -245,7 +245,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	accessToken, err := util.NewAccessToken(user.ID, user.Name, user.Email)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -256,7 +256,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	refreshToken, err := util.NewRefreshToken(refreshTokenClaim)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -286,7 +286,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 func RefreshToken(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	accessToken, err := util.GetJWT(r)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -295,13 +295,13 @@ func RefreshToken(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if err := validate.Struct(query); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
+		util.GenericValidationError(w, err)
 		return
 	}
 
 	accessTokenClaim, err := util.ParseExpiredAccessToken(accessToken)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -309,13 +309,13 @@ func RefreshToken(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	_, errr := util.ParseRefreshToken(query.RefreshToken)
 	if errr != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
 	newAccessToken, err := util.NewAccessToken(user.ID, user.Name, user.Email)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 

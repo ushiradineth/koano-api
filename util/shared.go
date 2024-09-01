@@ -76,9 +76,9 @@ func ValidationError(errors validator.ValidationErrors) string {
 		return fmt.Sprintf("%s must be a valid email", err.Field())
 	case "jwt":
 		return fmt.Sprintf("%s must be a JWT token", err.Field())
-  case "uuid":
+	case "uuid":
 		return fmt.Sprintf("%s must be a valid UUID", err.Field())
-  case "timezone":
+	case "timezone":
 		return fmt.Sprintf("%s must be a valid Timezone", err.Field())
 	case "lowercase":
 		return fmt.Sprintf("%s must contain at least one lowercase character", err.Field())
@@ -91,4 +91,12 @@ func ValidationError(errors validator.ValidationErrors) string {
 	default:
 		return fmt.Sprintf("%s is invalid", err.Field())
 	}
+}
+
+func GenericServerError(w http.ResponseWriter, err error) {
+	HTTPError(w, http.StatusInternalServerError, err.Error(), StatusError)
+}
+
+func GenericValidationError(w http.ResponseWriter, err error) {
+	HTTPError(w, http.StatusUnprocessableEntity, ValidationError(err.(validator.ValidationErrors)), StatusFail)
 }

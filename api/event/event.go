@@ -32,13 +32,13 @@ func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if err := validate.Struct(path); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
+		util.GenericValidationError(w, err)
 		return
 	}
 
 	event, err := util.GetEvent(path.EventID, user.ID.String(), db)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -71,7 +71,7 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if err := validate.Struct(query); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
+		util.GenericValidationError(w, err)
 		return
 	}
 
@@ -83,13 +83,13 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	parsedStart, err := time.Parse(time.RFC3339, query.Start)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
 	parsedEnd, err := time.Parse(time.RFC3339, query.End)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -110,7 +110,7 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	_, err = db.Exec("INSERT INTO events (id, title, start_time, end_time, user_id, timezone, repeated) VALUES ($1, $2, $3, $4, $5, $6, $7)", event.ID, event.Title, event.Start, event.End, event.UserID, event.Timezone, event.Repeated)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -146,12 +146,12 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if err := validate.Struct(path); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
+		util.GenericValidationError(w, err)
 		return
 	}
 
 	if err := validate.Struct(query); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
+		util.GenericValidationError(w, err)
 		return
 	}
 
@@ -164,13 +164,13 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	parsedStart, err := time.Parse(time.RFC3339, query.Start)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
 	parsedEnd, err := time.Parse(time.RFC3339, query.End)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -181,7 +181,7 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	parsedUUID, err := uuid.Parse(path.EventID)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -197,7 +197,7 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	_, err = db.Exec("UPDATE events SET title=$1, start_time=$2, end_time=$3, timezone=$4, repeated=$5 WHERE id=$6 AND user_id=$7", event.Title, event.Start, event.End, event.Timezone, event.Repeated, event.ID, event.UserID.String())
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -224,7 +224,7 @@ func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if err := validate.Struct(path); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
+		util.GenericValidationError(w, err)
 		return
 	}
 
@@ -269,19 +269,19 @@ func GetUserEvents(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	if err := validate.Struct(query); err != nil {
-		util.HTTPError(w, http.StatusBadRequest, util.ValidationError(err.(validator.ValidationErrors)), util.StatusFail)
+		util.GenericValidationError(w, err)
 		return
 	}
 
 	parsedStart, err := time.Parse("2006-01-02", query.Start)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
 	parsedEnd, err := time.Parse("2006-01-02", query.End)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
@@ -289,7 +289,7 @@ func GetUserEvents(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	err = db.Select(&events, "SELECT * FROM events WHERE user_id=$1 AND start_time >= $2 AND start_time <= $3", user.ID, parsedStart, parsedEnd)
 	if err != nil {
-		util.HTTPError(w, http.StatusInternalServerError, err.Error(), util.StatusError)
+		util.GenericServerError(w, err)
 		return
 	}
 
