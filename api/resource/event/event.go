@@ -11,7 +11,17 @@ import (
 	"github.com/ushiradineth/cron-be/util"
 )
 
-var validate = validator.New()
+type API struct {
+	db        *sqlx.DB
+	validator *validator.Validate
+}
+
+func New(db *sqlx.DB, validator *validator.Validate) *API {
+	return &API{
+		db:        db,
+		validator: validator,
+	}
+}
 
 // @Summary		Get Event
 // @Description	Get authenticated user's event based on the JWT and parameters sent with the request
@@ -24,8 +34,8 @@ var validate = validator.New()
 // @Failure		500		{object}	util.Error
 // @Security		BearerAuth
 // @Router			/event/{event_id} [get]
-func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user := util.GetUserFromJWT(r, w, db)
+func (api *API) Get(w http.ResponseWriter, r *http.Request) {
+	user := util.GetUserFromJWT(r, w, api.db)
 	if user == nil {
 		return
 	}
@@ -34,12 +44,12 @@ func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		EventID: r.PathValue("event_id"),
 	}
 
-	if err := validate.Struct(path); err != nil {
+	if err := api.validator.Struct(path); err != nil {
 		util.GenericValidationError(w, err)
 		return
 	}
 
-	event, err := util.GetEvent(path.EventID, user.ID.String(), db)
+	event, err := util.GetEvent(path.EventID, user.ID.String(), api.db)
 	if err != nil {
 		util.GenericServerError(w, err)
 		return
@@ -62,40 +72,40 @@ func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 // @Failure		500		{object}	util.Error
 // @Security		BearerAuth
 // @Router			/event [post]
-func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user := util.GetUserFromJWT(r, w, db)
+func (api *API) Post(w http.ResponseWriter, r *http.Request) {
+	user := util.GetUserFromJWT(r, w, api.db)
 	if user == nil {
 		return
 	}
 
 	query := PostQueryParams{
-		Title:    r.FormValue("title"),
-		Timezone: r.FormValue("timezone"),
-		Repeated: r.FormValue("repeated"),
-		Start:    r.FormValue("start_time"),
-		End:      r.FormValue("end_time"),
+		Title:     r.FormValue("title"),
+		Timezone:  r.FormValue("timezone"),
+		Repeated:  r.FormValue("repeated"),
+		StartTime: r.FormValue("start_time"),
+		EndTime:   r.FormValue("end_time"),
 	}
 
-	if err := validate.Struct(query); err != nil {
+	if err := api.validator.Struct(query); err != nil {
 		util.GenericValidationError(w, err)
 		return
 	}
 
-	eventExists := util.DoesEventExist("", query.Start, query.End, user.ID.String(), db)
+	parsedStart, err := time.Parse(time.RFC3339, query.StartTime)
+	if err != nil {
+		util.GenericServerError(w, err)
+		return
+	}
+
+	parsedEnd, err := time.Parse(time.RFC3339, query.EndTime)
+	if err != nil {
+		util.GenericServerError(w, err)
+		return
+	}
+
+	eventExists := util.DoesEventExist("", parsedStart.String(), parsedEnd.String(), user.ID.String(), api.db)
 	if eventExists {
 		util.HTTPError(w, http.StatusBadRequest, "Event already exists", util.StatusFail)
-		return
-	}
-
-	parsedStart, err := time.Parse(time.RFC3339, query.Start)
-	if err != nil {
-		util.GenericServerError(w, err)
-		return
-	}
-
-	parsedEnd, err := time.Parse(time.RFC3339, query.End)
-	if err != nil {
-		util.GenericServerError(w, err)
 		return
 	}
 
@@ -114,7 +124,7 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		Repeated: query.Repeated,
 	}
 
-	_, err = db.Exec("INSERT INTO events (id, title, start_time, end_time, user_id, timezone, repeated) VALUES ($1, $2, $3, $4, $5, $6, $7)", event.ID, event.Title, event.Start, event.End, event.UserID, event.Timezone, event.Repeated)
+	_, err = api.db.Exec("INSERT INTO events (id, title, start_time, end_time, user_id, timezone, repeated) VALUES ($1, $2, $3, $4, $5, $6, $7)", event.ID, event.Title, event.Start, event.End, event.UserID, event.Timezone, event.Repeated)
 	if err != nil {
 		util.GenericServerError(w, err)
 		return
@@ -136,8 +146,8 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 // @Failure		500		{object}	util.Error
 // @Security		BearerAuth
 // @Router			/event/{event_id} [put]
-func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user := util.GetUserFromJWT(r, w, db)
+func (api *API) Put(w http.ResponseWriter, r *http.Request) {
+	user := util.GetUserFromJWT(r, w, api.db)
 	if user == nil {
 		return
 	}
@@ -147,37 +157,37 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	}
 
 	query := PutQueryParams{
-		Title:    r.FormValue("title"),
-		Timezone: r.FormValue("timezone"),
-		Repeated: r.FormValue("repeated"),
-		Start:    r.FormValue("start_time"),
-		End:      r.FormValue("end_time"),
+		Title:     r.FormValue("title"),
+		Timezone:  r.FormValue("timezone"),
+		Repeated:  r.FormValue("repeated"),
+		StartTime: r.FormValue("start_time"),
+		EndTime:   r.FormValue("end_time"),
 	}
 
-	if err := validate.Struct(path); err != nil {
+	if err := api.validator.Struct(path); err != nil {
 		util.GenericValidationError(w, err)
 		return
 	}
 
-	if err := validate.Struct(query); err != nil {
+	if err := api.validator.Struct(query); err != nil {
 		util.GenericValidationError(w, err)
 		return
 	}
 
-	existingEvent := util.DoesEventExist(path.EventID, query.Start, query.End, user.ID.String(), db)
+	existingEvent := util.DoesEventExist(path.EventID, query.StartTime, query.EndTime, user.ID.String(), api.db)
 
 	if !existingEvent {
 		util.HTTPError(w, http.StatusBadRequest, "Event already exists", util.StatusFail)
 		return
 	}
 
-	parsedStart, err := time.Parse(time.RFC3339, query.Start)
+	parsedStart, err := time.Parse(time.RFC3339, query.StartTime)
 	if err != nil {
 		util.GenericServerError(w, err)
 		return
 	}
 
-	parsedEnd, err := time.Parse(time.RFC3339, query.End)
+	parsedEnd, err := time.Parse(time.RFC3339, query.EndTime)
 	if err != nil {
 		util.GenericServerError(w, err)
 		return
@@ -204,7 +214,7 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		Repeated: query.Repeated,
 	}
 
-	_, err = db.Exec("UPDATE events SET title=$1, start_time=$2, end_time=$3, timezone=$4, repeated=$5 WHERE id=$6 AND user_id=$7", event.Title, event.Start, event.End, event.Timezone, event.Repeated, event.ID, event.UserID.String())
+	_, err = api.db.Exec("UPDATE events SET title=$1, start_time=$2, end_time=$3, timezone=$4, repeated=$5 WHERE id=$6 AND user_id=$7", event.Title, event.Start, event.End, event.Timezone, event.Repeated, event.ID, event.UserID.String())
 	if err != nil {
 		util.GenericServerError(w, err)
 		return
@@ -225,8 +235,8 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 // @Failure		500		{object}	util.Error
 // @Security		BearerAuth
 // @Router			/event/{event_id} [delete]
-func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user := util.GetUserFromJWT(r, w, db)
+func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
+	user := util.GetUserFromJWT(r, w, api.db)
 	if user == nil {
 		return
 	}
@@ -235,12 +245,12 @@ func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		EventID: r.PathValue("event_id"),
 	}
 
-	if err := validate.Struct(path); err != nil {
+	if err := api.validator.Struct(path); err != nil {
 		util.GenericValidationError(w, err)
 		return
 	}
 
-	res, err := db.Exec("DELETE FROM events WHERE id=$1 AND user_id=$2", path.EventID, user.ID.String())
+	res, err := api.db.Exec("DELETE FROM events WHERE id=$1 AND user_id=$2", path.EventID, user.ID.String())
 	if err != nil {
 		util.HTTPError(w, http.StatusBadRequest, "Event does not exist", util.StatusFail)
 		return
@@ -272,29 +282,29 @@ func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 // @Failure		500		{object}	util.Error
 // @Security		BearerAuth
 // @Router			/event/user [get]
-func GetUserEvents(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user := util.GetUserFromJWT(r, w, db)
+func (api *API) GetUserEvents(w http.ResponseWriter, r *http.Request) {
+	user := util.GetUserFromJWT(r, w, api.db)
 	if user == nil {
 		return
 	}
 
 	query := GetUserEventsQueryParams{
-		Start: r.FormValue("start_day"),
-		End:   r.FormValue("end_day"),
+		StartDay: r.FormValue("start_day"),
+		EndDay:   r.FormValue("end_day"),
 	}
 
-	if err := validate.Struct(query); err != nil {
+	if err := api.validator.Struct(query); err != nil {
 		util.GenericValidationError(w, err)
 		return
 	}
 
-	parsedStart, err := time.Parse("2006-01-02", query.Start)
+	parsedStart, err := time.Parse("2006-01-02", query.StartDay)
 	if err != nil {
 		util.GenericServerError(w, err)
 		return
 	}
 
-	parsedEnd, err := time.Parse("2006-01-02", query.End)
+	parsedEnd, err := time.Parse("2006-01-02", query.EndDay)
 	if err != nil {
 		util.GenericServerError(w, err)
 		return
@@ -302,7 +312,7 @@ func GetUserEvents(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	events := []models.Event{}
 
-	err = db.Select(&events, "SELECT * FROM events WHERE user_id=$1 AND start_time >= $2 AND start_time <= $3", user.ID, parsedStart, parsedEnd)
+	err = api.db.Select(&events, "SELECT * FROM events WHERE user_id=$1 AND start_time >= $2 AND start_time <= $3", user.ID, parsedStart, parsedEnd)
 	if err != nil {
 		util.GenericServerError(w, err)
 		return

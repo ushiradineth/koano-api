@@ -186,7 +186,7 @@ func AuthenticateUserHelper(t testing.TB, body url.Values, wantCode int) {
 
 	user.Authenticate(response, request, db)
 
-	var responseBody user.AuthenticateUserResponse
+	var responseBody user.AuthenticateResponse
 	err := json.NewDecoder(response.Body).Decode(&responseBody)
 	assert.NoError(t, err)
 

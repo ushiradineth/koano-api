@@ -12,7 +12,17 @@ import (
 	"github.com/ushiradineth/cron-be/util"
 )
 
-var validate = validator.New()
+type API struct {
+	db        *sqlx.DB
+	validator *validator.Validate
+}
+
+func New(db *sqlx.DB, validator *validator.Validate) *API {
+	return &API{
+		db:        db,
+		validator: validator,
+	}
+}
 
 // @Summary		Get User
 // @Description	Get authenticated user based on the JWT sent with the request
@@ -24,8 +34,8 @@ var validate = validator.New()
 // @Failure		500	{object}	util.Error
 // @Security		BearerAuth
 // @Router			/user [get]
-func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user := util.GetUserFromJWT(r, w, db)
+func (api *API) Get(w http.ResponseWriter, r *http.Request) {
+	user := util.GetUserFromJWT(r, w, api.db)
 	if user == nil {
 		return
 	}
@@ -46,23 +56,23 @@ func Get(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 // @Failure		401		{object}	util.Error
 // @Failure		500		{object}	util.Error
 // @Router			/user [post]
-func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 	query := PostQueryParams{
 		Name:     r.FormValue("name"),
 		Email:    r.FormValue("email"),
 		Password: r.FormValue("password"),
 	}
 
-	if err := validate.Struct(query); err != nil {
+	if err := api.validator.Struct(query); err != nil {
 		util.GenericValidationError(w, err)
 		return
 	}
 
-	userExists, _, err := util.DoesUserExist("", query.Email, db)
-  if err != nil {
-    util.GenericServerError(w, err)
-    return
-  }
+	userExists, _, err := util.DoesUserExist("", query.Email, api.db)
+	if err != nil {
+		util.GenericServerError(w, err)
+		return
+	}
 
 	if userExists {
 		util.HTTPError(w, http.StatusBadRequest, "User already exists", util.StatusFail)
@@ -83,7 +93,7 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		CreatedAt: time.Now(),
 	}
 
-	_, err = db.Exec("INSERT INTO users (id, name, email, password) VALUES ($1, $2, $3, $4)", user.ID, user.Name, user.Email, user.Password)
+	_, err = api.db.Exec("INSERT INTO users (id, name, email, password) VALUES ($1, $2, $3, $4)", user.ID, user.Name, user.Email, user.Password)
 	if err != nil {
 		util.GenericServerError(w, err)
 		return
@@ -106,18 +116,18 @@ func Post(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 // @Failure		500		{object}	util.Error
 // @Security		BearerAuth
 // @Router			/user [put]
-func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 	query := PutQueryParams{
 		Name:  r.FormValue("name"),
 		Email: r.FormValue("email"),
 	}
 
-	if err := validate.Struct(query); err != nil {
+	if err := api.validator.Struct(query); err != nil {
 		util.GenericValidationError(w, err)
 		return
 	}
 
-	existingUser := util.GetUserFromJWT(r, w, db)
+	existingUser := util.GetUserFromJWT(r, w, api.db)
 	if existingUser == nil {
 		return
 	}
@@ -130,7 +140,7 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		Password:  "redacted",
 	}
 
-	_, count, err := util.DoesUserExist(user.ID.String(), user.Email, db)
+	_, count, err := util.DoesUserExist(user.ID.String(), user.Email, api.db)
 	if err != nil {
 		util.GenericServerError(w, err)
 		return
@@ -141,7 +151,7 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
-	_, err = db.Exec("UPDATE users SET name=$1, email=$2 WHERE id=$3", user.Name, user.Email, user.ID.String())
+	_, err = api.db.Exec("UPDATE users SET name=$1, email=$2 WHERE id=$3", user.Name, user.Email, user.ID.String())
 	if err != nil {
 		util.GenericServerError(w, err)
 		return
@@ -162,17 +172,17 @@ func Put(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 // @Failure		500		{object}	util.Error
 // @Security		BearerAuth
 // @Router			/user/auth/password [put]
-func PutPassword(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func (api *API) PutPassword(w http.ResponseWriter, r *http.Request) {
 	query := PutPasswordQueryParams{
 		Password: r.FormValue("password"),
 	}
 
-	if err := validate.Struct(query); err != nil {
+	if err := api.validator.Struct(query); err != nil {
 		util.GenericValidationError(w, err)
 		return
 	}
 
-	user := util.GetUserFromJWT(r, w, db)
+	user := util.GetUserFromJWT(r, w, api.db)
 	if user == nil {
 		return
 	}
@@ -180,10 +190,10 @@ func PutPassword(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	password, err := util.HashPassword(query.Password)
 	if err != nil {
 		util.GenericServerError(w, err)
-    return
+		return
 	}
 
-	_, err = db.Exec("UPDATE users SET password=$1 WHERE id=$2", password, user.ID)
+	_, err = api.db.Exec("UPDATE users SET password=$1 WHERE id=$2", password, user.ID)
 	if err != nil {
 		util.GenericServerError(w, err)
 		return
@@ -203,13 +213,13 @@ func PutPassword(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 // @Failure		500	{object}	util.Error
 // @Security		BearerAuth
 // @Router			/user [delete]
-func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
-	user := util.GetUserFromJWT(r, w, db)
+func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
+	user := util.GetUserFromJWT(r, w, api.db)
 	if user == nil {
 		return
 	}
 
-	res, err := db.Exec("DELETE FROM users WHERE id=$1", user.ID)
+	res, err := api.db.Exec("DELETE FROM users WHERE id=$1", user.ID)
 	if err != nil {
 		util.GenericServerError(w, err)
 		return
@@ -240,18 +250,18 @@ func Delete(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 // @Failure		401		{object}	util.Error
 // @Failure		500		{object}	util.Error
 // @Router			/user/auth [post]
-func Authenticate(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func (api *API) Authenticate(w http.ResponseWriter, r *http.Request) {
 	query := AuthenticateQueryParams{
 		Email:    r.FormValue("email"),
 		Password: r.FormValue("password"),
 	}
 
-	if err := validate.Struct(query); err != nil {
+	if err := api.validator.Struct(query); err != nil {
 		util.GenericValidationError(w, err)
 		return
 	}
 
-	user := util.GetUser(w, query.Email, db)
+	user := util.GetUser(w, query.Email, api.db)
 	if user == nil {
 		return
 	}
@@ -303,7 +313,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 // @Failure		500		{object}	util.Error
 // @Security		BearerAuth
 // @Router			/user/auth/refresh [post]
-func RefreshToken(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
+func (api *API) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	accessToken, err := util.GetJWT(r)
 	if err != nil {
 		util.GenericServerError(w, err)
@@ -314,7 +324,7 @@ func RefreshToken(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		RefreshToken: r.FormValue("refresh_token"),
 	}
 
-	if err := validate.Struct(query); err != nil {
+	if err := api.validator.Struct(query); err != nil {
 		util.GenericValidationError(w, err)
 		return
 	}
@@ -325,7 +335,7 @@ func RefreshToken(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 		return
 	}
 
-	user := util.GetUser(w, accessTokenClaim.Email, db)
+	user := util.GetUser(w, accessTokenClaim.Email, api.db)
 	if user == nil {
 		return
 	}

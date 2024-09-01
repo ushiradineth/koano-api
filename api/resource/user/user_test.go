@@ -112,7 +112,7 @@ func TestUserHandlers(t *testing.T) {
 
 			assert.Equal(t, user1.name, responseBody.Name)
 			assert.Equal(t, user1.email, responseBody.Email)
-			assert.Empty(t, responseBody.Password)
+			assert.Equal(t, "redacted", responseBody.Password, "Password in response should be redacted")
 
 			assert.Equal(t, http.StatusOK, response.Code)
 		})
@@ -124,20 +124,19 @@ func TestUserHandlers(t *testing.T) {
 			response := httptest.NewRecorder()
 			Get(response, request, db)
 
-      assert.Equal(t, http.StatusUnauthorized, response.Code)
+			assert.Equal(t, http.StatusUnauthorized, response.Code)
 		})
 	})
 
 	t.Run("Update User", func(t *testing.T) {
 		body := url.Values{}
-		body.Set("name", "Edited Ushira Dineth")
+		body.Set("name", user2.name)
 		body.Set("email", user1.email)
 
 		t.Run("Update user name", func(t *testing.T) {
 			UpdateUserHelper(t, body, http.StatusOK)
 		})
 
-		body.Set("name", user1.name)
 		body.Set("email", user2.email)
 
 		t.Run("Fail to update user 1 as email already exists", func(t *testing.T) {
@@ -314,7 +313,7 @@ func TestUserHelpers(t *testing.T) {
 			user, code, err := util.GetUserFromJWT(request, db)
 			assert.NoError(t, err, "Error getting user")
 
-      assert.Equal(t, code, http.StatusOK)
+			assert.Equal(t, code, http.StatusOK)
 			assert.Equal(t, user1.name, user.Name)
 			assert.Equal(t, user1.email, user.Email)
 		})
@@ -326,7 +325,7 @@ func TestUserHelpers(t *testing.T) {
 
 			_, code, err := util.GetUserFromJWT(request, db)
 
-      assert.Equal(t, code, http.StatusUnauthorized)
+			assert.Equal(t, code, http.StatusUnauthorized)
 			assert.Error(t, err, "This action should fail as this JWT is not owned by a valid user")
 		})
 	})
@@ -357,12 +356,12 @@ func AuthenticateUserHelper(t testing.TB, body url.Values, want_code int) {
 
 	Authenticate(response, request, db)
 
-	var responseBody AuthenticateUserResponse
+	var responseBody AuthenticateResponse
 	err := json.NewDecoder(response.Body).Decode(&responseBody)
 	assert.NoError(t, err)
 
 	assert.Equal(t, body.Get("email"), responseBody.User.Email)
-	assert.Equal(t, "", responseBody.User.Password, "Password in response should be empty")
+	assert.Equal(t, "redacted", responseBody.User.Password, "Password in response should be redacted")
 	assert.NotEmpty(t, responseBody.AccessToken, "Access Token is missing")
 	assert.NotEmpty(t, responseBody.RefreshToken, "Refresh Token is missing")
 
