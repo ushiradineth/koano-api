@@ -11,11 +11,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 	"github.com/ushiradineth/cron-be/api/router"
 	"github.com/ushiradineth/cron-be/database"
 	_ "github.com/ushiradineth/cron-be/docs"
+	validatorUtil "github.com/ushiradineth/cron-be/util/validator"
 )
 
 // @title						Cron
@@ -45,7 +45,7 @@ func run(ctx context.Context) error {
 	}
 
 	db := database.Configure()
-	v := validator.New()
+	v := validatorUtil.New()
 
 	routes := router.New(db, v)
 
