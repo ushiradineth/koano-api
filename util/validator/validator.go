@@ -3,6 +3,8 @@ package validator
 import (
 	"fmt"
 	"log"
+	"reflect"
+	"strings"
 	"unicode"
 
 	"github.com/go-playground/validator/v10"
@@ -10,6 +12,15 @@ import (
 
 func New() *validator.Validate {
 	validate := validator.New()
+
+	// Using the names which have been specified for JSON representations of structs, rather than normal Go field names
+	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+		if name == "-" {
+			return ""
+		}
+		return name
+	})
 
 	err := validate.RegisterValidation("hasLowercase", hasLowercase)
 	if err != nil {
@@ -45,11 +56,11 @@ func ValidationError(err error) []string {
 		for i, err := range fieldErrors {
 			switch err.Tag() {
 			case "required":
-				resp[i] = fmt.Sprintf("%s: field is required", err.Field())
+				resp[i] = fmt.Sprintf("%s field is required", err.Field())
 			case "min":
-				resp[i] = fmt.Sprintf("%s must be at least %s characters length", err.Field(), err.ActualTag())
+				resp[i] = fmt.Sprintf("%s must be at least %s characters length", err.Field(), err.Param())
 			case "max":
-				resp[i] = fmt.Sprintf("%s can't be more that %s characters length", err.Field(), err.ActualTag())
+				resp[i] = fmt.Sprintf("%s can't be more than %s characters length", err.Field(), err.Param())
 			case "email":
 				resp[i] = fmt.Sprintf("%s must be a valid email", err.Field())
 			case "jwt":
@@ -69,7 +80,7 @@ func ValidationError(err error) []string {
 			case "hasSpecialCharacter":
 				resp[i] = fmt.Sprintf("%s must contain at least one special character", err.Field())
 			default:
-				resp[i] = fmt.Sprintf("something wrong on %s; %s", err.Field(), err.Tag())
+				resp[i] = fmt.Sprintf("something is wrong with %s; %s", err.Field(), err.Tag())
 			}
 		}
 
