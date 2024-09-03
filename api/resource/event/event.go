@@ -68,9 +68,7 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 // @Summary		Create Event
 // @Description	Create Event based on the parameters sent with the request
 // @Tags			Event
-//
-// @Accept			json
-//
+// @Accept		application/x-www-form-urlencoded
 // @Produce		json
 // @Param			Query	query		PostQueryParams	true	"PostQueryParams"
 // @Success		200		{object}	response.Response{data=models.Event}
@@ -144,8 +142,7 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 // @Summary		Update Event
 // @Description	Update Event based on the parameters sent with the request
 // @Tags			Event
-//
-// @Accept			json
+// @Accept		application/x-www-form-urlencoded
 // @Produce		json
 // @Param			Path	path		EventPathParams	true	"EventPathParams"
 // @Param			Query	query		PutQueryParams	true	"PutQueryParams"
@@ -236,7 +233,7 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 //
 // @Description	Delete Event based on the parameters sent with the request
 // @Tags			Event
-// @Accept			json
+// @Accept		application/x-www-form-urlencoded
 // @Produce		json
 // @Param			Path	path		EventPathParams	true	"EventPathParams"
 // @Success		200		{object}	response.Response{data=string}
@@ -283,7 +280,7 @@ func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 // @Summary		Get User Events
 // @Description	Get authenticated user's event based on the JWT sent with the request
 // @Tags			Event
-// @Accept			json
+// @Accept		application/x-www-form-urlencoded
 // @Produce		json
 // @Param			Path	path		UserPathParams				true	"UserPathParams"
 // @Param			Query	query		GetUserEventsQueryParams	true	"GetUserEventsQueryParams"

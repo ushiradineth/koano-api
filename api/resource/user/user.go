@@ -64,7 +64,7 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 // @Summary		Create User
 // @Description	Create User with the parameters sent with the request
 // @Tags			User
-// @Accept			json
+// @Accept		application/x-www-form-urlencoded
 // @Produce		json
 // @Param			Query	query		PostQueryParams	true	"PostQueryParams"
 // @Success		200		{object}	response.Response{data=models.User}
@@ -123,7 +123,7 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 // @Summary		Update User
 // @Description	Update authenticated User with the parameters sent with the request based on the JWT
 // @Tags			User
-// @Accept			json
+// @Accept    application/x-www-form-urlencoded
 // @Produce		json
 // @Param			Path	path		UserPathParams	true	"UserPathParams"
 // @Param			Query	query		PutQueryParams	true	"PutQueryParams"
@@ -194,7 +194,7 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 // @Summary		Delete User
 // @Description	Delete authenticated User based on the JWT
 // @Tags			User
-// @Accept			json
+// @Accept		application/x-www-form-urlencoded
 // @Produce		json
 // @Param			Path	path		UserPathParams	true	"UserPathParams"
 // @Success		200		{object}	response.Response{data=string}

@@ -38,7 +38,7 @@ type RefreshTokenResponse struct {
 // @Summary		Authenticate User
 // @Description	Authenticate User with the parameters sent with the request
 // @Tags			Auth
-// @Accept			json
+// @Accept		application/x-www-form-urlencoded
 // @Produce		json
 // @Param			Query	query		AuthenticateQueryParams	true	"AuthenticateQueryParams"
 // @Success		200		{object}	response.Response{data=AuthenticateResponse}
@@ -100,7 +100,7 @@ func (api *API) Authenticate(w http.ResponseWriter, r *http.Request) {
 // @Summary		Refresh Access Token
 // @Description	Refresh Access Token with the parameters sent with the request based on the request based on the JWT
 // @Tags			Auth
-// @Accept			json
+// @Accept		application/x-www-form-urlencoded
 // @Produce		json
 // @Param			Query	query		RefreshTokenQueryParams	true	"RefreshTokenQueryParams"
 // @Success		200		{object}	response.Response{data=RefreshTokenResponse}
@@ -157,7 +157,7 @@ func (api *API) RefreshToken(w http.ResponseWriter, r *http.Request) {
 // @Summary		Update User Password
 // @Description	Update authenticated user's Password with the parameters sent with the request based on the JWT
 // @Tags			Auth
-// @Accept			json
+// @Accept		application/x-www-form-urlencoded
 // @Produce		json
 // @Param			Query	query		PutPasswordQueryParams	true	"PutPasswordQueryParams"
 // @Success		200		{object}	response.Response{data=string}
