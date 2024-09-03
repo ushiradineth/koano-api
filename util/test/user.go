@@ -20,8 +20,6 @@ func CreateUserHelper(userAPI *user.API, t testing.TB, body url.Values, want_cod
 
 	userAPI.Post(res, req)
 
-	assert.Equal(t, want_code, res.Code)
-
 	GenericAssert(t, want_code, want_status, res)
 }
 
@@ -37,7 +35,7 @@ func GetUserHelper(userAPI *user.API, t testing.TB, want_code int, want_status s
 
 	responseBody := GenericAssert(t, want_code, want_status, res)
 
-	if want_code == http.StatusOK {
+	if res.Code  == http.StatusOK {
 		datamap, ok := responseBody.Data.(map[string]interface{})
 		assert.True(t, true, ok)
 

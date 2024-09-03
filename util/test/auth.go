@@ -24,7 +24,7 @@ func AuthenticateUserHelper(authAPI *auth.API, t testing.TB, body url.Values, wa
 
 	responseBody := GenericAssert(t, want_code, want_status, res)
 
-	if want_code == http.StatusOK {
+	if res.Code == http.StatusOK {
 		dataMap, ok := responseBody.Data.(map[string]interface{})
 		assert.True(t, true, ok)
 
