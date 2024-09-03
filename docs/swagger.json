@@ -15,7 +15,7 @@
             "post": {
                 "description": "Authenticate User with the parameters sent with the request",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -89,7 +89,7 @@
                 ],
                 "description": "Refresh Access Token with the parameters sent with the request based on the request based on the JWT",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -149,7 +149,7 @@
                 ],
                 "description": "Update authenticated user's Password with the parameters sent with the request based on the JWT",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -217,7 +217,7 @@
                 ],
                 "description": "Create Event based on the parameters sent with the request",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -368,7 +368,7 @@
                 ],
                 "description": "Update Event based on the parameters sent with the request",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -462,7 +462,7 @@
                 ],
                 "description": "Delete Event based on the parameters sent with the request",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -523,7 +523,7 @@
             "post": {
                 "description": "Create User with the parameters sent with the request",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -664,7 +664,7 @@
                 ],
                 "description": "Update authenticated User with the parameters sent with the request based on the JWT",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -740,7 +740,7 @@
                 ],
                 "description": "Delete authenticated User based on the JWT",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -806,7 +806,7 @@
                 ],
                 "description": "Get authenticated user's event based on the JWT sent with the request",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -883,33 +883,21 @@
         "auth.AuthenticateResponse": {
             "type": "object",
             "properties": {
-                "accessToken": {
+                "access_token": {
                     "type": "string"
                 },
-                "createdAt": {
+                "refresh_token": {
                     "type": "string"
                 },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "refreshToken": {
-                    "type": "string"
+                "user": {
+                    "$ref": "#/definitions/models.User"
                 }
             }
         },
         "auth.RefreshTokenResponse": {
             "type": "object",
             "properties": {
-                "accessToken": {
+                "access_token": {
                     "type": "string"
                 }
             }
@@ -917,10 +905,10 @@
         "models.Event": {
             "type": "object",
             "properties": {
-                "createdAt": {
+                "created_at": {
                     "type": "string"
                 },
-                "end": {
+                "end_time": {
                     "type": "string"
                 },
                 "id": {
@@ -929,7 +917,7 @@
                 "repeated": {
                     "type": "string"
                 },
-                "start": {
+                "start_time": {
                     "type": "string"
                 },
                 "timezone": {
@@ -938,7 +926,7 @@
                 "title": {
                     "type": "string"
                 },
-                "userID": {
+                "user_id": {
                     "type": "string"
                 }
             }
@@ -946,7 +934,7 @@
         "models.User": {
             "type": "object",
             "properties": {
-                "createdAt": {
+                "created_at": {
                     "type": "string"
                 },
                 "email": {

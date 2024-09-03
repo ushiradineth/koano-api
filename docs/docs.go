@@ -23,7 +23,7 @@ const docTemplate = `{
             "post": {
                 "description": "Authenticate User with the parameters sent with the request",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -97,7 +97,7 @@ const docTemplate = `{
                 ],
                 "description": "Refresh Access Token with the parameters sent with the request based on the request based on the JWT",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -157,7 +157,7 @@ const docTemplate = `{
                 ],
                 "description": "Update authenticated user's Password with the parameters sent with the request based on the JWT",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -225,7 +225,7 @@ const docTemplate = `{
                 ],
                 "description": "Create Event based on the parameters sent with the request",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -376,7 +376,7 @@ const docTemplate = `{
                 ],
                 "description": "Update Event based on the parameters sent with the request",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -470,7 +470,7 @@ const docTemplate = `{
                 ],
                 "description": "Delete Event based on the parameters sent with the request",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -531,7 +531,7 @@ const docTemplate = `{
             "post": {
                 "description": "Create User with the parameters sent with the request",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -672,7 +672,7 @@ const docTemplate = `{
                 ],
                 "description": "Update authenticated User with the parameters sent with the request based on the JWT",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -748,7 +748,7 @@ const docTemplate = `{
                 ],
                 "description": "Delete authenticated User based on the JWT",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -814,7 +814,7 @@ const docTemplate = `{
                 ],
                 "description": "Get authenticated user's event based on the JWT sent with the request",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -891,33 +891,21 @@ const docTemplate = `{
         "auth.AuthenticateResponse": {
             "type": "object",
             "properties": {
-                "accessToken": {
+                "access_token": {
                     "type": "string"
                 },
-                "createdAt": {
+                "refresh_token": {
                     "type": "string"
                 },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "refreshToken": {
-                    "type": "string"
+                "user": {
+                    "$ref": "#/definitions/models.User"
                 }
             }
         },
         "auth.RefreshTokenResponse": {
             "type": "object",
             "properties": {
-                "accessToken": {
+                "access_token": {
                     "type": "string"
                 }
             }
@@ -925,10 +913,10 @@ const docTemplate = `{
         "models.Event": {
             "type": "object",
             "properties": {
-                "createdAt": {
+                "created_at": {
                     "type": "string"
                 },
-                "end": {
+                "end_time": {
                     "type": "string"
                 },
                 "id": {
@@ -937,7 +925,7 @@ const docTemplate = `{
                 "repeated": {
                     "type": "string"
                 },
-                "start": {
+                "start_time": {
                     "type": "string"
                 },
                 "timezone": {
@@ -946,7 +934,7 @@ const docTemplate = `{
                 "title": {
                     "type": "string"
                 },
-                "userID": {
+                "user_id": {
                     "type": "string"
                 }
             }
@@ -954,7 +942,7 @@ const docTemplate = `{
         "models.User": {
             "type": "object",
             "properties": {
-                "createdAt": {
+                "created_at": {
                     "type": "string"
                 },
                 "email": {

@@ -1,48 +1,40 @@
 definitions:
   auth.AuthenticateResponse:
     properties:
-      accessToken:
+      access_token:
         type: string
-      createdAt:
+      refresh_token:
         type: string
-      email:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      password:
-        type: string
-      refreshToken:
-        type: string
+      user:
+        $ref: '#/definitions/models.User'
     type: object
   auth.RefreshTokenResponse:
     properties:
-      accessToken:
+      access_token:
         type: string
     type: object
   models.Event:
     properties:
-      createdAt:
+      created_at:
         type: string
-      end:
+      end_time:
         type: string
       id:
         type: string
       repeated:
         type: string
-      start:
+      start_time:
         type: string
       timezone:
         type: string
       title:
         type: string
-      userID:
+      user_id:
         type: string
     type: object
   models.User:
     properties:
-      createdAt:
+      created_at:
         type: string
       email:
         type: string
@@ -81,7 +73,7 @@ paths:
   /auth/login:
     post:
       consumes:
-      - application/json
+      - application/x-www-form-urlencoded
       description: Authenticate User with the parameters sent with the request
       parameters:
       - in: query
@@ -124,7 +116,7 @@ paths:
   /auth/refresh:
     post:
       consumes:
-      - application/json
+      - application/x-www-form-urlencoded
       description: Refresh Access Token with the parameters sent with the request
         based on the request based on the JWT
       parameters:
@@ -160,7 +152,7 @@ paths:
   /auth/reset-password:
     put:
       consumes:
-      - application/json
+      - application/x-www-form-urlencoded
       description: Update authenticated user's Password with the parameters sent with
         the request based on the JWT
       parameters:
@@ -202,7 +194,7 @@ paths:
   /events:
     post:
       consumes:
-      - application/json
+      - application/x-www-form-urlencoded
       description: Create Event based on the parameters sent with the request
       parameters:
       - in: query
@@ -257,7 +249,7 @@ paths:
   /events/{event_id}:
     delete:
       consumes:
-      - application/json
+      - application/x-www-form-urlencoded
       description: Delete Event based on the parameters sent with the request
       parameters:
       - in: path
@@ -332,7 +324,7 @@ paths:
       - Event
     put:
       consumes:
-      - application/json
+      - application/x-www-form-urlencoded
       description: Update Event based on the parameters sent with the request
       parameters:
       - in: path
@@ -391,7 +383,7 @@ paths:
   /users:
     post:
       consumes:
-      - application/json
+      - application/x-www-form-urlencoded
       description: Create User with the parameters sent with the request
       parameters:
       - in: query
@@ -438,7 +430,7 @@ paths:
   /users/{user_id}:
     delete:
       consumes:
-      - application/json
+      - application/x-www-form-urlencoded
       description: Delete authenticated User based on the JWT
       parameters:
       - in: path
@@ -512,7 +504,7 @@ paths:
       - User
     put:
       consumes:
-      - application/json
+      - application/x-www-form-urlencoded
       description: Update authenticated User with the parameters sent with the request
         based on the JWT
       parameters:
@@ -560,7 +552,7 @@ paths:
   /users/{user_id}/events:
     get:
       consumes:
-      - application/json
+      - application/x-www-form-urlencoded
       description: Get authenticated user's event based on the JWT sent with the request
       parameters:
       - in: path
