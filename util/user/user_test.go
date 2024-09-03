@@ -62,17 +62,16 @@ func TestInit(t *testing.T) {
 		}()
 	})
 
+	body := url.Values{}
+	body.Set("name", user1.Name)
+	body.Set("email", user1.Email)
+	body.Set("password", user1.Password)
 	t.Run("Create User", func(t *testing.T) {
-		body := url.Values{}
-		body.Set("name", user1.Name)
-		body.Set("email", user1.Email)
-		body.Set("password", user1.Password)
-
 		test.CreateUserHelper(userAPI, t, body, http.StatusOK, response.StatusSuccess)
+	})
 
-		t.Run("Authenticates user 1", func(t *testing.T) {
-			test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
-		})
+	t.Run("Authenticates user 1", func(t *testing.T) {
+		test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
 	})
 }
 
