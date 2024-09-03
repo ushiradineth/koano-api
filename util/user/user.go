@@ -3,6 +3,7 @@ package user
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -36,12 +37,12 @@ func GetUser(w http.ResponseWriter, idOrEmail string, db *sqlx.DB) *models.User 
 	err = db.Get(&user, query, args...)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			response.HTTPError(w, http.StatusBadRequest, "User not found", response.StatusFail)
+			response.GenericBadRequestError(w, fmt.Errorf("User not found"))
 			return nil
 
 		}
 
-		response.HTTPError(w, http.StatusInternalServerError, err.Error(), response.StatusError)
+		response.GenericServerError(w, err)
 		return nil
 	}
 
@@ -53,7 +54,6 @@ func DoesUserExist(idStr string, email string, db *sqlx.DB) (bool, int, error) {
 
 	if idStr != "" {
 		parsedID, err := uuid.Parse(idStr)
-
 		if err != nil {
 			return false, 0, err
 		}
@@ -85,17 +85,12 @@ func DoesUserExist(idStr string, email string, db *sqlx.DB) (bool, int, error) {
 func GetUserFromJWT(r *http.Request, w http.ResponseWriter, db *sqlx.DB) *models.User {
 	accessToken, err := auth.GetJWT(r)
 	if err != nil {
-		response.HTTPError(w, http.StatusBadRequest, err.Error(), response.StatusFail)
+    response.GenericBadRequestError(w, err)
 		return nil
 	}
 
 	JWT, err := auth.ParseAccessToken(accessToken)
 	if err != nil {
-		response.HTTPError(w, http.StatusUnauthorized, "Access Token is invalid or expired", response.StatusFail)
-		return nil
-	}
-
-	if JWT.StandardClaims.Valid() != nil {
 		response.HTTPError(w, http.StatusUnauthorized, "Access Token is invalid or expired", response.StatusFail)
 		return nil
 	}
