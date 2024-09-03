@@ -1,30 +1,30 @@
 package event
 
 type UserPathParams struct {
-	UserID string `form:"user_id" validate:"required,uuid"`
+	UserID string `json:"user_id" validate:"required,uuid"`
 }
 
 type EventPathParams struct {
-	EventID string `form:"event_id" validate:"required,uuid"`
+	EventID string `json:"event_id" validate:"required,uuid"`
 }
 
 type PostQueryParams struct {
-	Title     string `form:"title" validate:"required"`
-	Timezone  string `form:"timezone" validate:"required,timezone"`
-	Repeated  string `form:"repeated" validate:"required,oneof=never daily weekly monthly yearly"`
-	StartTime string `form:"start_time" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
-	EndTime   string `form:"end_time" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
+	Title     string `json:"title" validate:"required"`
+	Timezone  string `json:"timezone" validate:"required,timezone"`
+	Repeated  string `json:"repeated" validate:"required,oneof=never daily weekly monthly yearly"`
+	StartTime string `json:"start_time" validate:"required,datetime=2006-01-02T15:04:05Z"`
+	EndTime   string `json:"end_time" validate:"required,datetime=2006-01-02T15:04:05Z"`
 }
 
 type PutQueryParams struct {
-	Title     string `form:"title" validate:"required"`
-	Timezone  string `form:"timezone" validate:"required,timezone"`
-	Repeated  string `form:"repeated" validate:"required,oneof=never daily weekly monthly yearly"`
-	StartTime string `form:"start_time" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
-	EndTime   string `form:"end_time" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
+	Title     string `json:"title" validate:"required"`
+	Timezone  string `json:"timezone" validate:"required,timezone"`
+	Repeated  string `json:"repeated" validate:"required,oneof=never daily weekly monthly yearly"`
+	StartTime string `json:"start_time" validate:"required,datetime=2006-01-02T15:04:05Z"`
+	EndTime   string `json:"end_time" validate:"required,datetime=2006-01-02T15:04:05Z"`
 }
 
 type GetUserEventsQueryParams struct {
-	StartDay string `form:"start_day" validate:"required,datetime=2006-01-02"`
-	EndDay   string `form:"end_day" validate:"required,datetime=2006-01-02"`
+	StartDay string `json:"start_day" validate:"required,datetime=2006-01-02"`
+	EndDay   string `json:"end_day" validate:"required,datetime=2006-01-02"`
 }

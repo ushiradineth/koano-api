@@ -235,6 +235,7 @@
                     },
                     {
                         "enum": [
+                            "never",
                             "daily",
                             "weekly",
                             "monthly",
@@ -398,6 +399,7 @@
                     },
                     {
                         "enum": [
+                            "never",
                             "daily",
                             "weekly",
                             "monthly",

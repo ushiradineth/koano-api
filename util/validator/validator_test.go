@@ -72,6 +72,13 @@ var errorTests = []*testCase{
 		expected: "date must follow `2006-01-02` format",
 	},
 	{
+		name: `datetime`,
+		input: struct {
+			Date string `json:"date" validate:"datetime=2006-01-02T14:04:05Z"`
+		}{Date: "2006/01/02"},
+		expected: "date must follow `2006-01-02T14:04:05Z` format",
+	},
+	{
 		name: `hasLowercase`,
 		input: struct {
 			Name string `json:"name" validate:"hasLowercase"`
@@ -176,6 +183,13 @@ var successTests = []*testCase{
 		expected: "",
 	},
 	{
+		name: `datetime`,
+		input: struct {
+			Date string `json:"date" validate:"datetime=2006-01-02T15:04:05Z"`
+		}{Date: "2006-01-02T14:04:05Z"},
+		expected: "",
+	},
+	{
 		name: `hasLowercase`,
 		input: struct {
 			Name string `json:"name" validate:"hasLowercase"`
@@ -201,6 +215,13 @@ var successTests = []*testCase{
 		input: struct {
 			Name string `json:"name" validate:"hasSpecialCharacter"`
 		}{Name: "!@#$%^"},
+		expected: "",
+	},
+	{
+		name: `oneof`,
+		input: struct {
+			Repeated string `json:"repeated" validate:"oneof=never daily weekly monthly yearly"`
+		}{Repeated: "never"},
 		expected: "",
 	},
 	{

@@ -48,6 +48,9 @@ func DoesEventExist(id string, start_time string, end_time string, user_id strin
 	}
 
 	db.Get(&event, query, args...)
+	if err != nil {
+		return false
+	}
 
 	return event != 0
 }

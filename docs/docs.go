@@ -243,6 +243,7 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
+                            "never",
                             "daily",
                             "weekly",
                             "monthly",
@@ -406,6 +407,7 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
+                            "never",
                             "daily",
                             "weekly",
                             "monthly",

@@ -202,6 +202,7 @@ paths:
         required: true
         type: string
       - enum:
+        - never
         - daily
         - weekly
         - monthly
@@ -341,6 +342,7 @@ paths:
         required: true
         type: string
       - enum:
+        - never
         - daily
         - weekly
         - monthly
