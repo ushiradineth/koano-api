@@ -11,7 +11,7 @@ type EventPathParams struct {
 type PostQueryParams struct {
 	Title     string `form:"title" validate:"required"`
 	Timezone  string `form:"timezone" validate:"required,timezone"`
-	Repeated  string `form:"repeated" validate:"required"`
+	Repeated  string `form:"repeated" validate:"required,oneof=daily weekly monthly yearly"`
 	StartTime string `form:"start_time" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
 	EndTime   string `form:"end_time" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
 }
@@ -19,7 +19,7 @@ type PostQueryParams struct {
 type PutQueryParams struct {
 	Title     string `form:"title" validate:"required"`
 	Timezone  string `form:"timezone" validate:"required,timezone"`
-	Repeated  string `form:"repeated" validate:"required"`
+	Repeated  string `form:"repeated" validate:"required,oneof=daily weekly monthly yearly"`
 	StartTime string `form:"start_time" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
 	EndTime   string `form:"end_time" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
 }

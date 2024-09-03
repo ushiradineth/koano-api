@@ -201,7 +201,12 @@ paths:
         name: end_time
         required: true
         type: string
-      - in: query
+      - enum:
+        - daily
+        - weekly
+        - monthly
+        - yearly
+        in: query
         name: repeated
         required: true
         type: string
@@ -335,7 +340,12 @@ paths:
         name: end_time
         required: true
         type: string
-      - in: query
+      - enum:
+        - daily
+        - weekly
+        - monthly
+        - yearly
+        in: query
         name: repeated
         required: true
         type: string

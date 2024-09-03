@@ -242,6 +242,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "enum": [
+                            "daily",
+                            "weekly",
+                            "monthly",
+                            "yearly"
+                        ],
                         "type": "string",
                         "name": "repeated",
                         "in": "query",
@@ -399,6 +405,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "enum": [
+                            "daily",
+                            "weekly",
+                            "monthly",
+                            "yearly"
+                        ],
                         "type": "string",
                         "name": "repeated",
                         "in": "query",
