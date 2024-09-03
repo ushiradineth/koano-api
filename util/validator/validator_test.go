@@ -100,6 +100,13 @@ var errorTests = []*testCase{
 		expected: "name must contain at least one special character",
 	},
 	{
+		name: `oneof`,
+		input: struct {
+			Repeated string `json:"repeated" validate:"oneof=never daily weekly monthly yearly"`
+		}{Repeated: "nothing"},
+		expected: "repeated field can only be one of the following `never daily weekly monthly yearly`",
+	},
+	{
 		name: `default`,
 		input: struct {
 			URL string `json:"url" validate:"url"`

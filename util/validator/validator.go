@@ -79,6 +79,8 @@ func ValidationError(err error) []string {
 				resp[i] = fmt.Sprintf("%s must contain at least one digit", err.Field())
 			case "hasSpecialCharacter":
 				resp[i] = fmt.Sprintf("%s must contain at least one special character", err.Field())
+			case "oneof":
+				resp[i] = fmt.Sprintf("%s field can only be one of the following `%s`", err.Field(), err.Param())
 			default:
 				resp[i] = fmt.Sprintf("something is wrong with %s; %s", err.Field(), err.Tag())
 			}
