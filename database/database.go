@@ -9,7 +9,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func Configure() *sqlx.DB {
+func New() *sqlx.DB {
 	connectionString := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s", os.Getenv("PG_USER"), os.Getenv("PG_PASSWORD"), os.Getenv("PG_URL"), os.Getenv("PG_DATABASE"), os.Getenv("PG_SSLMODE"))
 
 	db, err := sqlx.Connect("postgres", connectionString)

@@ -44,7 +44,7 @@ func run(ctx context.Context) error {
 		return errors.New("Failed to load env")
 	}
 
-	db := database.Configure()
+	db := database.New()
 	v := validatorUtil.New()
 
 	routes := router.New(db, v)

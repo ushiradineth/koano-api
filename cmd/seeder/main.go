@@ -23,7 +23,7 @@ func run() error {
 		return errors.New("Failed to load env")
 	}
 
-	db := database.Configure()
+	db := database.New()
 
 	for i := 0; i < 100; i++ {
 		userId := seeder.CreateUser(db)
