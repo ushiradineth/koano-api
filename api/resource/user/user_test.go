@@ -92,8 +92,8 @@ func TestCreateUserHandler(t *testing.T) {
 	t.Run("Email is invalid", func(t *testing.T) {
 		test.CreateUserHelper(userAPI, t, body, http.StatusBadRequest, response.StatusFail)
 	})
-
 	body.Set("email", "placeholder@email.com")
+
 	body.Set("password", "notastandardpassword")
 	t.Run("Password is invalid", func(t *testing.T) {
 		test.CreateUserHelper(userAPI, t, body, http.StatusBadRequest, response.StatusFail)
@@ -180,6 +180,7 @@ func TestUpdateUserHandler(t *testing.T) {
 	t.Run("Name is required", func(t *testing.T) {
 		test.UpdateUserHelper(userAPI, t, body, http.StatusBadRequest, response.StatusFail, user1ID, accessToken)
 	})
+	body.Set("name", user1.Name)
 
 	body.Set("email", "not_an_email")
 	t.Run("Email is invalid", func(t *testing.T) {
