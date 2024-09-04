@@ -58,12 +58,13 @@ func UpdateUserPasswordHelper(authAPI *auth.API, t testing.TB, body url.Values, 
 
 func RefreshTokenHelper(authAPI *auth.API, t testing.TB, body url.Values, access_token string, want_code int, want_status string) {
 	t.Helper()
-	req, _ := http.NewRequest("POST", "/auth/refresh", strings.NewReader(body.Encode()))
+	req, _ := http.NewRequest(http.MethodPost, "/auth/refresh", strings.NewReader(body.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
 	res := httptest.NewRecorder()
 
 	authAPI.RefreshToken(res, req)
 
+  t.Log(res.Body)
 	GenericAssert(t, want_code, want_status, res)
 }

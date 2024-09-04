@@ -39,7 +39,6 @@ func GetUser(w http.ResponseWriter, idOrEmail string, db *sqlx.DB) *models.User 
 		if errors.Is(err, sql.ErrNoRows) {
 			response.GenericBadRequestError(w, fmt.Errorf("User not found"))
 			return nil
-
 		}
 
 		response.GenericServerError(w, err)

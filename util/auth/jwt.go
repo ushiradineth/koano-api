@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
+	"github.com/ushiradineth/cron-be/util/response"
 )
 
 type UserClaim struct {
@@ -62,28 +64,19 @@ func ParseAccessToken(accessToken string) (*UserClaim, error) {
 	return claims, nil
 }
 
-func ParseRefreshToken(refreshToken string) (*jwt.StandardClaims, error) {
+func ParseRefreshToken(w http.ResponseWriter, refreshToken string) *jwt.StandardClaims {
 	parsedRefreshToken, err := jwt.ParseWithClaims(refreshToken, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	if parsedRefreshToken == nil {
-		return nil, errors.New("unable to parse refresh token")
-	}
 
 	claims, ok := parsedRefreshToken.Claims.(*jwt.StandardClaims)
-	if !ok || !parsedRefreshToken.Valid {
-		return nil, errors.New("invalid refresh token")
+	if ok && parsedRefreshToken.Valid {
+		return claims
+	} else {
+    response.GenericBadRequestError(w, fmt.Errorf("Invalid refresh token: %v", err))
 	}
 
-	if claims.ExpiresAt < time.Now().Unix() {
-		return nil, errors.New("refresh token has expired")
-	}
-
-	return claims, nil
+	return nil
 }
 
 func GetJWT(r *http.Request) (string, error) {
@@ -100,18 +93,20 @@ func GetJWT(r *http.Request) (string, error) {
 	return parts[1], nil
 }
 
-func ParseExpiredAccessToken(accessToken string) (*UserClaim, error) {
+func ParseExpiredAccessToken(w http.ResponseWriter, accessToken string) *UserClaim {
 	parsedAccessToken, err := jwt.ParseWithClaims(accessToken, &UserClaim{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
 	if err == nil || !strings.Contains(err.Error(), "token is expired by") {
-		return nil, errors.New("Token is valid")
+		response.GenericBadRequestError(w, errors.New("Token is valid"))
+		return nil
 	}
 
 	claims, ok := parsedAccessToken.Claims.(*UserClaim)
 	if !ok || parsedAccessToken.Valid {
-		return nil, errors.New("Token is valid")
+		response.GenericBadRequestError(w, errors.New("Token is valid"))
+		return nil
 	}
 
-	return claims, nil
+	return claims
 }

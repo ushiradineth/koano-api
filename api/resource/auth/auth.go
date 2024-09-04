@@ -26,19 +26,19 @@ func New(db *sqlx.DB, validator *validator.Validate) *API {
 }
 
 type AuthenticateResponse struct {
-	models.User
-	AccessToken  string
-	RefreshToken string
+	User         models.User `json:"user"`
+	AccessToken  string      `json:"access_token"`
+	RefreshToken string      `json:"refresh_token"`
 }
 
 type RefreshTokenResponse struct {
-	AccessToken string
+	AccessToken string `json:"access_token"`
 }
 
 // @Summary		Authenticate User
 // @Description	Authenticate User with the parameters sent with the request
 // @Tags			Auth
-// @Accept		application/x-www-form-urlencoded
+// @Accept			application/x-www-form-urlencoded
 // @Produce		json
 // @Param			Query	query		AuthenticateQueryParams	true	"AuthenticateQueryParams"
 // @Success		200		{object}	response.Response{data=AuthenticateResponse}
@@ -100,7 +100,7 @@ func (api *API) Authenticate(w http.ResponseWriter, r *http.Request) {
 // @Summary		Refresh Access Token
 // @Description	Refresh Access Token with the parameters sent with the request based on the request based on the JWT
 // @Tags			Auth
-// @Accept		application/x-www-form-urlencoded
+// @Accept			application/x-www-form-urlencoded
 // @Produce		json
 // @Param			Query	query		RefreshTokenQueryParams	true	"RefreshTokenQueryParams"
 // @Success		200		{object}	response.Response{data=RefreshTokenResponse}
@@ -124,9 +124,8 @@ func (api *API) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessTokenClaim, err := auth.ParseExpiredAccessToken(accessToken)
-	if err != nil {
-		response.GenericServerError(w, err)
+	accessTokenClaim := auth.ParseExpiredAccessToken(w, accessToken)
+	if accessTokenClaim == nil {
 		return
 	}
 
@@ -135,9 +134,8 @@ func (api *API) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, errr := auth.ParseRefreshToken(query.RefreshToken)
-	if errr != nil {
-		response.GenericServerError(w, err)
+	refreshTokenClaim := auth.ParseRefreshToken(w, query.RefreshToken)
+	if refreshTokenClaim == nil {
 		return
 	}
 
@@ -157,7 +155,7 @@ func (api *API) RefreshToken(w http.ResponseWriter, r *http.Request) {
 // @Summary		Update User Password
 // @Description	Update authenticated user's Password with the parameters sent with the request based on the JWT
 // @Tags			Auth
-// @Accept		application/x-www-form-urlencoded
+// @Accept			application/x-www-form-urlencoded
 // @Produce		json
 // @Param			Query	query		PutPasswordQueryParams	true	"PutPasswordQueryParams"
 // @Success		200		{object}	response.Response{data=string}

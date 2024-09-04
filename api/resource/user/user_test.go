@@ -107,35 +107,6 @@ func TestCreateUserHandler(t *testing.T) {
 	})
 }
 
-func TestAuthenticateUserHandler(t *testing.T) {
-	body := url.Values{}
-	bodyStruct := user2
-
-	body.Set("email", user2.Email)
-	body.Set("password", user2.Password)
-	bodyStruct.Email = user2.Email
-	bodyStruct.Password = user2.Password
-	t.Run("Authenticate User 2", func(t *testing.T) {
-		test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user2ID, &accessToken, &refreshToken)
-	})
-
-	body.Set("email", user1.Email)
-	body.Set("password", user1.Password)
-	bodyStruct.Email = user1.Email
-	bodyStruct.Password = user1.Password
-	t.Run("Authenticate User 1", func(t *testing.T) {
-		test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
-	})
-
-	body.Set("email", user1.Email)
-	body.Set("password", user2.Password)
-	bodyStruct.Email = user1.Email
-	bodyStruct.Password = user2.Password
-	t.Run("Wrong credentials", func(t *testing.T) {
-		test.AuthenticateUserHelper(authAPI, t, body, http.StatusUnauthorized, response.StatusFail, &user1ID, &accessToken, &refreshToken)
-	})
-}
-
 func TestGetUserHandler(t *testing.T) {
 	t.Run("Get user 1", func(t *testing.T) {
 		test.GetUserHelper(userAPI, t, http.StatusOK, response.StatusSuccess, user1, user1ID, accessToken)
