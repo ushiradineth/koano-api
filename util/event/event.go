@@ -3,25 +3,31 @@ package event
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/ushiradineth/cron-be/models"
+	"github.com/ushiradineth/cron-be/util/response"
 )
 
-func GetEvent(id string, user_id string, db *sqlx.DB) (*models.Event, error) {
+func GetEvent(w http.ResponseWriter, id string, user_id string, db *sqlx.DB) *models.Event {
 	event := models.Event{}
 
 	err := db.Get(&event, "SELECT * FROM events WHERE id=$1 AND user_id=$2", id, user_id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("Event not found")
+			response.GenericBadRequestError(w, fmt.Errorf("Event not found"))
+			return nil
 		}
-		return nil, err
+
+		response.GenericServerError(w, err)
+		return nil
 	}
 
-	return &event, nil
+	return &event
 }
 
 func DoesEventExist(id string, start_time string, end_time string, user_id string, db *sqlx.DB) bool {

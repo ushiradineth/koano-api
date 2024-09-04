@@ -8,15 +8,7 @@ type EventPathParams struct {
 	EventID string `json:"event_id" validate:"required,uuid"`
 }
 
-type PostQueryParams struct {
-	Title     string `json:"title" validate:"required"`
-	Timezone  string `json:"timezone" validate:"required,timezone"`
-	Repeated  string `json:"repeated" validate:"required,oneof=never daily weekly monthly yearly"`
-	StartTime string `json:"start_time" validate:"required,datetime=2006-01-02T15:04:05Z"`
-	EndTime   string `json:"end_time" validate:"required,datetime=2006-01-02T15:04:05Z"`
-}
-
-type PutQueryParams struct {
+type EventQueryParams struct {
 	Title     string `json:"title" validate:"required"`
 	Timezone  string `json:"timezone" validate:"required,timezone"`
 	Repeated  string `json:"repeated" validate:"required,oneof=never daily weekly monthly yearly"`
