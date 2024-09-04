@@ -12,7 +12,7 @@ import (
 	"github.com/ushiradineth/cron-be/api/resource/user"
 )
 
-func CreateUserHelper(userAPI *user.API, t testing.TB, body url.Values, want_code int, want_status string) {
+func CreateUserHelper(userAPI *user.API, t testing.TB, body url.Values, want_code int, want_status string, user user.PostQueryParams) {
 	t.Helper()
 	req, _ := http.NewRequest(http.MethodPost, "/users", strings.NewReader(body.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -20,7 +20,16 @@ func CreateUserHelper(userAPI *user.API, t testing.TB, body url.Values, want_cod
 
 	userAPI.Post(res, req)
 
-	GenericAssert(t, want_code, want_status, res)
+	responseBody := GenericAssert(t, want_code, want_status, res)
+
+	if res.Code == http.StatusOK {
+		datamap, ok := responseBody.Data.(map[string]interface{})
+		assert.True(t, true, ok)
+
+		assert.Equal(t, user.Name, datamap["name"])
+		assert.Equal(t, user.Email, datamap["email"])
+		assert.Equal(t, "redacted", datamap["password"], "password in response should be redacted")
+	}
 }
 
 func GetUserHelper(userAPI *user.API, t testing.TB, want_code int, want_status string, user user.PostQueryParams, userId string, accessToken string) {
@@ -35,17 +44,18 @@ func GetUserHelper(userAPI *user.API, t testing.TB, want_code int, want_status s
 
 	responseBody := GenericAssert(t, want_code, want_status, res)
 
-	if res.Code  == http.StatusOK {
+	if res.Code == http.StatusOK {
 		datamap, ok := responseBody.Data.(map[string]interface{})
 		assert.True(t, true, ok)
 
 		assert.Equal(t, user.Name, datamap["name"])
 		assert.Equal(t, user.Email, datamap["email"])
 		assert.Equal(t, "redacted", datamap["password"], "password in response should be redacted")
+		assert.Equal(t, userId, datamap["id"])
 	}
 }
 
-func UpdateUserHelper(userAPI *user.API, t testing.TB, body url.Values, want_code int, want_status string, userId string, accessToken string) {
+func UpdateUserHelper(userAPI *user.API, t testing.TB, body url.Values, want_code int, want_status string, user user.PostQueryParams, userId string, accessToken string) {
 	t.Helper()
 	req, _ := http.NewRequest(http.MethodPut, "/users/{user_id}", strings.NewReader(body.Encode()))
 	req.SetPathValue("user_id", userId)
@@ -55,7 +65,17 @@ func UpdateUserHelper(userAPI *user.API, t testing.TB, body url.Values, want_cod
 
 	userAPI.Put(res, req)
 
-	GenericAssert(t, want_code, want_status, res)
+	responseBody := GenericAssert(t, want_code, want_status, res)
+
+	if res.Code == http.StatusOK {
+		datamap, ok := responseBody.Data.(map[string]interface{})
+		assert.True(t, true, ok)
+
+		assert.Equal(t, user.Name, datamap["name"])
+		assert.Equal(t, user.Email, datamap["email"])
+		assert.Equal(t, "redacted", datamap["password"], "password in response should be redacted")
+		assert.Equal(t, userId, datamap["id"])
+	}
 }
 
 func DeleteUserHelper(userAPI *user.API, t testing.TB, want_code int, want_status string, userId string, accessToken string) {

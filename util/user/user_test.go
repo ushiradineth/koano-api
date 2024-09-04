@@ -67,7 +67,7 @@ func TestInit(t *testing.T) {
 	body.Set("email", user1.Email)
 	body.Set("password", user1.Password)
 	t.Run("Create User", func(t *testing.T) {
-		test.CreateUserHelper(userAPI, t, body, http.StatusOK, response.StatusSuccess)
+		test.CreateUserHelper(userAPI, t, body, http.StatusOK, response.StatusSuccess, user1)
 	})
 
 	t.Run("Authenticates user 1", func(t *testing.T) {
