@@ -69,6 +69,7 @@ func TestInit(t *testing.T) {
 
 func TestCreateUserHandler(t *testing.T) {
 	body := url.Values{}
+	bodyStruct := user1
 
 	body.Set("name", user1.Name)
 	body.Set("email", user1.Email)
@@ -84,17 +85,23 @@ func TestCreateUserHandler(t *testing.T) {
 	body.Set("name", user2.Name)
 	body.Set("email", user2.Email)
 	body.Set("password", user2.Password)
+	bodyStruct.Name = user2.Name
+	bodyStruct.Email = user2.Email
+	bodyStruct.Password = user2.Password
 	t.Run("Create User 2", func(t *testing.T) {
 		test.CreateUserHelper(userAPI, t, body, http.StatusOK, response.StatusSuccess, user2)
 	})
 
 	body.Set("email", "not_an_email")
+	bodyStruct.Email = "not_an_email"
 	t.Run("Email is invalid", func(t *testing.T) {
 		test.CreateUserHelper(userAPI, t, body, http.StatusBadRequest, response.StatusFail, user1)
 	})
 	body.Set("email", "placeholder@email.com")
+	bodyStruct.Email = "placeholder@email.com"
 
 	body.Set("password", "notastandardpassword")
+	bodyStruct.Password = "notastandardpassword"
 	t.Run("Password is invalid", func(t *testing.T) {
 		test.CreateUserHelper(userAPI, t, body, http.StatusBadRequest, response.StatusFail, user1)
 	})
@@ -102,21 +109,28 @@ func TestCreateUserHandler(t *testing.T) {
 
 func TestAuthenticateUserHandler(t *testing.T) {
 	body := url.Values{}
+	bodyStruct := user2
 
 	body.Set("email", user2.Email)
 	body.Set("password", user2.Password)
+	bodyStruct.Email = user2.Email
+	bodyStruct.Password = user2.Password
 	t.Run("Authenticate User 2", func(t *testing.T) {
 		test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user2ID, &accessToken, &refreshToken)
 	})
 
 	body.Set("email", user1.Email)
 	body.Set("password", user1.Password)
+	bodyStruct.Email = user1.Email
+	bodyStruct.Password = user1.Password
 	t.Run("Authenticate User 1", func(t *testing.T) {
 		test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
 	})
 
 	body.Set("email", user1.Email)
 	body.Set("password", user2.Password)
+	bodyStruct.Email = user1.Email
+	bodyStruct.Password = user2.Password
 	t.Run("Wrong credentials", func(t *testing.T) {
 		test.AuthenticateUserHelper(authAPI, t, body, http.StatusUnauthorized, response.StatusFail, &user1ID, &accessToken, &refreshToken)
 	})
@@ -150,14 +164,14 @@ func TestUpdateUserHandler(t *testing.T) {
 
 	body.Set("name", user2.Name)
 	body.Set("email", user1.Email)
-  bodyStruct.Name = user2.Name
-  bodyStruct.Email = user1.Email
+	bodyStruct.Name = user2.Name
+	bodyStruct.Email = user1.Email
 	t.Run("Update user name", func(t *testing.T) {
 		test.UpdateUserHelper(userAPI, t, body, http.StatusOK, response.StatusSuccess, bodyStruct, user1ID, accessToken)
 	})
 
 	body.Set("email", user2.Email)
-  bodyStruct.Email = user2.Email
+	bodyStruct.Email = user2.Email
 	t.Run("Email already exists", func(t *testing.T) {
 		test.UpdateUserHelper(userAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct, user1ID, accessToken)
 	})
@@ -167,7 +181,7 @@ func TestUpdateUserHandler(t *testing.T) {
 	})
 
 	body.Set("email", "newemail@gmail.com")
-  bodyStruct.Email = "newemail@gmail.com"
+	bodyStruct.Email = "newemail@gmail.com"
 	t.Run("Update user 1 email", func(t *testing.T) {
 		test.UpdateUserHelper(userAPI, t, body, http.StatusOK, response.StatusSuccess, bodyStruct, user1ID, accessToken)
 	})
@@ -177,7 +191,7 @@ func TestUpdateUserHandler(t *testing.T) {
 	})
 
 	body.Set("email", user1.Email)
-  bodyStruct.Email = user1.Email
+	bodyStruct.Email = user1.Email
 	t.Run("Reset user 1", func(t *testing.T) {
 		test.UpdateUserHelper(userAPI, t, body, http.StatusOK, response.StatusSuccess, bodyStruct, user1ID, accessToken)
 	})
@@ -187,15 +201,15 @@ func TestUpdateUserHandler(t *testing.T) {
 	})
 
 	body.Set("name", "")
-  bodyStruct.Name = ""
+	bodyStruct.Name = ""
 	t.Run("Name is required", func(t *testing.T) {
 		test.UpdateUserHelper(userAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct, user1ID, accessToken)
 	})
 	body.Set("name", user1.Name)
-  bodyStruct.Name = user1.Name
+	bodyStruct.Name = user1.Name
 
 	body.Set("email", "not_an_email")
-  bodyStruct.Email = "not_an_email"
+	bodyStruct.Email = "not_an_email"
 	t.Run("Email is invalid", func(t *testing.T) {
 		test.UpdateUserHelper(userAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct, user1ID, accessToken)
 	})
