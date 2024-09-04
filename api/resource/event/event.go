@@ -1,6 +1,7 @@
 package event
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -51,14 +52,8 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	event, err := event.GetEvent(path.EventID, user.ID.String(), api.db)
-	if err != nil {
-		response.GenericServerError(w, err)
-		return
-	}
-
-	if user.ID.String() != event.UserID.String() {
-		response.GenericUnauthenticatedError(w)
+	event := event.GetEvent(w, path.EventID, user.ID.String(), api.db)
+	if event == nil {
 		return
 	}
 
@@ -70,7 +65,7 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 //	@Tags			Event
 //	@Accept			application/x-www-form-urlencoded
 //	@Produce		json
-//	@Param			Query	query		PostQueryParams	true	"PostQueryParams"
+//	@Param			Query	query		EventQueryParams	true	"EventQueryParams"
 //	@Success		200		{object}	response.Response{data=models.Event}
 //	@Failure		400		{object}	response.Error
 //	@Failure		401		{object}	response.Error
@@ -78,7 +73,7 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 //	@Security		BearerAuth
 //	@Router			/events [post]
 func (api *API) Post(w http.ResponseWriter, r *http.Request) {
-	query := PostQueryParams{
+	query := EventQueryParams{
 		Title:     r.FormValue("title"),
 		Timezone:  r.FormValue("timezone"),
 		Repeated:  r.FormValue("repeated"),
@@ -96,6 +91,8 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	eventExists := event.DoesEventExist("", query.StartTime, query.EndTime, user.ID.String(), api.db)
+
 	parsedStart, err := time.Parse(time.RFC3339, query.StartTime)
 	if err != nil {
 		response.GenericServerError(w, err)
@@ -107,8 +104,6 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 		response.GenericServerError(w, err)
 		return
 	}
-
-	eventExists := event.DoesEventExist("", parsedStart.String(), parsedEnd.String(), user.ID.String(), api.db)
 
 	if eventExists {
 		response.HTTPError(w, http.StatusBadRequest, "Event already exists", response.StatusFail)
@@ -144,8 +139,8 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 //	@Tags			Event
 //	@Accept			application/x-www-form-urlencoded
 //	@Produce		json
-//	@Param			Path	path		EventPathParams	true	"EventPathParams"
-//	@Param			Query	query		PutQueryParams	true	"PutQueryParams"
+//	@Param			Path	path		EventPathParams		true	"EventPathParams"
+//	@Param			Query	query		EventQueryParams	true	"EventQueryParams"
 //	@Success		200		{object}	response.Response{data=models.Event}
 //	@Failure		400		{object}	response.Error
 //	@Failure		401		{object}	response.Error
@@ -157,7 +152,7 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 		EventID: r.PathValue("event_id"),
 	}
 
-	query := PutQueryParams{
+	query := EventQueryParams{
 		Title:     r.FormValue("title"),
 		Timezone:  r.FormValue("timezone"),
 		Repeated:  r.FormValue("repeated"),
@@ -180,9 +175,8 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existingEvent := event.DoesEventExist(path.EventID, query.StartTime, query.EndTime, user.ID.String(), api.db)
-
-	if !existingEvent {
+	existingEvent := event.GetEvent(w, path.EventID, user.ID.String(), api.db)
+	if existingEvent == nil {
 		response.HTTPError(w, http.StatusBadRequest, "Event does not exists", response.StatusFail)
 		return
 	}
@@ -259,18 +253,18 @@ func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 
 	res, err := api.db.Exec("DELETE FROM events WHERE id=$1 AND user_id=$2", path.EventID, user.ID.String())
 	if err != nil {
-		response.HTTPError(w, http.StatusBadRequest, "Event does not exist", response.StatusFail)
+		response.GenericServerError(w, err)
 		return
 	}
 
 	count, err := res.RowsAffected()
 	if err != nil {
-		response.HTTPError(w, http.StatusBadRequest, "Event does not exist", response.StatusFail)
+		response.GenericServerError(w, err)
 		return
 	}
 
 	if count == 0 {
-		response.HTTPError(w, http.StatusBadRequest, "Event does not exist", response.StatusFail)
+		response.GenericBadRequestError(w, fmt.Errorf("Event does not exist"))
 		return
 	}
 

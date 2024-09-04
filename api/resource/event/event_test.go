@@ -1,235 +1,371 @@
-package event
+package event_test
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"net/url"
-	"strings"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/go-faker/faker/v4"
+	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
-	"github.com/ushiradineth/cron-be/api/user"
+	"github.com/ushiradineth/cron-be/api/resource/auth"
+	"github.com/ushiradineth/cron-be/api/resource/event"
+	"github.com/ushiradineth/cron-be/api/resource/user"
 	"github.com/ushiradineth/cron-be/database"
-	"github.com/ushiradineth/cron-be/models"
+	"github.com/ushiradineth/cron-be/util/response"
+	"github.com/ushiradineth/cron-be/util/test"
+	"github.com/ushiradineth/cron-be/util/validator"
 )
 
-type UserType struct {
-	name     string
-	email    string
-	password string
+var (
+	accessToken         string
+	refreshToken        string
+	user1ID             string
+	user2ID             string
+	eventId             string
+	expiredAccessToken  string
+	expiredRefreshToken string
+	db                  *sqlx.DB
+	userAPI             *user.API
+	authAPI             *auth.API
+	eventAPI            *event.API
+)
+
+var user1 user.PostQueryParams = user.PostQueryParams{
+	Name:     faker.Name(),
+	Email:    faker.Email(),
+	Password: "UPlow1234!@#",
 }
 
-type EventType struct {
-	title      string
-	start_time string
-	end_time   string
-	timezone   string
-	repeated   string
+var user2 user.PostQueryParams = user.PostQueryParams{
+	Name:     faker.Name(),
+	Email:    faker.Email(),
+	Password: "lowUP1234!@#",
 }
 
-var user1 UserType = UserType{
-	name:     "Ushira Dineth",
-	email:    "ushiradineth@gmail.com",
-	password: "Ushira1234!",
+var event1 event.EventQueryParams = event.EventQueryParams{
+	Title:     "Test",
+	StartTime: "2020-01-02T15:04:05Z",
+	EndTime:   "2023-01-02T14:04:05Z",
+	Timezone:  "Asia/Colombo",
+	Repeated:  "daily",
 }
 
-var event1 EventType = EventType{
-	title:      "Event 1",
-	start_time: "2001-11-30T10:00:00Z",
-	end_time:   "2001-11-30T10:15:00Z",
-	timezone:   "Asia/Colombo",
-	repeated:   "No",
-}
+func TestInit(t *testing.T) {
+	t.Run("Initiate Dependencies", func(t *testing.T) {
+		assert.NoError(t, godotenv.Load("../../../.env"), "Environment variables should be loaded in")
 
-var access_token string = ""
-var refresh_token string = ""
-var event_id uuid.UUID
+		db = database.New()
+		v := validator.New()
 
-var db *sqlx.DB
+		userAPI = user.New(db, v)
+		eventAPI = event.New(db, v)
+		authAPI = auth.New(db, v)
 
-func TestInitDB(t *testing.T) {
-	t.Run("Initiate DB Connection", func(t *testing.T) {
-		assert.NoError(t, godotenv.Load("../../.env"), "Environment variables should be loaded in")
-		db = database.Configure()
+		expiredAccessToken = func() string {
+			token, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{"sub": "1234567890", "iat": time.Now().Unix(), "exp": time.Now().Add(-1 * time.Hour).Unix()}).SignedString([]byte(os.Getenv("JWT_SECRET")))
+			return token
+		}()
+
+		expiredRefreshToken = func() string {
+			token, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{"sub": "1234567890", "iat": time.Now().Unix(), "exp": time.Now().Add(-1 * time.Hour).Unix()}).SignedString([]byte(os.Getenv("JWT_SECRET")))
+			return token
+		}()
+	})
+
+	body := url.Values{}
+	body.Set("name", user1.Name)
+	body.Set("email", user1.Email)
+	body.Set("password", user1.Password)
+	t.Run("Create User 1", func(t *testing.T) {
+		test.CreateUserHelper(userAPI, t, body, http.StatusOK, response.StatusSuccess, user1)
+	})
+
+	t.Run("Authenticates User 1", func(t *testing.T) {
+		test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
+	})
+
+	body.Set("name", user2.Name)
+	body.Set("email", user2.Email)
+	body.Set("password", user2.Password)
+	t.Run("Create User 2", func(t *testing.T) {
+		test.CreateUserHelper(userAPI, t, body, http.StatusOK, response.StatusSuccess, user2)
 	})
 }
 
-func TestEventHandlers(t *testing.T) {
-	t.Run("Create User", func(t *testing.T) {
-		body := url.Values{}
-		body.Set("name", user1.name)
-		body.Set("email", user1.email)
-		body.Set("password", user1.password)
+func TestCreateEventHandler(t *testing.T) {
+	body := url.Values{}
+	bodyStruct := event1
 
-		CreateUserHelper(t, body, http.StatusOK)
-
-		t.Run("Authenticates user", func(t *testing.T) {
-			AuthenticateUserHelper(t, body, http.StatusOK)
-		})
+	body.Set("title", event1.Title)
+	body.Set("start_time", event1.StartTime)
+	body.Set("end_time", event1.EndTime)
+	body.Set("timezone", event1.Timezone)
+	body.Set("repeated", event1.Repeated)
+	t.Run("Success", func(t *testing.T) {
+		test.CreateEventHelper(eventAPI, t, body, http.StatusOK, response.StatusSuccess, bodyStruct, &eventId, accessToken)
 	})
 
-	t.Run("Create Event", func(t *testing.T) {
-		body := url.Values{}
-		body.Set("title", event1.title)
-		body.Set("start_time", event1.start_time)
-		body.Set("end_time", event1.end_time)
-		body.Set("timezone", event1.timezone)
-		body.Set("repeated", event1.repeated)
-
-		t.Run("Success", func(t *testing.T) {
-			CreateEventHelper(t, body, http.StatusOK)
-		})
-
-		t.Run("Event Already Exists", func(t *testing.T) {
-			CreateEventHelper(t, body, http.StatusBadRequest)
-		})
+	t.Run("Event Already Exists", func(t *testing.T) {
+		test.CreateEventHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct, &eventId, accessToken)
 	})
 
-	t.Run("Get Event", func(t *testing.T) {
-		t.Run("Fail with invalid Event ID", func(t *testing.T) {
-			request, _ := http.NewRequest(http.MethodGet, "/event/{event_id}", nil)
-			request.SetPathValue("event_id", "INVALID_ID")
-			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-			request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
-			response := httptest.NewRecorder()
-
-			Get(response, request, db)
-
-			assert.Equal(t, http.StatusInternalServerError, response.Code)
-		})
-
-		t.Run("Success", func(t *testing.T) {
-			request, _ := http.NewRequest(http.MethodGet, "/event/{event_id}", nil)
-			request.SetPathValue("event_id", event_id.String())
-			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-			request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
-			response := httptest.NewRecorder()
-
-			Get(response, request, db)
-
-			var responseBody models.Event
-
-			err := json.NewDecoder(response.Body).Decode(&responseBody)
-			assert.NoError(t, err)
-
-			parsed_start, err := time.Parse(time.RFC3339, event1.start_time)
-			if err != nil {
-				fmt.Println("Error parsing time:", err)
-				return
-			}
-
-			parsed_end, err := time.Parse(time.RFC3339, event1.end_time)
-			if err != nil {
-				fmt.Println("Error parsing time:", err)
-				return
-			}
-
-			assert.Equal(t, event1.title, responseBody.Title)
-			assert.Equal(t, parsed_start, responseBody.Start)
-			assert.Equal(t, parsed_end, responseBody.End)
-			assert.Equal(t, event1.timezone, responseBody.Timezone)
-			assert.Equal(t, event1.repeated, responseBody.Repeated)
-			assert.Equal(t, http.StatusOK, response.Code)
-		})
+	t.Run("JWT is Invalid", func(t *testing.T) {
+		test.CreateEventHelper(eventAPI, t, body, http.StatusUnauthorized, response.StatusFail, bodyStruct, &eventId, expiredAccessToken)
 	})
 
-	t.Run("Delete User", func(t *testing.T) {
-		t.Run("Deletes user", func(t *testing.T) {
-			DeleteUserHelper(t, http.StatusOK)
-		})
+	body.Set("start_time", "not_datetime_with_timezone")
+	bodyStruct.StartTime = "not_datetime_with_timezone"
+	t.Run("Start time is invalid", func(t *testing.T) {
+		test.CreateEventHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct, &eventId, accessToken)
+	})
+	body.Set("start_time", event1.StartTime)
+	bodyStruct.StartTime = event1.StartTime
+
+	body.Set("end_time", "not_datetime_with_timezone")
+	bodyStruct.EndTime = "not_datetime_with_timezone"
+	t.Run("End time is invalid", func(t *testing.T) {
+		test.CreateEventHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct, &eventId, accessToken)
+	})
+
+	body.Set("start_time", event1.EndTime)
+	body.Set("end_time", event1.StartTime)
+	bodyStruct.StartTime = event1.EndTime
+	bodyStruct.EndTime = event1.StartTime
+	t.Run("Start time occurs after End time", func(t *testing.T) {
+		test.CreateEventHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct, &eventId, accessToken)
+	})
+	body.Set("start_time", event1.StartTime)
+	body.Set("end_time", event1.EndTime)
+	bodyStruct.StartTime = event1.StartTime
+	bodyStruct.EndTime = event1.EndTime
+
+	body.Set("timezone", "not_a_timezone")
+	bodyStruct.Timezone = "not_a_timezone"
+	t.Run("Timezone is invalid", func(t *testing.T) {
+		test.CreateEventHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct, &eventId, accessToken)
+	})
+	body.Set("timezone", event1.Timezone)
+	bodyStruct.Timezone = event1.Timezone
+
+	body.Set("repeated", "not_a_repeated_value")
+	bodyStruct.Repeated = "not_a_repeated_value"
+	t.Run("Repeated is invalid", func(t *testing.T) {
+		test.CreateEventHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct, &eventId, accessToken)
 	})
 }
 
-func TestEventHelpers(t *testing.T) {
-	t.Run("Create User", func(t *testing.T) {
-		body := url.Values{}
-		body.Set("name", user1.name)
-		body.Set("email", user1.email)
-		body.Set("password", user1.password)
-
-		CreateUserHelper(t, body, http.StatusOK)
-
-		t.Run("Authenticates user 1", func(t *testing.T) {
-			AuthenticateUserHelper(t, body, http.StatusOK)
-		})
+func TestGetEventHandler(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		test.GetEventHelper(eventAPI, t, http.StatusOK, response.StatusSuccess, event1, eventId, accessToken)
 	})
 
-	t.Run("Delete User", func(t *testing.T) {
-		t.Run("Deletes user", func(t *testing.T) {
-			DeleteUserHelper(t, http.StatusOK)
-		})
+	t.Run("Event ID is invalid", func(t *testing.T) {
+		test.GetEventHelper(eventAPI, t, http.StatusBadRequest, response.StatusFail, event1, "not_an_id", accessToken)
+	})
+
+	t.Run("JWT is Invalid", func(t *testing.T) {
+		test.GetEventHelper(eventAPI, t, http.StatusUnauthorized, response.StatusFail, event1, eventId, expiredAccessToken)
+	})
+
+	body := url.Values{}
+	body.Set("name", user2.Name)
+	body.Set("email", user2.Email)
+	body.Set("password", user2.Password)
+	t.Run("Authenticates User 2", func(t *testing.T) {
+		test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user2ID, &accessToken, &refreshToken)
+	})
+
+	t.Run("JWT does not match user ID", func(t *testing.T) {
+		test.GetEventHelper(eventAPI, t, http.StatusBadRequest, response.StatusFail, event1, eventId, accessToken)
 	})
 }
 
-func CreateUserHelper(t testing.TB, body url.Values, want_code int) {
-	t.Helper()
-	request, _ := http.NewRequest(http.MethodPost, "/user", strings.NewReader(body.Encode()))
-	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	response := httptest.NewRecorder()
+func TestUpdateEventHandler(t *testing.T) {
+	body := url.Values{}
+	bodyStruct := event1
 
-	user.Post(response, request, db)
+	user := url.Values{}
+	user.Set("name", user1.Name)
+	user.Set("email", user1.Email)
+	user.Set("password", user1.Password)
+	t.Run("Authenticates User 1", func(t *testing.T) {
+		test.AuthenticateUserHelper(authAPI, t, user, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
+	})
 
-	assert.Equal(t, http.StatusOK, response.Code)
+	body.Set("title", event1.Title)
+	body.Set("start_time", event1.StartTime)
+	body.Set("end_time", event1.EndTime)
+	body.Set("timezone", event1.Timezone)
+	body.Set("repeated", event1.Repeated)
+	t.Run("Success", func(t *testing.T) {
+		test.UpdateEventHelper(eventAPI, t, body, http.StatusOK, response.StatusSuccess, bodyStruct, eventId, accessToken)
+	})
+
+	t.Run("Event ID is invalid", func(t *testing.T) {
+		test.UpdateEventHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct, "not_an_id", accessToken)
+	})
+
+	t.Run("JWT is Invalid", func(t *testing.T) {
+		test.UpdateEventHelper(eventAPI, t, body, http.StatusUnauthorized, response.StatusFail, bodyStruct, eventId, expiredAccessToken)
+	})
+
+	user.Set("name", user2.Name)
+	user.Set("email", user2.Email)
+	user.Set("password", user2.Password)
+	t.Run("Authenticates User 2", func(t *testing.T) {
+		test.AuthenticateUserHelper(authAPI, t, user, http.StatusOK, response.StatusSuccess, &user2ID, &accessToken, &refreshToken)
+	})
+
+	t.Run("JWT does not match user ID", func(t *testing.T) {
+		test.UpdateEventHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct, eventId, accessToken)
+	})
+
+	user.Set("name", user1.Name)
+	user.Set("email", user1.Email)
+	user.Set("password", user1.Password)
+	t.Run("Authenticates User 1", func(t *testing.T) {
+		test.AuthenticateUserHelper(authAPI, t, user, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
+	})
+
+	body.Set("start_time", "not_datetime_with_timezone")
+	bodyStruct.StartTime = "not_datetime_with_timezone"
+	t.Run("Start time is invalid", func(t *testing.T) {
+		test.UpdateEventHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct, eventId, accessToken)
+	})
+	body.Set("start_time", event1.StartTime)
+	bodyStruct.StartTime = event1.StartTime
+
+	body.Set("end_time", "not_datetime_with_timezone")
+	bodyStruct.EndTime = "not_datetime_with_timezone"
+	t.Run("End time is invalid", func(t *testing.T) {
+		test.UpdateEventHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct, eventId, accessToken)
+	})
+
+	body.Set("start_time", event1.EndTime)
+	body.Set("end_time", event1.StartTime)
+	bodyStruct.StartTime = event1.EndTime
+	bodyStruct.EndTime = event1.StartTime
+	t.Run("Start time occurs after End time", func(t *testing.T) {
+		test.UpdateEventHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct, eventId, accessToken)
+	})
+	body.Set("start_time", event1.StartTime)
+	body.Set("end_time", event1.EndTime)
+	bodyStruct.StartTime = event1.StartTime
+	bodyStruct.EndTime = event1.EndTime
+
+	body.Set("timezone", "not_a_timezone")
+	bodyStruct.Timezone = "not_a_timezone"
+	t.Run("Timezone is invalid", func(t *testing.T) {
+		test.UpdateEventHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct, eventId, accessToken)
+	})
+	body.Set("timezone", event1.Timezone)
+	bodyStruct.Timezone = event1.Timezone
+
+	body.Set("repeated", "not_a_repeated_value")
+	bodyStruct.Repeated = "not_a_repeated_value"
+	t.Run("Repeated is invalid", func(t *testing.T) {
+		test.UpdateEventHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct, eventId, accessToken)
+	})
 }
 
-func AuthenticateUserHelper(t testing.TB, body url.Values, wantCode int) {
-	t.Helper()
-	request, _ := http.NewRequest(http.MethodPost, "/user/auth", strings.NewReader(body.Encode()))
-	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	response := httptest.NewRecorder()
+func TestGetUserEventsHandler(t *testing.T) {
+	user := url.Values{}
+	user.Set("name", user1.Name)
+	user.Set("email", user1.Email)
+	user.Set("password", user1.Password)
+	t.Run("Authenticates User 1", func(t *testing.T) {
+		test.AuthenticateUserHelper(authAPI, t, user, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
+	})
 
-	user.Authenticate(response, request, db)
+	body := url.Values{}
+	body.Set("start_day", "not_datetime_with_timezone")
+	t.Run("End time is invalid", func(t *testing.T) {
+		test.GetUserEventsHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, user1ID, accessToken)
+	})
 
-	var responseBody user.AuthenticateResponse
-	err := json.NewDecoder(response.Body).Decode(&responseBody)
-	assert.NoError(t, err)
+	body.Set("end_day", "not_datetime_with_timezone")
+	t.Run("End time is invalid", func(t *testing.T) {
+		test.GetUserEventsHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, user1ID, accessToken)
+	})
 
-	assert.Equal(t, body.Get("email"), responseBody.User.Email)
-	assert.Equal(t, "", responseBody.User.Password)
-	assert.NotEmpty(t, responseBody.AccessToken)
-	assert.NotEmpty(t, responseBody.RefreshToken)
+	body.Set("start_day", "2001-01-02")
+	body.Set("end_day", "2006-01-02")
+	t.Run("Success", func(t *testing.T) {
+		test.GetUserEventsHelper(eventAPI, t, body, http.StatusOK, response.StatusSuccess, user1ID, accessToken)
+	})
 
-	assert.Equal(t, http.StatusOK, response.Code)
+  user.Set("name", user2.Name)
+	user.Set("email", user2.Email)
+	user.Set("password", user2.Password)
+	t.Run("Authenticates User 2", func(t *testing.T) {
+		test.AuthenticateUserHelper(authAPI, t, user, http.StatusOK, response.StatusSuccess, &user2ID, &accessToken, &refreshToken)
+	})
 
-	access_token = responseBody.AccessToken
-	refresh_token = responseBody.RefreshToken
+	t.Run("JWT does not match user ID", func(t *testing.T) {
+		test.GetUserEventsHelper(eventAPI, t, body, http.StatusUnauthorized, response.StatusFail, user1ID, accessToken)
+	})
+
+	t.Run("Event ID is invalid", func(t *testing.T) {
+		test.GetUserEventsHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, "not_an_id", accessToken)
+	})
+
+	t.Run("JWT is Invalid", func(t *testing.T) {
+		test.GetUserEventsHelper(eventAPI, t, body, http.StatusUnauthorized, response.StatusFail, user1ID, expiredAccessToken)
+	})
 }
 
-func DeleteUserHelper(t testing.TB, want_code int) {
-	t.Helper()
-	request, _ := http.NewRequest(http.MethodDelete, "/user", nil)
-	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
-	response := httptest.NewRecorder()
+func TestDeleteEventHandler(t *testing.T) {
+	user := url.Values{}
+	user.Set("email", user1.Email)
+	user.Set("password", user1.Password)
+	t.Run("Authenticate User 1", func(t *testing.T) {
+		test.AuthenticateUserHelper(authAPI, t, user, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
+	})
 
-	user.Delete(response, request, db)
+	t.Run("Success", func(t *testing.T) {
+		test.DeleteEventHelper(eventAPI, t, http.StatusOK, response.StatusSuccess, eventId, accessToken)
+	})
 
-	assert.Equal(t, http.StatusOK, response.Code)
+	t.Run("Event does not exist", func(t *testing.T) {
+		test.DeleteEventHelper(eventAPI, t, http.StatusBadRequest, response.StatusFail, uuid.NewString(), accessToken)
+	})
+
+	t.Run("JWT is invalid", func(t *testing.T) {
+		test.DeleteEventHelper(eventAPI, t, http.StatusUnauthorized, response.StatusFail, eventId, expiredAccessToken)
+	})
+
+	t.Run("UUID is invalid", func(t *testing.T) {
+		test.DeleteEventHelper(eventAPI, t, http.StatusBadRequest, response.StatusFail, "not_an_uuid", accessToken)
+	})
 }
 
-func CreateEventHelper(t testing.TB, body url.Values, want_code int) {
-	t.Helper()
-	request, _ := http.NewRequest(http.MethodPost, "/event", strings.NewReader(body.Encode()))
-	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", access_token))
-	response := httptest.NewRecorder()
+func TestCleanUp(t *testing.T) {
+	body := url.Values{}
 
-	Post(response, request, db)
+	body.Set("name", user1.Name)
+	body.Set("email", user1.Email)
+	body.Set("password", user1.Password)
+	t.Run("Authenticates User 1", func(t *testing.T) {
+		test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
+	})
 
-	assert.Equal(t, want_code, response.Code)
+	t.Run("Delete User 1", func(t *testing.T) {
+		test.DeleteUserHelper(userAPI, t, http.StatusOK, response.StatusSuccess, user1ID, accessToken)
+	})
 
-	if response.Code == http.StatusOK {
-		var responseBody models.Event
+	body.Set("email", user2.Email)
+	body.Set("password", user2.Password)
+	t.Run("Authenticate User 2", func(t *testing.T) {
+		test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user2ID, &accessToken, &refreshToken)
+	})
 
-		err := json.NewDecoder(response.Body).Decode(&responseBody)
-		assert.NoError(t, err)
-
-		event_id = responseBody.ID
-	}
+	t.Run("Delete User 2", func(t *testing.T) {
+		test.DeleteUserHelper(userAPI, t, http.StatusOK, response.StatusSuccess, user2ID, accessToken)
+	})
 }
