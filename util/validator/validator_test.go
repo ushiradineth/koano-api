@@ -72,7 +72,7 @@ var errorTests = []*testCase{
 		expected: "date must follow `2006-01-02` format",
 	},
 	{
-		name: `datetime`,
+		name: `datetimeWithTimezone`,
 		input: struct {
 			Date string `json:"date" validate:"datetime=2006-01-02T14:04:05Z"`
 		}{Date: "2006/01/02"},
@@ -183,7 +183,7 @@ var successTests = []*testCase{
 		expected: "",
 	},
 	{
-		name: `datetime`,
+		name: `datetimeWithTimezone`,
 		input: struct {
 			Date string `json:"date" validate:"datetime=2006-01-02T15:04:05Z"`
 		}{Date: "2006-01-02T14:04:05Z"},
