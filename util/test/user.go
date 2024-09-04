@@ -48,10 +48,10 @@ func GetUserHelper(userAPI *user.API, t testing.TB, want_code int, want_status s
 		datamap, ok := responseBody.Data.(map[string]interface{})
 		assert.True(t, true, ok)
 
+		assert.Equal(t, userId, datamap["id"])
 		assert.Equal(t, user.Name, datamap["name"])
 		assert.Equal(t, user.Email, datamap["email"])
 		assert.Equal(t, "redacted", datamap["password"], "password in response should be redacted")
-		assert.Equal(t, userId, datamap["id"])
 	}
 }
 
@@ -71,10 +71,10 @@ func UpdateUserHelper(userAPI *user.API, t testing.TB, body url.Values, want_cod
 		datamap, ok := responseBody.Data.(map[string]interface{})
 		assert.True(t, true, ok)
 
+		assert.Equal(t, userId, datamap["id"])
 		assert.Equal(t, user.Name, datamap["name"])
 		assert.Equal(t, user.Email, datamap["email"])
 		assert.Equal(t, "redacted", datamap["password"], "password in response should be redacted")
-		assert.Equal(t, userId, datamap["id"])
 	}
 }
 
