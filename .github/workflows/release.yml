@@ -28,3 +28,4 @@ jobs:
           push: true
           file: ./deployments/Dockerfile
           tags: ushiradineth/cron-be:latest
+          platforms: linux/amd64,linux/arm64
