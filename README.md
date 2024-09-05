@@ -15,7 +15,7 @@
 
 ### Start the Postgres Database
 
-- Run `docker-compose -f docker-compose.yml up -d` to start the Postgres Database and Adminer.
+- Run `docker compose -f deployments/docker-compose.yml --env-file .env up -d` to start the Postgres Database and Adminer.
 - Wait for a moment for the database to initialize.
 
 ### Connect to the database
@@ -31,22 +31,32 @@
 
 - Run `make db_up` to run the latest Database Migration.
 
+### Run the Seeder
+
+- Note: Make sure the database is the development database
+- `go run cmd/seeder/main.go`
+
+### Install Go Watch (optional)
+
+- `go install github.com/mitranim/gow@latest`
+
 ### Run the Go Server
 
-- Run `go run .` to start the Cron Go HTTP Server.
+- `go run cmd/api/main.go` or `gow run cmd/api/main.go`
 
-## Build Docker Image
-
-### Create Environment variables
-
-- Check the `.env.example` file for the required environment variables.
-- Use `cp .env.example .env.production` to create the `.env.production` file.
+## Build the Cron API
 
 ### Build the image
 
-- Run `docker build -t cron-be:prod -f Dockerfile .` to build the image.
+- Run `docker build -t cron-be:go -f deployments/Dockerfile .` to build the image.
 
 ### Run the image using Docker Compose
 
 - Uncomment the `cron-be` service in `docker-compose.yml`.
-- Run `docker-compose -f docker-compose.yml up -d` to start the Postgres Database, Adminer, and the Cron Go HTTP Server.
+- Run `docker compose -f deployments/docker-compose.yml --env-file .env up -d` to start the Postgres Database, Adminer, and the Cron Go HTTP Server.
+
+## Testing the Project
+
+### Run the tests
+
+- `go test -v -cover -failfast test ./...`
