@@ -16,7 +16,6 @@ import (
 	"github.com/ushiradineth/cron-be/api/resource/auth"
 	"github.com/ushiradineth/cron-be/api/resource/event"
 	"github.com/ushiradineth/cron-be/api/resource/user"
-	"github.com/ushiradineth/cron-be/database"
 	authUtil "github.com/ushiradineth/cron-be/util/auth"
 	"github.com/ushiradineth/cron-be/util/response"
 	"github.com/ushiradineth/cron-be/util/test"
@@ -53,7 +52,7 @@ func TestInit(t *testing.T) {
 	t.Run("Initiate Dependencies", func(t *testing.T) {
 		assert.NoError(t, godotenv.Load("../../../.env"), "Environment variables should be loaded in")
 
-		db = database.New()
+		db = test.NewDB("../../../database/migration")
 		v := validator.New()
 
 		userAPI = user.New(db, v)
