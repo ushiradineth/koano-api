@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -20,65 +19,6 @@ type UserClaim struct {
 	jwt.StandardClaims
 }
 
-func NewAccessToken(id uuid.UUID, name string, email string) (string, error) {
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaim{
-		Id:    id,
-		Name:  name,
-		Email: email,
-		StandardClaims: jwt.StandardClaims{
-			IssuedAt:  time.Now().Unix(),
-			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
-		},
-	})
-
-	return accessToken.SignedString([]byte(os.Getenv("JWT_SECRET")))
-}
-
-func NewRefreshToken(claims jwt.StandardClaims) (string, error) {
-	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	return refreshToken.SignedString([]byte(os.Getenv("JWT_SECRET")))
-}
-
-func ParseAccessToken(accessToken string) (*UserClaim, error) {
-	parsedAccessToken, err := jwt.ParseWithClaims(accessToken, &UserClaim{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("JWT_SECRET")), nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if parsedAccessToken == nil {
-		return nil, errors.New("unable to parse access token")
-	}
-
-	claims, ok := parsedAccessToken.Claims.(*UserClaim)
-	if !ok || !parsedAccessToken.Valid {
-		return nil, errors.New("invalid access token")
-	}
-
-	if claims.ExpiresAt < time.Now().Unix() {
-		return nil, errors.New("access token has expired")
-	}
-
-	return claims, nil
-}
-
-func ParseRefreshToken(w http.ResponseWriter, refreshToken string) *jwt.StandardClaims {
-	parsedRefreshToken, err := jwt.ParseWithClaims(refreshToken, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("JWT_SECRET")), nil
-	})
-
-	claims, ok := parsedRefreshToken.Claims.(*jwt.StandardClaims)
-	if ok && parsedRefreshToken.Valid {
-		return claims
-	} else {
-    response.GenericBadRequestError(w, fmt.Errorf("Invalid refresh token: %v", err))
-	}
-
-	return nil
-}
-
 func GetJWT(r *http.Request) (string, error) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
@@ -93,6 +33,63 @@ func GetJWT(r *http.Request) (string, error) {
 	return parts[1], nil
 }
 
+func NewAccessToken(id uuid.UUID, name string, email string) (string, error) {
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaim{
+		Id:    id,
+		Name:  name,
+		Email: email,
+		StandardClaims: jwt.StandardClaims{
+			IssuedAt:  time.Now().Unix(),
+			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
+		},
+	})
+
+	return accessToken.SignedString([]byte(os.Getenv("JWT_SECRET")))
+}
+
+func NewRefreshToken() (string, error) {
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		IssuedAt:  time.Now().Unix(),
+		ExpiresAt: time.Now().Add(time.Hour * 48).Unix(),
+	})
+
+	return refreshToken.SignedString([]byte(os.Getenv("JWT_SECRET")))
+}
+
+func ParseAccessToken(w http.ResponseWriter, accessToken string) *UserClaim {
+	parsedAccessToken, err := jwt.ParseWithClaims(accessToken, &UserClaim{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+	if err != nil {
+		response.GenericUnauthenticatedError(w)
+		return nil
+	}
+
+	claims, ok := parsedAccessToken.Claims.(*UserClaim)
+	if ok && parsedAccessToken.Valid {
+		return claims
+	}
+
+	return nil
+}
+
+func ParseRefreshToken(w http.ResponseWriter, refreshToken string) *jwt.StandardClaims {
+	parsedRefreshToken, err := jwt.ParseWithClaims(refreshToken, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+	if err != nil {
+		response.GenericUnauthenticatedError(w)
+		return nil
+	}
+
+	claims, ok := parsedRefreshToken.Claims.(*jwt.StandardClaims)
+	if ok && parsedRefreshToken.Valid {
+		return claims
+	}
+
+	return nil
+}
+
 func ParseExpiredAccessToken(w http.ResponseWriter, accessToken string) *UserClaim {
 	parsedAccessToken, err := jwt.ParseWithClaims(accessToken, &UserClaim{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
@@ -103,7 +100,7 @@ func ParseExpiredAccessToken(w http.ResponseWriter, accessToken string) *UserCla
 	}
 
 	claims, ok := parsedAccessToken.Claims.(*UserClaim)
-	if !ok || parsedAccessToken.Valid {
+	if ok && parsedAccessToken.Valid {
 		response.GenericBadRequestError(w, errors.New("Token is valid"))
 		return nil
 	}
