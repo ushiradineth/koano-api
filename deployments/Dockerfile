@@ -19,14 +19,8 @@ RUN go mod download
 # Set environment variables
 RUN cp .env.example .env
 
-## Manually set PG_URL to local PG server
-ENV PG_URL="host.docker.internal:5432"
-
 # Build the binary.
 RUN go build -v -o server cmd/api/main.go
-
-# Run the tests in the container
-RUN go test -v -cover ./...
 
 # Use the official Debian slim image for a lean production container.
 # https://hub.docker.com/_/debian
@@ -37,10 +31,13 @@ RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -
   ca-certificates && \
   rm -rf /var/lib/apt/lists/*
 
-WORKDIR /
+WORKDIR /app
 
 # Copy the binary to the production image from the builder stage.
-COPY --from=builder /app/server /app/server
+COPY --from=builder /app/server server
+
+# Set environment variables
+COPY --from=builder  /app/.env .env
 
 # Run the web service on container startup.
-CMD ["/app/server"]
+CMD ["./server"]
