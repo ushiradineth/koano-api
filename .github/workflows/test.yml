@@ -34,7 +34,9 @@ jobs:
         run: |
           go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
-
+      - name: Create .env file
+        run: |
+          cp .env.example .env
 
       - name: Tests
         run: go test ./...
