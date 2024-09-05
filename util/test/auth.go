@@ -65,6 +65,5 @@ func RefreshTokenHelper(authAPI *auth.API, t testing.TB, body url.Values, access
 
 	authAPI.RefreshToken(res, req)
 
-  t.Log(res.Body)
 	GenericAssert(t, want_code, want_status, res)
 }
