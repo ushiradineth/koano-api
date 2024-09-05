@@ -1,4 +1,7 @@
-DATABASE ?= "postgres://cron:password@localhost:5432/cron?sslmode=disable"
+include .env
+export $(shell sed 's/=.*//' .env)
+
+DATABASE ?= "postgres://$(PG_USER):$(PG_PASSWORD)@$(PG_URL)/$(PG_DATABASE)?sslmode=$(PG_SSLMODE)"
 
 db_up:
 	migrate -path database/migration/ -database $(DATABASE) -verbose up
