@@ -30,6 +30,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      - name: Install migrate CLI
+        run: |
+          go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+
+
       - name: Tests
         run: go test ./...
 
