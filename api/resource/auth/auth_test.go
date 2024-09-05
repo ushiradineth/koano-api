@@ -178,7 +178,7 @@ func TestUpdateUserPasswordHandler(t *testing.T) {
 		})
 
 		t.Run("JWT is invalid", func(t *testing.T) {
-			test.UpdateUserPasswordHelper(authAPI, t, body, http.StatusUnauthorized, response.StatusFail, expiredAccessToken)
+			test.UpdateUserPasswordHelper(authAPI, t, body, http.StatusUnauthorized, response.StatusFail, "not_an_access_token")
 		})
 
 		t.Run("JWT is expired", func(t *testing.T) {
@@ -220,11 +220,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 		})
 
 		t.Run("Expired refresh token, Expired access token", func(t *testing.T) {
-			test.RefreshTokenHelper(authAPI, t, body, expiredAccessToken, http.StatusBadRequest, response.StatusFail)
-		})
-
-		t.Run("Expired refresh token, Valid access token", func(t *testing.T) {
-			test.RefreshTokenHelper(authAPI, t, body, accessToken, http.StatusBadRequest, response.StatusFail)
+			test.RefreshTokenHelper(authAPI, t, body, expiredAccessToken, http.StatusUnauthorized, response.StatusFail)
 		})
 
 		t.Run("JWT is invalid", func(t *testing.T) {
@@ -232,7 +228,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 		})
 
 		t.Run("JWT is expired", func(t *testing.T) {
-			test.RefreshTokenHelper(authAPI, t, body, expiredAccessToken, http.StatusBadRequest, response.StatusFail)
+			test.RefreshTokenHelper(authAPI, t, body, expiredAccessToken, http.StatusUnauthorized, response.StatusFail)
 		})
 	})
 }

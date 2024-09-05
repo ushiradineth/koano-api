@@ -2,10 +2,8 @@ package auth
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/golang-jwt/jwt"
 	"github.com/jmoiron/sqlx"
 	"github.com/ushiradineth/cron-be/models"
 	"github.com/ushiradineth/cron-be/util/auth"
@@ -75,12 +73,7 @@ func (api *API) Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refreshTokenClaim := jwt.StandardClaims{
-		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: time.Now().Add(time.Hour * 48).Unix(),
-	}
-
-	refreshToken, err := auth.NewRefreshToken(refreshTokenClaim)
+	refreshToken, err := auth.NewRefreshToken()
 	if err != nil {
 		response.GenericServerError(w, err)
 		return

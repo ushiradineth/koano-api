@@ -88,9 +88,8 @@ func GetUserFromJWT(r *http.Request, w http.ResponseWriter, db *sqlx.DB) *models
 		return nil
 	}
 
-	JWT, err := auth.ParseAccessToken(accessToken)
-	if err != nil {
-		response.HTTPError(w, http.StatusUnauthorized, "Access Token is invalid or expired", response.StatusFail)
+	JWT := auth.ParseAccessToken(w, accessToken)
+	if JWT == nil {
 		return nil
 	}
 
