@@ -10,4 +10,7 @@ db_fix:
 	migrate -path database/migration/ -database $(DATABASE) force 1
 
 gen_docs:
-	swag init -g cmd/api/main.go
+	swag fmt && swag init -g cmd/api/main.go
+
+run: gen_docs
+	go run cmd/api/main.go
