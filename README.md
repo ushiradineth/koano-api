@@ -31,22 +31,18 @@
 
 - Run `make db_up` to run the latest Database Migration.
 
-### Install Go Watch
+### Run the Seeder
+
+- Note: Make sure the database is the development database
+- `go run cmd/seeder/main.go`
+
+### Install Go Watch (optional)
 
 - `go install github.com/mitranim/gow@latest`
 
 ### Run the Go Server
 
 - `go run cmd/api/main.go` or `gow run cmd/api/main.go`
-
-### Run Tests
-
-- `go test -v -cover ./...` or `gow test -v -cover ./...`
-
-### Run the Seeder
-
-- Note: Make sure the database is the development database
-- `go run cmd/seeder/main.go`
 
 ## Build the Cron API
 
@@ -57,5 +53,10 @@
 ### Run the image using Docker Compose
 
 - Uncomment the `cron-be` service in `docker-compose.yml`.
-- Replace `PG_URL` in `.env` with `postgres:5432`
 - Run `docker compose -f deployments/docker-compose.yml --env-file .env up -d` to start the Postgres Database, Adminer, and the Cron Go HTTP Server.
+
+## Testing the Project
+
+### Run the tests
+
+- `go test -v -cover -failfast test ./...`
