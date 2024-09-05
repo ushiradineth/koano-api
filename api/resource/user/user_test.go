@@ -89,13 +89,13 @@ func TestCreateUserHandler(t *testing.T) {
 	bodyStruct.Email = user2.Email
 	bodyStruct.Password = user2.Password
 	t.Run("Create User 2", func(t *testing.T) {
-		test.CreateUserHelper(userAPI, t, body, http.StatusOK, response.StatusSuccess, user2)
+		test.CreateUserHelper(userAPI, t, body, http.StatusOK, response.StatusSuccess, bodyStruct)
 	})
 
 	body.Set("email", "not_an_email")
 	bodyStruct.Email = "not_an_email"
 	t.Run("Email is invalid", func(t *testing.T) {
-		test.CreateUserHelper(userAPI, t, body, http.StatusBadRequest, response.StatusFail, user1)
+		test.CreateUserHelper(userAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct)
 	})
 	body.Set("email", "placeholder@email.com")
 	bodyStruct.Email = "placeholder@email.com"
@@ -103,11 +103,26 @@ func TestCreateUserHandler(t *testing.T) {
 	body.Set("password", "notastandardpassword")
 	bodyStruct.Password = "notastandardpassword"
 	t.Run("Password is invalid", func(t *testing.T) {
-		test.CreateUserHelper(userAPI, t, body, http.StatusBadRequest, response.StatusFail, user1)
+		test.CreateUserHelper(userAPI, t, body, http.StatusBadRequest, response.StatusFail, bodyStruct)
 	})
 }
 
 func TestGetUserHandler(t *testing.T) {
+	user := url.Values{}
+	user.Set("name", user2.Name)
+	user.Set("email", user2.Email)
+	user.Set("password", user2.Password)
+	t.Run("Authenticate User 2", func(t *testing.T) {
+		test.AuthenticateUserHelper(authAPI, t, user, http.StatusOK, response.StatusSuccess, &user2ID, &accessToken, &refreshToken)
+	})
+
+	user.Set("name", user1.Name)
+	user.Set("email", user1.Email)
+	user.Set("password", user1.Password)
+	t.Run("Authenticate User 1", func(t *testing.T) {
+		test.AuthenticateUserHelper(authAPI, t, user, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
+	})
+
 	t.Run("Get user 1", func(t *testing.T) {
 		test.GetUserHelper(userAPI, t, http.StatusOK, response.StatusSuccess, user1, user1ID, accessToken)
 	})
