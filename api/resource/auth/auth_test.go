@@ -100,7 +100,7 @@ func TestInit(t *testing.T) {
 			return token
 		}()
 
-    expiredClaim.Email = faker.Email()
+		expiredClaim.Email = faker.Email()
 		deletedUserAccessToken = func() string {
 			token, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, expiredClaim).SignedString([]byte(os.Getenv("JWT_SECRET")))
 			return token
@@ -128,11 +128,11 @@ func TestAuthenticateUserHandler(t *testing.T) {
 		test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
 	})
 
-  body.Set("email", "not_an_user@email.com")
-  bodyStruct.Email = "not_an_user@email.com"
-  t.Run("Email is not registered", func(t *testing.T) {
-    test.AuthenticateUserHelper(authAPI, t, body, http.StatusBadRequest, response.StatusFail, &user1ID, &accessToken, &refreshToken)
-  })
+	body.Set("email", "not_an_user@email.com")
+	bodyStruct.Email = "not_an_user@email.com"
+	t.Run("Email is not registered", func(t *testing.T) {
+		test.AuthenticateUserHelper(authAPI, t, body, http.StatusBadRequest, response.StatusFail, &user1ID, &accessToken, &refreshToken)
+	})
 
 	body.Set("email", "not_an_email")
 	bodyStruct.Email = "not_an_email"

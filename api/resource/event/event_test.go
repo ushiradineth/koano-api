@@ -300,7 +300,7 @@ func TestGetUserEventsHandler(t *testing.T) {
 		test.GetUserEventsHelper(eventAPI, t, body, http.StatusOK, response.StatusSuccess, user1ID, accessToken)
 	})
 
-  user.Set("name", user2.Name)
+	user.Set("name", user2.Name)
 	user.Set("email", user2.Email)
 	user.Set("password", user2.Password)
 	t.Run("Authenticates User 2", func(t *testing.T) {

@@ -25,17 +25,17 @@ func New(db *sqlx.DB, validator *validator.Validate) *API {
 	}
 }
 
-//	@Summary		Get User
-//	@Description	Get authenticated user based on the JWT sent with the request
-//	@Tags			User
-//	@Produce		json
-//	@Param			Path	path		UserPathParams	true	"UserPathParams"
-//	@Success		200		{object}	response.Response{data=models.User}
-//	@Failure		400		{object}	response.Error
-//	@Failure		401		{object}	response.Error
-//	@Failure		500		{object}	response.Error
-//	@Security		BearerAuth
-//	@Router			/users/{user_id} [get]
+// @Summary		Get User
+// @Description	Get authenticated user based on the JWT sent with the request
+// @Tags			User
+// @Produce		json
+// @Param			Path	path		UserPathParams	true	"UserPathParams"
+// @Success		200		{object}	response.Response{data=models.User}
+// @Failure		400		{object}	response.Error
+// @Failure		401		{object}	response.Error
+// @Failure		500		{object}	response.Error
+// @Security		BearerAuth
+// @Router			/users/{user_id} [get]
 func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 	path := UserPathParams{
 		UserID: r.PathValue("user_id"),
@@ -61,17 +61,17 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 	response.HTTPResponse(w, user)
 }
 
-//	@Summary		Create User
-//	@Description	Create User with the parameters sent with the request
-//	@Tags			User
-//	@Accept			application/x-www-form-urlencoded
-//	@Produce		json
-//	@Param			Query	query		PostQueryParams	true	"PostQueryParams"
-//	@Success		200		{object}	response.Response{data=models.User}
-//	@Failure		400		{object}	response.Error
-//	@Failure		401		{object}	response.Error
-//	@Failure		500		{object}	response.Error
-//	@Router			/users [post]
+// @Summary		Create User
+// @Description	Create User with the parameters sent with the request
+// @Tags			User
+// @Accept			application/x-www-form-urlencoded
+// @Produce		json
+// @Param			Query	query		PostQueryParams	true	"PostQueryParams"
+// @Success		200		{object}	response.Response{data=models.User}
+// @Failure		400		{object}	response.Error
+// @Failure		401		{object}	response.Error
+// @Failure		500		{object}	response.Error
+// @Router			/users [post]
 func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 	query := PostQueryParams{
 		Name:     r.FormValue("name"),
@@ -120,19 +120,19 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 	response.HTTPResponse(w, user)
 }
 
-//	@Summary		Update User
-//	@Description	Update authenticated User with the parameters sent with the request based on the JWT
-//	@Tags			User
-//	@Accept			application/x-www-form-urlencoded
-//	@Produce		json
-//	@Param			Path	path		UserPathParams	true	"UserPathParams"
-//	@Param			Query	query		PutQueryParams	true	"PutQueryParams"
-//	@Success		200		{object}	response.Response{data=models.User}
-//	@Failure		400		{object}	response.Error
-//	@Failure		401		{object}	response.Error
-//	@Failure		500		{object}	response.Error
-//	@Security		BearerAuth
-//	@Router			/users/{user_id} [put]
+// @Summary		Update User
+// @Description	Update authenticated User with the parameters sent with the request based on the JWT
+// @Tags			User
+// @Accept			application/x-www-form-urlencoded
+// @Produce		json
+// @Param			Path	path		UserPathParams	true	"UserPathParams"
+// @Param			Query	query		PutQueryParams	true	"PutQueryParams"
+// @Success		200		{object}	response.Response{data=models.User}
+// @Failure		400		{object}	response.Error
+// @Failure		401		{object}	response.Error
+// @Failure		500		{object}	response.Error
+// @Security		BearerAuth
+// @Router			/users/{user_id} [put]
 func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 	path := UserPathParams{
 		UserID: r.PathValue("user_id"),
@@ -191,18 +191,18 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 	response.HTTPResponse(w, newUser)
 }
 
-//	@Summary		Delete User
-//	@Description	Delete authenticated User based on the JWT
-//	@Tags			User
-//	@Accept			application/x-www-form-urlencoded
-//	@Produce		json
-//	@Param			Path	path		UserPathParams	true	"UserPathParams"
-//	@Success		200		{object}	response.Response{data=string}
-//	@Failure		400		{object}	response.Error
-//	@Failure		401		{object}	response.Error
-//	@Failure		500		{object}	response.Error
-//	@Security		BearerAuth
-//	@Router			/users/{user_id} [delete]
+// @Summary		Delete User
+// @Description	Delete authenticated User based on the JWT
+// @Tags			User
+// @Accept			application/x-www-form-urlencoded
+// @Produce		json
+// @Param			Path	path		UserPathParams	true	"UserPathParams"
+// @Success		200		{object}	response.Response{data=string}
+// @Failure		400		{object}	response.Error
+// @Failure		401		{object}	response.Error
+// @Failure		500		{object}	response.Error
+// @Security		BearerAuth
+// @Router			/users/{user_id} [delete]
 func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 	path := UserPathParams{
 		UserID: r.PathValue("user_id"),

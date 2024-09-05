@@ -84,7 +84,7 @@ func DoesUserExist(idStr string, email string, db *sqlx.DB) (bool, int, error) {
 func GetUserFromJWT(r *http.Request, w http.ResponseWriter, db *sqlx.DB) *models.User {
 	accessToken, err := auth.GetJWT(r)
 	if err != nil {
-    response.GenericBadRequestError(w, err)
+		response.GenericBadRequestError(w, err)
 		return nil
 	}
 

@@ -26,17 +26,17 @@ func New(db *sqlx.DB, validator *validator.Validate) *API {
 	}
 }
 
-//	@Summary		Get Event
-//	@Description	Get authenticated user's event based on the JWT and parameters sent with the request
-//	@Tags			Event
-//	@Produce		json
-//	@Param			Path	path		EventPathParams	true	"EventPathParams"
-//	@Success		200		{object}	response.Response{data=models.Event}
-//	@Failure		400		{object}	response.Error
-//	@Failure		401		{object}	response.Error
-//	@Failure		500		{object}	response.Error
-//	@Security		BearerAuth
-//	@Router			/events/{event_id} [get]
+// @Summary		Get Event
+// @Description	Get authenticated user's event based on the JWT and parameters sent with the request
+// @Tags			Event
+// @Produce		json
+// @Param			Path	path		EventPathParams	true	"EventPathParams"
+// @Success		200		{object}	response.Response{data=models.Event}
+// @Failure		400		{object}	response.Error
+// @Failure		401		{object}	response.Error
+// @Failure		500		{object}	response.Error
+// @Security		BearerAuth
+// @Router			/events/{event_id} [get]
 func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 	path := EventPathParams{
 		EventID: r.PathValue("event_id"),
@@ -60,18 +60,18 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 	response.HTTPResponse(w, event)
 }
 
-//	@Summary		Create Event
-//	@Description	Create Event based on the parameters sent with the request
-//	@Tags			Event
-//	@Accept			application/x-www-form-urlencoded
-//	@Produce		json
-//	@Param			Query	query		EventQueryParams	true	"EventQueryParams"
-//	@Success		200		{object}	response.Response{data=models.Event}
-//	@Failure		400		{object}	response.Error
-//	@Failure		401		{object}	response.Error
-//	@Failure		500		{object}	response.Error
-//	@Security		BearerAuth
-//	@Router			/events [post]
+// @Summary		Create Event
+// @Description	Create Event based on the parameters sent with the request
+// @Tags			Event
+// @Accept			application/x-www-form-urlencoded
+// @Produce		json
+// @Param			Query	query		EventQueryParams	true	"EventQueryParams"
+// @Success		200		{object}	response.Response{data=models.Event}
+// @Failure		400		{object}	response.Error
+// @Failure		401		{object}	response.Error
+// @Failure		500		{object}	response.Error
+// @Security		BearerAuth
+// @Router			/events [post]
 func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 	query := EventQueryParams{
 		Title:     r.FormValue("title"),
@@ -134,19 +134,19 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 	response.HTTPResponse(w, event)
 }
 
-//	@Summary		Update Event
-//	@Description	Update Event based on the parameters sent with the request
-//	@Tags			Event
-//	@Accept			application/x-www-form-urlencoded
-//	@Produce		json
-//	@Param			Path	path		EventPathParams		true	"EventPathParams"
-//	@Param			Query	query		EventQueryParams	true	"EventQueryParams"
-//	@Success		200		{object}	response.Response{data=models.Event}
-//	@Failure		400		{object}	response.Error
-//	@Failure		401		{object}	response.Error
-//	@Failure		500		{object}	response.Error
-//	@Security		BearerAuth
-//	@Router			/events/{event_id} [put]
+// @Summary		Update Event
+// @Description	Update Event based on the parameters sent with the request
+// @Tags			Event
+// @Accept			application/x-www-form-urlencoded
+// @Produce		json
+// @Param			Path	path		EventPathParams		true	"EventPathParams"
+// @Param			Query	query		EventQueryParams	true	"EventQueryParams"
+// @Success		200		{object}	response.Response{data=models.Event}
+// @Failure		400		{object}	response.Error
+// @Failure		401		{object}	response.Error
+// @Failure		500		{object}	response.Error
+// @Security		BearerAuth
+// @Router			/events/{event_id} [put]
 func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 	path := EventPathParams{
 		EventID: r.PathValue("event_id"),
@@ -223,19 +223,19 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 	response.HTTPResponse(w, event)
 }
 
-//	@Summary		Delete Event
+// @Summary		Delete Event
 //
-//	@Description	Delete Event based on the parameters sent with the request
-//	@Tags			Event
-//	@Accept			application/x-www-form-urlencoded
-//	@Produce		json
-//	@Param			Path	path		EventPathParams	true	"EventPathParams"
-//	@Success		200		{object}	response.Response{data=string}
-//	@Failure		400		{object}	response.Error
-//	@Failure		401		{object}	response.Error
-//	@Failure		500		{object}	response.Error
-//	@Security		BearerAuth
-//	@Router			/events/{event_id} [delete]
+// @Description	Delete Event based on the parameters sent with the request
+// @Tags			Event
+// @Accept			application/x-www-form-urlencoded
+// @Produce		json
+// @Param			Path	path		EventPathParams	true	"EventPathParams"
+// @Success		200		{object}	response.Response{data=string}
+// @Failure		400		{object}	response.Error
+// @Failure		401		{object}	response.Error
+// @Failure		500		{object}	response.Error
+// @Security		BearerAuth
+// @Router			/events/{event_id} [delete]
 func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 	path := EventPathParams{
 		EventID: r.PathValue("event_id"),
@@ -271,19 +271,19 @@ func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 	response.HTTPResponse(w, "Event has been successfully deleted")
 }
 
-//	@Summary		Get User Events
-//	@Description	Get authenticated user's event based on the JWT sent with the request
-//	@Tags			Event
-//	@Accept			application/x-www-form-urlencoded
-//	@Produce		json
-//	@Param			Path	path		UserPathParams				true	"UserPathParams"
-//	@Param			Query	query		GetUserEventsQueryParams	true	"GetUserEventsQueryParams"
-//	@Success		200		{object}	response.Response{data=[]models.Event}
-//	@Failure		400		{object}	response.Error
-//	@Failure		401		{object}	response.Error
-//	@Failure		500		{object}	response.Error
-//	@Security		BearerAuth
-//	@Router			/users/{user_id}/events [get]
+// @Summary		Get User Events
+// @Description	Get authenticated user's event based on the JWT sent with the request
+// @Tags			Event
+// @Accept			application/x-www-form-urlencoded
+// @Produce		json
+// @Param			Path	path		UserPathParams				true	"UserPathParams"
+// @Param			Query	query		GetUserEventsQueryParams	true	"GetUserEventsQueryParams"
+// @Success		200		{object}	response.Response{data=[]models.Event}
+// @Failure		400		{object}	response.Error
+// @Failure		401		{object}	response.Error
+// @Failure		500		{object}	response.Error
+// @Security		BearerAuth
+// @Router			/users/{user_id}/events [get]
 func (api *API) GetUserEvents(w http.ResponseWriter, r *http.Request) {
 	path := UserPathParams{
 		UserID: r.PathValue("user_id"),

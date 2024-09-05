@@ -63,7 +63,7 @@ func TestNewAccessToken(t *testing.T) {
 func TestNewRefreshToken(t *testing.T) {
 	os.Setenv("JWT_SECRET", "testsecret")
 
-  token, err := auth.NewRefreshToken()
+	token, err := auth.NewRefreshToken()
 	assert.NoError(t, err, "NewRefreshToken should not return an error")
 	assert.NotEmpty(t, token, "NewRefreshToken should return a non-empty token")
 }
@@ -85,7 +85,7 @@ func TestParseAccessToken(t *testing.T) {
 
 	w = httptest.NewRecorder()
 	claims = auth.ParseAccessToken(w, "invalidtoken")
-  assert.Nil(t, claims, "Parsed claims should be nil for an invalid token")
+	assert.Nil(t, claims, "Parsed claims should be nil for an invalid token")
 }
 
 func TestParseRefreshToken(t *testing.T) {

@@ -104,7 +104,7 @@ func DeleteEventHelper(eventAPI *event.API, t testing.TB, want_code int, want_st
 func GetUserEventsHelper(eventAPI *event.API, t testing.TB, body url.Values, want_code int, want_status string, userId string, accessToken string) {
 	t.Helper()
 	req, _ := http.NewRequest(http.MethodGet, "/users/{user_id}/events", nil)
-  req.URL.RawQuery = body.Encode()
+	req.URL.RawQuery = body.Encode()
 	req.SetPathValue("user_id", userId)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", accessToken))
@@ -112,5 +112,5 @@ func GetUserEventsHelper(eventAPI *event.API, t testing.TB, body url.Values, wan
 
 	eventAPI.GetUserEvents(res, req)
 
-  GenericAssert(t, want_code, want_status, res)
+	GenericAssert(t, want_code, want_status, res)
 }
