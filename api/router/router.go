@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/jmoiron/sqlx"
@@ -35,9 +36,11 @@ func New(db *sqlx.DB, v *validator.Validate) http.Handler {
 	mux.HandleFunc("DELETE /events/{event_id}", eventAPI.Delete)
 	mux.HandleFunc("GET /users/{user_id}/events", eventAPI.GetUserEvents)
 
-	mux.HandleFunc("GET /swagger/", httpSwagger.Handler(
-		httpSwagger.URL("/swagger/doc.json"),
-	))
+	if os.Getenv("ENV") == "DEVELOPMENT" {
+		mux.HandleFunc("/swagger/", httpSwagger.Handler(
+			httpSwagger.URL("/swagger/doc.json"),
+		))
+	}
 
 	return mux
 }
