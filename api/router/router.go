@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -14,33 +15,49 @@ import (
 )
 
 func New(db *sqlx.DB, v *validator.Validate) http.Handler {
-	mux := http.NewServeMux()
+	router := http.NewServeMux()
+	router.Handle("/", Base())
 
-	mux.HandleFunc("GET /health", health.Health)
+	group := "/api/v1"
+	router.Handle(fmt.Sprintf("%s/", group), V1(group, db, v))
 
-	userAPI := user.New(db, v)
-	mux.HandleFunc("GET /users/{user_id}", userAPI.Get)
-	mux.HandleFunc("POST /users", userAPI.Post)
-	mux.HandleFunc("PUT /users/{user_id}", userAPI.Put)
-	mux.HandleFunc("DELETE /users/{user_id}", userAPI.Delete)
+	return router
+}
 
-	authAPI := auth.New(db, v)
-	mux.HandleFunc("POST /auth/login", authAPI.Authenticate)
-	mux.HandleFunc("POST /auth/refresh", authAPI.RefreshToken)
-	mux.HandleFunc("PUT /auth/reset-password", authAPI.PutPassword)
+func Base() http.Handler {
+	router := http.NewServeMux()
 
-	eventAPI := event.New(db, v)
-	mux.HandleFunc("GET /events/{event_id}", eventAPI.Get)
-	mux.HandleFunc("POST /events", eventAPI.Post)
-	mux.HandleFunc("PUT /events/{event_id}", eventAPI.Put)
-	mux.HandleFunc("DELETE /events/{event_id}", eventAPI.Delete)
-	mux.HandleFunc("GET /users/{user_id}/events", eventAPI.GetUserEvents)
+	router.HandleFunc("GET /health", health.Health)
 
 	if os.Getenv("ENV") == "DEVELOPMENT" {
-		mux.HandleFunc("/swagger/", httpSwagger.Handler(
+		router.HandleFunc("/swagger/", httpSwagger.Handler(
 			httpSwagger.URL("/swagger/doc.json"),
 		))
 	}
 
-	return mux
+	return router
+}
+
+func V1(group string, db *sqlx.DB, v *validator.Validate) http.Handler {
+	router := http.NewServeMux()
+
+	userAPI := user.New(db, v)
+	router.HandleFunc("GET /users/{user_id}", userAPI.Get)
+	router.HandleFunc("POST /users", userAPI.Post)
+	router.HandleFunc("PUT /users/{user_id}", userAPI.Put)
+	router.HandleFunc("DELETE /users/{user_id}", userAPI.Delete)
+
+	authAPI := auth.New(db, v)
+	router.HandleFunc("POST /auth/login", authAPI.Authenticate)
+	router.HandleFunc("POST /auth/refresh", authAPI.RefreshToken)
+	router.HandleFunc("PUT /auth/reset-password", authAPI.PutPassword)
+
+	eventAPI := event.New(db, v)
+	router.HandleFunc("GET /events/{event_id}", eventAPI.Get)
+	router.HandleFunc("POST /events", eventAPI.Post)
+	router.HandleFunc("PUT /events/{event_id}", eventAPI.Put)
+	router.HandleFunc("DELETE /events/{event_id}", eventAPI.Delete)
+	router.HandleFunc("GET /users/{user_id}/events", eventAPI.GetUserEvents)
+
+	return http.StripPrefix(group, router)
 }

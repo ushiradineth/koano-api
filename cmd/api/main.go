@@ -24,6 +24,7 @@ import (
 // @contact.name				Ushira Dineth
 // @contact.url				https://ushira.com
 // @contact.email				ushiradineth@gmail.com
+// @BasePath					/api/v1
 // @securityDefinitions.apikey	BearerAuth
 // @in							header
 // @name						Authorization
@@ -46,12 +47,11 @@ func run(ctx context.Context) error {
 
 	db := database.New()
 	v := validatorUtil.New()
-
-	routes := router.New(db, v)
+	router := router.New(db, v)
 
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf(":%s", os.Getenv("PORT")),
-		Handler: routes,
+		Handler: router,
 	}
 
 	go func() {
