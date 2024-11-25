@@ -1,7 +1,7 @@
 name: cron
 services:
   postgres:
-    container_name: postgres
+    container_name: cron-postgres
     image: postgres:16-alpine
     restart: unless-stopped
     platform: linux/arm64
@@ -17,7 +17,7 @@ services:
       - postgres:/var/lib/postgres
 
   adminer:
-    container_name: adminer
+    container_name: cron-adminer
     image: adminer
     restart: unless-stopped
     ports:
