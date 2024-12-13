@@ -27,6 +27,10 @@
   - Password: password
   - Database: cron
 
+### Install Go Migrate
+
+- `go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest`
+
 ### Run Database Migrations
 
 - Run `make db_up` to run the latest Database Migration.
