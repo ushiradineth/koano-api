@@ -1,6 +1,7 @@
 package user
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -57,6 +58,8 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.Password = "redacted"
+
+	log.Printf("User %s has been retrieved", user.ID)
 
 	response.HTTPResponse(w, user)
 }
@@ -116,6 +119,8 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.Password = "redacted"
+
+	log.Printf("User %s has been created", user.ID)
 
 	response.HTTPResponse(w, user)
 }
@@ -188,6 +193,8 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("User %s has been updated", newUser.ID)
+
 	response.HTTPResponse(w, newUser)
 }
 
@@ -239,6 +246,8 @@ func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 		response.HTTPError(w, http.StatusBadRequest, "User does not exist", response.StatusFail)
 		return
 	}
+
+	log.Printf("User %s has been deleted", user.ID)
 
 	response.HTTPResponse(w, "User has been successfully deleted")
 }

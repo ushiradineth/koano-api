@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -97,6 +98,8 @@ func (api *API) Authenticate(w http.ResponseWriter, r *http.Request) {
 		RefreshToken: refreshToken,
 	}
 
+	log.Printf("User %s has been authenticated", user.ID)
+
 	response.HTTPResponse(w, authenticateResponse)
 }
 
@@ -162,6 +165,8 @@ func (api *API) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		RefreshToken: newRefreshToken,
 	}
 
+	log.Printf("Access Token for user %s has been refreshed", user.ID)
+
 	response.HTTPResponse(w, refreshTokenResponse)
 }
 
@@ -203,6 +208,8 @@ func (api *API) PutPassword(w http.ResponseWriter, r *http.Request) {
 		response.GenericServerError(w, err)
 		return
 	}
+
+	log.Printf("User %s has updated their password", user.ID)
 
 	response.HTTPResponse(w, "Password has being updated")
 }

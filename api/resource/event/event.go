@@ -2,6 +2,7 @@ package event
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -56,6 +57,8 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 	if event == nil {
 		return
 	}
+
+	log.Printf("Event %s has been retrieved by user %s", path.EventID, user.ID)
 
 	response.HTTPResponse(w, event)
 }
@@ -130,6 +133,8 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 		response.GenericServerError(w, err)
 		return
 	}
+
+	log.Printf("Event %s has been created by user %s", event.ID, user.ID)
 
 	response.HTTPResponse(w, event)
 }
@@ -220,6 +225,8 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("Event %s has been updated by user %s", path.EventID, user.ID)
+
 	response.HTTPResponse(w, event)
 }
 
@@ -267,6 +274,8 @@ func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 		response.GenericBadRequestError(w, fmt.Errorf("Event does not exist"))
 		return
 	}
+
+	log.Printf("Event %s has been deleted by user %s", path.EventID, user.ID)
 
 	response.HTTPResponse(w, "Event has been successfully deleted")
 }
@@ -333,6 +342,8 @@ func (api *API) GetUserEvents(w http.ResponseWriter, r *http.Request) {
 		response.GenericServerError(w, err)
 		return
 	}
+
+	log.Printf("Events for user %s have been retrieved", user.ID)
 
 	response.HTTPResponse(w, events)
 }
