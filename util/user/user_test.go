@@ -2,6 +2,7 @@ package user_test
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -42,7 +43,10 @@ var user1 user.PostQueryParams = user.PostQueryParams{
 
 func TestInit(t *testing.T) {
 	t.Run("Initiate Dependencies", func(t *testing.T) {
-		assert.NoError(t, godotenv.Load("../../.env"), "Environment variables should be loaded in")
+		err := godotenv.Load("../../.env")
+		if err != nil {
+			log.Println("Failed to load env")
+		}
 
 		db = test.NewDB("../../database/migration")
 		v := validator.New()

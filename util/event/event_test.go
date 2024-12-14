@@ -1,6 +1,7 @@
 package event_test
 
 import (
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -52,7 +53,10 @@ var event1 event.EventQueryParams = event.EventQueryParams{
 
 func TestInit(t *testing.T) {
 	t.Run("Initiate Dependencies", func(t *testing.T) {
-		assert.NoError(t, godotenv.Load("../../.env"), "Environment variables should be loaded in")
+		err := godotenv.Load("../../.env")
+		if err != nil {
+			log.Println("Failed to load env")
+		}
 
 		db = test.NewDB("../../database/migration")
 		v := validator.New()

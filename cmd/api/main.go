@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -42,7 +41,7 @@ func run(ctx context.Context) error {
 
 	err := godotenv.Load(".env")
 	if err != nil {
-		return errors.New("Failed to load env")
+		log.Println("Failed to load env")
 	}
 
 	db := database.New()

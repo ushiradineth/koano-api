@@ -1,8 +1,8 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -20,7 +20,7 @@ func main() {
 func run() error {
 	err := godotenv.Load(".env")
 	if err != nil {
-		return errors.New("Failed to load env")
+		log.Println("Failed to load env")
 	}
 
 	db := database.New()

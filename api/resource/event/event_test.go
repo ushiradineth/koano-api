@@ -1,6 +1,7 @@
 package event_test
 
 import (
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -12,7 +13,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
-	"github.com/stretchr/testify/assert"
 	"github.com/ushiradineth/cron-be/api/resource/auth"
 	"github.com/ushiradineth/cron-be/api/resource/event"
 	"github.com/ushiradineth/cron-be/api/resource/user"
@@ -57,7 +57,10 @@ var event1 event.EventQueryParams = event.EventQueryParams{
 
 func TestInit(t *testing.T) {
 	t.Run("Initiate Dependencies", func(t *testing.T) {
-		assert.NoError(t, godotenv.Load("../../../.env"), "Environment variables should be loaded in")
+		err := godotenv.Load("../../../.env")
+		if err != nil {
+			log.Println("Failed to load env")
+		}
 
 		db = test.NewDB("../../../database/migration")
 		v := validator.New()
