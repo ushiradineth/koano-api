@@ -456,7 +456,7 @@ const docTemplate = `{
                 ],
                 "description": "Update Event based on the parameters sent with the request",
                 "consumes": [
-                    "application/x-www-form-urlencodedPathParams"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"

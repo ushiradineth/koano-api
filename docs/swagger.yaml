@@ -389,7 +389,7 @@ paths:
       - Event
     put:
       consumes:
-      - application/x-www-form-urlencodedPathParams
+      - application/x-www-form-urlencoded
       description: Update Event based on the parameters sent with the request
       parameters:
       - in: path
