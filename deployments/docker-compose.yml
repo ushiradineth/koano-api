@@ -30,11 +30,16 @@ services:
 
   # cron-be:
   #   container_name: cron_be
-  #   image: cron-be:go
+  #   image: cron-be:dev
+  #   build:
+  #     context: ../
+  #     dockerfile: deployments/Dockerfile
   #   restart: unless-stopped
   #   platform: linux/arm64
   #   environment:
   #     PG_URL: "postgres:5432"
+  #   env_file:
+  #     - ../.env
   #   ports:
   #     - "8080:8080"
   #   expose:
