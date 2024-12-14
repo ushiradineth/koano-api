@@ -7,21 +7,27 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/jmoiron/sqlx"
-	"github.com/swaggo/http-swagger/v2"
+	"github.com/rs/cors"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"github.com/ushiradineth/cron-be/api/resource/auth"
 	"github.com/ushiradineth/cron-be/api/resource/event"
 	"github.com/ushiradineth/cron-be/api/resource/health"
 	"github.com/ushiradineth/cron-be/api/resource/user"
 )
 
-func New(db *sqlx.DB, v *validator.Validate) http.Handler {
+func New(db *sqlx.DB, v *validator.Validate, allowedOrigins []string) http.Handler {
 	router := http.NewServeMux()
 	router.Handle("/", Base())
 
 	group := "/api/v1"
 	router.Handle(fmt.Sprintf("%s/", group), V1(group, db, v))
 
-	return router
+	c := cors.New(cors.Options{
+		AllowedOrigins:   allowedOrigins,
+		AllowCredentials: true,
+	})
+
+	return c.Handler(router)
 }
 
 func Base() http.Handler {
