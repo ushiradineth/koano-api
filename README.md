@@ -1,6 +1,6 @@
 # Go backend for Cron
 
-- Check [main repo](https://github.com/ushiradineth/cron) for details about the project.
+- Check [frontend repository](https://github.com/ushiradineth/cron) for details about the project.
 
 ## Running the Project Locally
 
