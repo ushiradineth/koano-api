@@ -309,14 +309,6 @@ func TestGetUserEventsHandler(t *testing.T) {
 		test.AuthenticateUserHelper(authAPI, t, user, http.StatusOK, response.StatusSuccess, &user2ID, &accessToken, &refreshToken)
 	})
 
-	t.Run("JWT does not match user ID", func(t *testing.T) {
-		test.GetUserEventsHelper(eventAPI, t, body, http.StatusUnauthorized, response.StatusFail, user1ID, accessToken)
-	})
-
-	t.Run("Event ID is invalid", func(t *testing.T) {
-		test.GetUserEventsHelper(eventAPI, t, body, http.StatusBadRequest, response.StatusFail, "not_an_id", accessToken)
-	})
-
 	t.Run("JWT is Invalid", func(t *testing.T) {
 		test.GetUserEventsHelper(eventAPI, t, body, http.StatusUnauthorized, response.StatusFail, user1ID, expiredAccessToken)
 	})

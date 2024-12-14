@@ -55,9 +55,11 @@ func TestNewAccessToken(t *testing.T) {
 	name := "Test User"
 	email := "test@example.com"
 
-	token, err := auth.NewAccessToken(id, name, email)
+	token, expiresIn, expiresAt, err := auth.NewAccessToken(id, name, email)
 	assert.NoError(t, err, "NewAccessToken should not return an error")
 	assert.NotEmpty(t, token, "NewAccessToken should return a non-empty token")
+	assert.NotEmpty(t, expiresIn, "NewAccessToken should return a non-empty expiresIn")
+	assert.NotEmpty(t, expiresAt, "NewAccessToken should return a non-empty expiresAt")
 }
 
 func TestNewRefreshToken(t *testing.T) {
@@ -74,7 +76,7 @@ func TestParseAccessToken(t *testing.T) {
 	id := uuid.New()
 	name := "Test User"
 	email := "test@example.com"
-	token, _ := auth.NewAccessToken(id, name, email)
+	token, expiresIn, expiresAt, err := auth.NewAccessToken(id, name, email)
 
 	w := httptest.NewRecorder()
 	claims := auth.ParseAccessToken(w, token)
@@ -82,6 +84,9 @@ func TestParseAccessToken(t *testing.T) {
 	assert.Equal(t, id, claims.Id, "Parsed token ID should match")
 	assert.Equal(t, name, claims.Name, "Parsed token name should match")
 	assert.Equal(t, email, claims.Email, "Parsed token email should match")
+	assert.Equal(t, expiresAt, claims.StandardClaims.ExpiresAt, "Parsed token expiresAt should match")
+	assert.NotEmpty(t, expiresIn, "Parsed token expiresIn should not be empty")
+	assert.NoError(t, err, "Parsed access token should not return an error")
 
 	w = httptest.NewRecorder()
 	claims = auth.ParseAccessToken(w, "invalidtoken")
@@ -141,7 +146,7 @@ func TestParseExpiredAccessToken(t *testing.T) {
 	assert.Equal(t, claims.Email, parsedClaims.Email, "Parsed token email should match")
 
 	w = httptest.NewRecorder()
-	validToken, _ := auth.NewAccessToken(claims.Id, claims.Name, claims.Email)
+	validToken, _, _, _ := auth.NewAccessToken(claims.Id, claims.Name, claims.Email)
 	parsedClaims = auth.ParseExpiredAccessToken(w, validToken)
 	assert.Nil(t, parsedClaims, "Parsed claims should be nil for a valid token")
 }

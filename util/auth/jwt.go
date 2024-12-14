@@ -33,18 +33,25 @@ func GetJWT(r *http.Request) (string, error) {
 	return parts[1], nil
 }
 
-func NewAccessToken(id uuid.UUID, name string, email string) (string, error) {
+func NewAccessToken(id uuid.UUID, name string, email string) (string, int64, int64, error) {
+	expiresIn := int64(15 * 60)
+	expiresAt := time.Now().Add(time.Duration(expiresIn) * time.Second).Unix()
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaim{
 		Id:    id,
 		Name:  name,
 		Email: email,
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt:  time.Now().Unix(),
-			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
+			ExpiresAt: expiresAt,
 		},
 	})
 
-	return accessToken.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	signedToken, err := accessToken.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		return "", 0, 0, err
+	}
+
+	return signedToken, expiresIn, expiresAt, nil
 }
 
 func NewRefreshToken() (string, error) {

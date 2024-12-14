@@ -26,11 +26,18 @@ func New(db *sqlx.DB, validator *validator.Validate) *API {
 type AuthenticateResponse struct {
 	User         models.User `json:"user"`
 	AccessToken  string      `json:"access_token"`
+	TokenType    string      `json:"token_type"`
+	ExpiresIn    int64       `json:"expires_in"`
+	ExpiresAt    int64       `json:"expires_at"`
 	RefreshToken string      `json:"refresh_token"`
 }
 
 type RefreshTokenResponse struct {
-	AccessToken string `json:"access_token"`
+	AccessToken  string `json:"access_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int64  `json:"expires_in"`
+	ExpiresAt    int64  `json:"expires_at"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 // @Summary		Authenticate User
@@ -67,7 +74,7 @@ func (api *API) Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, err := auth.NewAccessToken(user.ID, user.Name, user.Email)
+	accessToken, expiresIn, expiresAt, err := auth.NewAccessToken(user.ID, user.Name, user.Email)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
@@ -84,6 +91,9 @@ func (api *API) Authenticate(w http.ResponseWriter, r *http.Request) {
 	authenticateResponse := AuthenticateResponse{
 		User:         *user,
 		AccessToken:  accessToken,
+		TokenType:    "Bearer",
+		ExpiresIn:    expiresIn,
+		ExpiresAt:    expiresAt,
 		RefreshToken: refreshToken,
 	}
 
@@ -132,14 +142,24 @@ func (api *API) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newAccessToken, err := auth.NewAccessToken(user.ID, user.Name, user.Email)
+	newAccessToken, expiresIn, expiresAt, err := auth.NewAccessToken(user.ID, user.Name, user.Email)
+	if err != nil {
+		response.GenericServerError(w, err)
+		return
+	}
+
+	newRefreshToken, err := auth.NewRefreshToken()
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
 	}
 
 	refreshTokenResponse := RefreshTokenResponse{
-		AccessToken: newAccessToken,
+		AccessToken:  newAccessToken,
+		TokenType:    "Bearer",
+		ExpiresIn:    expiresIn,
+		ExpiresAt:    expiresAt,
+		RefreshToken: newRefreshToken,
 	}
 
 	response.HTTPResponse(w, refreshTokenResponse)

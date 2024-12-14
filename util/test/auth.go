@@ -36,6 +36,9 @@ func AuthenticateUserHelper(authAPI *auth.API, t testing.TB, body url.Values, wa
 
 		assert.NotEmpty(t, userMap["id"], "User ID is missing")
 		assert.NotEmpty(t, dataMap["access_token"], "Access Token is missing")
+		assert.Equal(t, "Bearer", dataMap["token_type"], "Token Type should be 'Bearer'")
+		assert.NotEmpty(t, dataMap["expires_in"], "Expires In is missing")
+		assert.NotEmpty(t, dataMap["expires_at"], "Expires At is missing")
 		assert.NotEmpty(t, dataMap["refresh_token"], "Refresh Token is missing")
 
 		*userId, _ = userMap["id"].(string)
@@ -65,5 +68,16 @@ func RefreshTokenHelper(authAPI *auth.API, t testing.TB, body url.Values, access
 
 	authAPI.RefreshToken(res, req)
 
-	GenericAssert(t, want_code, want_status, res)
+	responseBody := GenericAssert(t, want_code, want_status, res)
+
+	if res.Code == http.StatusOK {
+		dataMap, ok := responseBody.Data.(map[string]interface{})
+		assert.True(t, true, ok)
+
+		assert.NotEmpty(t, dataMap["access_token"], "Access Token is missing")
+		assert.Equal(t, "Bearer", dataMap["token_type"], "Token Type should be 'Bearer'")
+		assert.NotEmpty(t, dataMap["expires_in"], "Expires In is missing")
+		assert.NotEmpty(t, dataMap["expires_at"], "Expires At is missing")
+		assert.NotEmpty(t, dataMap["refresh_token"], "Refresh Token is missing")
+	}
 }
