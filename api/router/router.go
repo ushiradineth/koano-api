@@ -57,7 +57,7 @@ func V1(group string, db *sqlx.DB, v *validator.Validate) http.Handler {
 	router.HandleFunc("POST /events", eventAPI.Post)
 	router.HandleFunc("PUT /events/{event_id}", eventAPI.Put)
 	router.HandleFunc("DELETE /events/{event_id}", eventAPI.Delete)
-	router.HandleFunc("GET /users/{user_id}/events", eventAPI.GetUserEvents)
+	router.HandleFunc("GET /events", eventAPI.GetUserEvents)
 
 	return http.StripPrefix(group, router)
 }

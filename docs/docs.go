@@ -217,6 +217,79 @@ const docTemplate = `{
             }
         },
         "/events": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get authenticated user's event based on the JWT sent with the request",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Get User Events",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "end_day",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_day",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/models.Event"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -320,14 +393,14 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get authenticated user's event based on the JWT and parameters sent with the request",
+                "description": "Get authenticated user's event based on the JWT and event ID sent with the request",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Event"
                 ],
-                "summary": "Get Event",
+                "summary": "Get Event by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -383,7 +456,7 @@ const docTemplate = `{
                 ],
                 "description": "Update Event based on the parameters sent with the request",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/x-www-form-urlencodedPathParams"
                 ],
                 "produces": [
                     "application/json"
@@ -818,87 +891,6 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/users/{user_id}/events": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get authenticated user's event based on the JWT sent with the request",
-                "consumes": [
-                    "application/x-www-form-urlencoded"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Event"
-                ],
-                "summary": "Get User Events",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "end_day",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_day",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/models.Event"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Error"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.Error"
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
@@ -908,7 +900,16 @@ const docTemplate = `{
                 "access_token": {
                     "type": "string"
                 },
+                "expires_at": {
+                    "type": "integer"
+                },
+                "expires_in": {
+                    "type": "integer"
+                },
                 "refresh_token": {
+                    "type": "string"
+                },
+                "token_type": {
                     "type": "string"
                 },
                 "user": {
@@ -920,6 +921,18 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "access_token": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "integer"
+                },
+                "expires_in": {
+                    "type": "integer"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "token_type": {
                     "type": "string"
                 }
             }

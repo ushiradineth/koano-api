@@ -4,7 +4,13 @@ definitions:
     properties:
       access_token:
         type: string
+      expires_at:
+        type: integer
+      expires_in:
+        type: integer
       refresh_token:
+        type: string
+      token_type:
         type: string
       user:
         $ref: '#/definitions/models.User'
@@ -12,6 +18,14 @@ definitions:
   auth.RefreshTokenResponse:
     properties:
       access_token:
+        type: string
+      expires_at:
+        type: integer
+      expires_in:
+        type: integer
+      refresh_token:
+        type: string
+      token_type:
         type: string
     type: object
   models.Event:
@@ -193,6 +207,50 @@ paths:
       tags:
       - Auth
   /events:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Get authenticated user's event based on the JWT sent with the request
+      parameters:
+      - in: query
+        name: end_day
+        required: true
+        type: string
+      - in: query
+        name: start_day
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.Event'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      security:
+      - BearerAuth: []
+      summary: Get User Events
+      tags:
+      - Event
     post:
       consumes:
       - application/x-www-form-urlencoded
@@ -293,8 +351,8 @@ paths:
       tags:
       - Event
     get:
-      description: Get authenticated user's event based on the JWT and parameters
-        sent with the request
+      description: Get authenticated user's event based on the JWT and event ID sent
+        with the request
       parameters:
       - in: path
         name: event_id
@@ -326,12 +384,12 @@ paths:
             $ref: '#/definitions/response.Error'
       security:
       - BearerAuth: []
-      summary: Get Event
+      summary: Get Event by ID
       tags:
       - Event
     put:
       consumes:
-      - application/x-www-form-urlencoded
+      - application/x-www-form-urlencodedPathParams
       description: Update Event based on the parameters sent with the request
       parameters:
       - in: path
@@ -562,55 +620,6 @@ paths:
       summary: Update User
       tags:
       - User
-  /users/{user_id}/events:
-    get:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: Get authenticated user's event based on the JWT sent with the request
-      parameters:
-      - in: path
-        name: user_id
-        required: true
-        type: string
-      - in: query
-        name: end_day
-        required: true
-        type: string
-      - in: query
-        name: start_day
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/models.Event'
-                  type: array
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Error'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Error'
-      security:
-      - BearerAuth: []
-      summary: Get User Events
-      tags:
-      - Event
 securityDefinitions:
   BearerAuth:
     in: header

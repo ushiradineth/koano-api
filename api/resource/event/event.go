@@ -27,8 +27,8 @@ func New(db *sqlx.DB, validator *validator.Validate) *API {
 	}
 }
 
-// @Summary		Get Event
-// @Description	Get authenticated user's event based on the JWT and parameters sent with the request
+// @Summary		Get Event by ID
+// @Description	Get authenticated user's event based on the JWT and event ID sent with the request
 // @Tags			Event
 // @Produce		json
 // @Param			Path	path		EventPathParams	true	"EventPathParams"
@@ -231,7 +231,6 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary		Delete Event
-//
 // @Description	Delete Event based on the parameters sent with the request
 // @Tags			Event
 // @Accept			application/x-www-form-urlencoded
@@ -285,27 +284,17 @@ func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 // @Tags			Event
 // @Accept			application/x-www-form-urlencoded
 // @Produce		json
-// @Param			Path	path		UserPathParams				true	"UserPathParams"
 // @Param			Query	query		GetUserEventsQueryParams	true	"GetUserEventsQueryParams"
 // @Success		200		{object}	response.Response{data=[]models.Event}
 // @Failure		400		{object}	response.Error
 // @Failure		401		{object}	response.Error
 // @Failure		500		{object}	response.Error
 // @Security		BearerAuth
-// @Router			/users/{user_id}/events [get]
+// @Router			/events [get]
 func (api *API) GetUserEvents(w http.ResponseWriter, r *http.Request) {
-	path := UserPathParams{
-		UserID: r.PathValue("user_id"),
-	}
-
 	query := GetUserEventsQueryParams{
 		StartDay: r.FormValue("start_day"),
 		EndDay:   r.FormValue("end_day"),
-	}
-
-	if err := api.validator.Struct(path); err != nil {
-		response.GenericValidationError(w, err)
-		return
 	}
 
 	if err := api.validator.Struct(query); err != nil {
@@ -315,11 +304,6 @@ func (api *API) GetUserEvents(w http.ResponseWriter, r *http.Request) {
 
 	user := user.GetUserFromJWT(r, w, api.db)
 	if user == nil {
-		return
-	}
-
-	if user.ID.String() != path.UserID {
-		response.GenericUnauthenticatedError(w)
 		return
 	}
 
