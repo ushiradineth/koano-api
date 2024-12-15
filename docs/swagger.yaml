@@ -1,5 +1,17 @@
 basePath: /api/v1
 definitions:
+  auth.AuthenticateBodyParams:
+    properties:
+      email:
+        type: string
+      password:
+        maxLength: 20
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
   auth.AuthenticateResponse:
     properties:
       access_token:
@@ -15,6 +27,22 @@ definitions:
       user:
         $ref: '#/definitions/models.User'
     type: object
+  auth.PutPasswordBodyParams:
+    properties:
+      password:
+        maxLength: 20
+        minLength: 8
+        type: string
+    required:
+    - password
+    type: object
+  auth.RefreshTokenBodyParams:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
   auth.RefreshTokenResponse:
     properties:
       access_token:
@@ -27,6 +55,41 @@ definitions:
         type: string
       token_type:
         type: string
+    type: object
+  event.EventBodyParams:
+    properties:
+      end_time:
+        type: string
+      repeated:
+        enum:
+        - never
+        - daily
+        - weekly
+        - monthly
+        - yearly
+        type: string
+      start_time:
+        type: string
+      timezone:
+        type: string
+      title:
+        type: string
+    required:
+    - end_time
+    - repeated
+    - start_time
+    - timezone
+    - title
+    type: object
+  event.GetUserEventsBodyParams:
+    properties:
+      end_day:
+        type: string
+      start_day:
+        type: string
+    required:
+    - end_day
+    - start_day
     type: object
   models.Event:
     properties:
@@ -76,6 +139,31 @@ definitions:
       status:
         type: string
     type: object
+  user.PostBodyParams:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        maxLength: 20
+        minLength: 8
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  user.PutBodyParams:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    required:
+    - email
+    - name
+    type: object
 info:
   contact:
     email: ushiradineth@gmail.com
@@ -88,19 +176,15 @@ paths:
   /auth/login:
     post:
       consumes:
-      - application/x-www-form-urlencoded
+      - application/json
       description: Authenticate User with the parameters sent with the request
       parameters:
-      - in: query
-        name: email
+      - description: AuthenticateBodyParams
+        in: body
+        name: Body
         required: true
-        type: string
-      - in: query
-        maxLength: 20
-        minLength: 8
-        name: password
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/auth.AuthenticateBodyParams'
       produces:
       - application/json
       responses:
@@ -131,14 +215,16 @@ paths:
   /auth/refresh:
     post:
       consumes:
-      - application/x-www-form-urlencoded
+      - application/json
       description: Refresh Access Token with the parameters sent with the request
         based on the request based on the JWT
       parameters:
-      - in: query
-        name: refresh_token
+      - description: RefreshTokenBodyParams
+        in: body
+        name: Body
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/auth.RefreshTokenBodyParams'
       produces:
       - application/json
       responses:
@@ -167,16 +253,16 @@ paths:
   /auth/reset-password:
     put:
       consumes:
-      - application/x-www-form-urlencoded
+      - application/json
       description: Update authenticated user's Password with the parameters sent with
         the request based on the JWT
       parameters:
-      - in: query
-        maxLength: 20
-        minLength: 8
-        name: password
+      - description: PutPasswordBodyParams
+        in: body
+        name: Body
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/auth.PutPasswordBodyParams'
       produces:
       - application/json
       responses:
@@ -209,17 +295,15 @@ paths:
   /events:
     get:
       consumes:
-      - application/x-www-form-urlencoded
+      - application/json
       description: Get authenticated user's event based on the JWT sent with the request
       parameters:
-      - in: query
-        name: end_day
+      - description: GetUserEventsBodyParams
+        in: body
+        name: Body
         required: true
-        type: string
-      - in: query
-        name: start_day
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/event.GetUserEventsBodyParams'
       produces:
       - application/json
       responses:
@@ -253,35 +337,15 @@ paths:
       - Event
     post:
       consumes:
-      - application/x-www-form-urlencoded
+      - application/json
       description: Create Event based on the parameters sent with the request
       parameters:
-      - in: query
-        name: end_time
+      - description: EventBodyParams
+        in: body
+        name: Body
         required: true
-        type: string
-      - enum:
-        - never
-        - daily
-        - weekly
-        - monthly
-        - yearly
-        in: query
-        name: repeated
-        required: true
-        type: string
-      - in: query
-        name: start_time
-        required: true
-        type: string
-      - in: query
-        name: timezone
-        required: true
-        type: string
-      - in: query
-        name: title
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/event.EventBodyParams'
       produces:
       - application/json
       responses:
@@ -313,8 +377,6 @@ paths:
       - Event
   /events/{event_id}:
     delete:
-      consumes:
-      - application/x-www-form-urlencoded
       description: Delete Event based on the parameters sent with the request
       parameters:
       - in: path
@@ -389,39 +451,19 @@ paths:
       - Event
     put:
       consumes:
-      - application/x-www-form-urlencoded
+      - application/json
       description: Update Event based on the parameters sent with the request
       parameters:
       - in: path
         name: event_id
         required: true
         type: string
-      - in: query
-        name: end_time
+      - description: EventBodyParams
+        in: body
+        name: Body
         required: true
-        type: string
-      - enum:
-        - never
-        - daily
-        - weekly
-        - monthly
-        - yearly
-        in: query
-        name: repeated
-        required: true
-        type: string
-      - in: query
-        name: start_time
-        required: true
-        type: string
-      - in: query
-        name: timezone
-        required: true
-        type: string
-      - in: query
-        name: title
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/event.EventBodyParams'
       produces:
       - application/json
       responses:
@@ -454,23 +496,15 @@ paths:
   /users:
     post:
       consumes:
-      - application/x-www-form-urlencoded
+      - application/json
       description: Create User with the parameters sent with the request
       parameters:
-      - in: query
-        name: email
+      - description: PostBodyParams
+        in: body
+        name: Body
         required: true
-        type: string
-      - in: query
-        name: name
-        required: true
-        type: string
-      - in: query
-        maxLength: 20
-        minLength: 8
-        name: password
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/user.PostBodyParams'
       produces:
       - application/json
       responses:
@@ -500,8 +534,6 @@ paths:
       - User
   /users/{user_id}:
     delete:
-      consumes:
-      - application/x-www-form-urlencoded
       description: Delete authenticated User based on the JWT
       parameters:
       - in: path
@@ -575,7 +607,7 @@ paths:
       - User
     put:
       consumes:
-      - application/x-www-form-urlencoded
+      - application/json
       description: Update authenticated User with the parameters sent with the request
         based on the JWT
       parameters:
@@ -583,14 +615,12 @@ paths:
         name: user_id
         required: true
         type: string
-      - in: query
-        name: email
+      - description: PutBodyParams
+        in: body
+        name: Body
         required: true
-        type: string
-      - in: query
-        name: name
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/user.PutBodyParams'
       produces:
       - application/json
       responses:

@@ -16,7 +16,7 @@
             "post": {
                 "description": "Authenticate User with the parameters sent with the request",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -27,18 +27,13 @@
                 "summary": "Authenticate User",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "email",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "maxLength": 20,
-                        "minLength": 8,
-                        "type": "string",
-                        "name": "password",
-                        "in": "query",
-                        "required": true
+                        "description": "AuthenticateBodyParams",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.AuthenticateBodyParams"
+                        }
                     }
                 ],
                 "responses": {
@@ -90,7 +85,7 @@
                 ],
                 "description": "Refresh Access Token with the parameters sent with the request based on the request based on the JWT",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -101,10 +96,13 @@
                 "summary": "Refresh Access Token",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "refresh_token",
-                        "in": "query",
-                        "required": true
+                        "description": "RefreshTokenBodyParams",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.RefreshTokenBodyParams"
+                        }
                     }
                 ],
                 "responses": {
@@ -150,7 +148,7 @@
                 ],
                 "description": "Update authenticated user's Password with the parameters sent with the request based on the JWT",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -161,12 +159,13 @@
                 "summary": "Update User Password",
                 "parameters": [
                     {
-                        "maxLength": 20,
-                        "minLength": 8,
-                        "type": "string",
-                        "name": "password",
-                        "in": "query",
-                        "required": true
+                        "description": "PutPasswordBodyParams",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.PutPasswordBodyParams"
+                        }
                     }
                 ],
                 "responses": {
@@ -218,7 +217,7 @@
                 ],
                 "description": "Get authenticated user's event based on the JWT sent with the request",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -229,16 +228,13 @@
                 "summary": "Get User Events",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "end_day",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_day",
-                        "in": "query",
-                        "required": true
+                        "description": "GetUserEventsBodyParams",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/event.GetUserEventsBodyParams"
+                        }
                     }
                 ],
                 "responses": {
@@ -291,7 +287,7 @@
                 ],
                 "description": "Create Event based on the parameters sent with the request",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -302,41 +298,13 @@
                 "summary": "Create Event",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "end_time",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "enum": [
-                            "never",
-                            "daily",
-                            "weekly",
-                            "monthly",
-                            "yearly"
-                        ],
-                        "type": "string",
-                        "name": "repeated",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_time",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "timezone",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "title",
-                        "in": "query",
-                        "required": true
+                        "description": "EventBodyParams",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/event.EventBodyParams"
+                        }
                     }
                 ],
                 "responses": {
@@ -449,7 +417,7 @@
                 ],
                 "description": "Update Event based on the parameters sent with the request",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -466,41 +434,13 @@
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "name": "end_time",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "enum": [
-                            "never",
-                            "daily",
-                            "weekly",
-                            "monthly",
-                            "yearly"
-                        ],
-                        "type": "string",
-                        "name": "repeated",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_time",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "timezone",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "title",
-                        "in": "query",
-                        "required": true
+                        "description": "EventBodyParams",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/event.EventBodyParams"
+                        }
                     }
                 ],
                 "responses": {
@@ -549,9 +489,6 @@
                     }
                 ],
                 "description": "Delete Event based on the parameters sent with the request",
-                "consumes": [
-                    "application/x-www-form-urlencoded"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -611,7 +548,7 @@
             "post": {
                 "description": "Create User with the parameters sent with the request",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -622,24 +559,13 @@
                 "summary": "Create User",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "email",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "name",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "maxLength": 20,
-                        "minLength": 8,
-                        "type": "string",
-                        "name": "password",
-                        "in": "query",
-                        "required": true
+                        "description": "PostBodyParams",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.PostBodyParams"
+                        }
                     }
                 ],
                 "responses": {
@@ -752,7 +678,7 @@
                 ],
                 "description": "Update authenticated User with the parameters sent with the request based on the JWT",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -769,16 +695,13 @@
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "name": "email",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "name",
-                        "in": "query",
-                        "required": true
+                        "description": "PutBodyParams",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.PutBodyParams"
+                        }
                     }
                 ],
                 "responses": {
@@ -827,9 +750,6 @@
                     }
                 ],
                 "description": "Delete authenticated User based on the JWT",
-                "consumes": [
-                    "application/x-www-form-urlencoded"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -887,6 +807,23 @@
         }
     },
     "definitions": {
+        "auth.AuthenticateBodyParams": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 8
+                }
+            }
+        },
         "auth.AuthenticateResponse": {
             "type": "object",
             "properties": {
@@ -910,6 +847,30 @@
                 }
             }
         },
+        "auth.PutPasswordBodyParams": {
+            "type": "object",
+            "required": [
+                "password"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 8
+                }
+            }
+        },
+        "auth.RefreshTokenBodyParams": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
         "auth.RefreshTokenResponse": {
             "type": "object",
             "properties": {
@@ -926,6 +887,55 @@
                     "type": "string"
                 },
                 "token_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "event.EventBodyParams": {
+            "type": "object",
+            "required": [
+                "end_time",
+                "repeated",
+                "start_time",
+                "timezone",
+                "title"
+            ],
+            "properties": {
+                "end_time": {
+                    "type": "string"
+                },
+                "repeated": {
+                    "type": "string",
+                    "enum": [
+                        "never",
+                        "daily",
+                        "weekly",
+                        "monthly",
+                        "yearly"
+                    ]
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "event.GetUserEventsBodyParams": {
+            "type": "object",
+            "required": [
+                "end_day",
+                "start_day"
+            ],
+            "properties": {
+                "end_day": {
+                    "type": "string"
+                },
+                "start_day": {
                     "type": "string"
                 }
             }
@@ -999,6 +1009,42 @@
                 },
                 "data": {},
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.PostBodyParams": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 8
+                }
+            }
+        },
+        "user.PutBodyParams": {
+            "type": "object",
+            "required": [
+                "email",
+                "name"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }

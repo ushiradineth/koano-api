@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -35,10 +34,15 @@ var (
 	authAPI             *auth.API
 )
 
-var user1 user.PostQueryParams = user.PostQueryParams{
+var user1 user.PostBodyParams = user.PostBodyParams{
 	Name:     faker.Name(),
 	Email:    faker.Email(),
 	Password: "UPlow1234!@#",
+}
+
+var user1Auth auth.AuthenticateBodyParams = auth.AuthenticateBodyParams{
+	Email:    user1.Email,
+	Password: user1.Password,
 }
 
 func TestInit(t *testing.T) {
@@ -65,16 +69,12 @@ func TestInit(t *testing.T) {
 		}()
 	})
 
-	body := url.Values{}
-	body.Set("name", user1.Name)
-	body.Set("email", user1.Email)
-	body.Set("password", user1.Password)
 	t.Run("Create User", func(t *testing.T) {
-		test.CreateUserHelper(userAPI, t, body, http.StatusOK, response.StatusSuccess, user1)
+		test.CreateUserHelper(userAPI, t, user1, http.StatusOK, response.StatusSuccess)
 	})
 
 	t.Run("Authenticates user 1", func(t *testing.T) {
-		test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
+		test.AuthenticateUserHelper(authAPI, t, user1Auth, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
 	})
 }
 
@@ -140,7 +140,7 @@ func TestDoesUserExistHelper(t *testing.T) {
 func TestGetUserFromJWTHelper(t *testing.T) {
 	t.Run("Get User with JWT", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/non-existent-path", nil)
-		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		request.Header.Set("Content-Type", "application/json")
 		request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", accessToken))
 
 		response := httptest.NewRecorder()
@@ -154,7 +154,7 @@ func TestGetUserFromJWTHelper(t *testing.T) {
 
 	t.Run("User does not exist", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/non-existent-path", nil)
-		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		request.Header.Set("Content-Type", "application/json")
 		request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", expiredAccessToken))
 
 		response := httptest.NewRecorder()
@@ -166,7 +166,7 @@ func TestGetUserFromJWTHelper(t *testing.T) {
 
 	t.Run("JWT is invalid", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/non-existent-path", nil)
-		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		request.Header.Set("Content-Type", "application/json")
 		request.Header.Set("Authorization", fmt.Sprintf("Bearer %v", "not_an_jwt"))
 
 		response := httptest.NewRecorder()
@@ -178,7 +178,7 @@ func TestGetUserFromJWTHelper(t *testing.T) {
 
 	t.Run("Authorization header is invalid", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/non-existent-path", nil)
-		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		request.Header.Set("Content-Type", "application/json")
 		request.Header.Set("Authorization", fmt.Sprintf("invalid %v", "not_an_jwt"))
 
 		response := httptest.NewRecorder()

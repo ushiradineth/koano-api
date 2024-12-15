@@ -23,7 +23,7 @@ const docTemplate = `{
             "post": {
                 "description": "Authenticate User with the parameters sent with the request",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -34,18 +34,13 @@ const docTemplate = `{
                 "summary": "Authenticate User",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "email",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "maxLength": 20,
-                        "minLength": 8,
-                        "type": "string",
-                        "name": "password",
-                        "in": "query",
-                        "required": true
+                        "description": "AuthenticateBodyParams",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.AuthenticateBodyParams"
+                        }
                     }
                 ],
                 "responses": {
@@ -97,7 +92,7 @@ const docTemplate = `{
                 ],
                 "description": "Refresh Access Token with the parameters sent with the request based on the request based on the JWT",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -108,10 +103,13 @@ const docTemplate = `{
                 "summary": "Refresh Access Token",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "refresh_token",
-                        "in": "query",
-                        "required": true
+                        "description": "RefreshTokenBodyParams",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.RefreshTokenBodyParams"
+                        }
                     }
                 ],
                 "responses": {
@@ -157,7 +155,7 @@ const docTemplate = `{
                 ],
                 "description": "Update authenticated user's Password with the parameters sent with the request based on the JWT",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -168,12 +166,13 @@ const docTemplate = `{
                 "summary": "Update User Password",
                 "parameters": [
                     {
-                        "maxLength": 20,
-                        "minLength": 8,
-                        "type": "string",
-                        "name": "password",
-                        "in": "query",
-                        "required": true
+                        "description": "PutPasswordBodyParams",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.PutPasswordBodyParams"
+                        }
                     }
                 ],
                 "responses": {
@@ -225,7 +224,7 @@ const docTemplate = `{
                 ],
                 "description": "Get authenticated user's event based on the JWT sent with the request",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -236,16 +235,13 @@ const docTemplate = `{
                 "summary": "Get User Events",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "end_day",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_day",
-                        "in": "query",
-                        "required": true
+                        "description": "GetUserEventsBodyParams",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/event.GetUserEventsBodyParams"
+                        }
                     }
                 ],
                 "responses": {
@@ -298,7 +294,7 @@ const docTemplate = `{
                 ],
                 "description": "Create Event based on the parameters sent with the request",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -309,41 +305,13 @@ const docTemplate = `{
                 "summary": "Create Event",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "end_time",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "enum": [
-                            "never",
-                            "daily",
-                            "weekly",
-                            "monthly",
-                            "yearly"
-                        ],
-                        "type": "string",
-                        "name": "repeated",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_time",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "timezone",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "title",
-                        "in": "query",
-                        "required": true
+                        "description": "EventBodyParams",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/event.EventBodyParams"
+                        }
                     }
                 ],
                 "responses": {
@@ -456,7 +424,7 @@ const docTemplate = `{
                 ],
                 "description": "Update Event based on the parameters sent with the request",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -473,41 +441,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "name": "end_time",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "enum": [
-                            "never",
-                            "daily",
-                            "weekly",
-                            "monthly",
-                            "yearly"
-                        ],
-                        "type": "string",
-                        "name": "repeated",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_time",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "timezone",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "title",
-                        "in": "query",
-                        "required": true
+                        "description": "EventBodyParams",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/event.EventBodyParams"
+                        }
                     }
                 ],
                 "responses": {
@@ -556,9 +496,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Delete Event based on the parameters sent with the request",
-                "consumes": [
-                    "application/x-www-form-urlencoded"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -618,7 +555,7 @@ const docTemplate = `{
             "post": {
                 "description": "Create User with the parameters sent with the request",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -629,24 +566,13 @@ const docTemplate = `{
                 "summary": "Create User",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "email",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "name",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "maxLength": 20,
-                        "minLength": 8,
-                        "type": "string",
-                        "name": "password",
-                        "in": "query",
-                        "required": true
+                        "description": "PostBodyParams",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.PostBodyParams"
+                        }
                     }
                 ],
                 "responses": {
@@ -759,7 +685,7 @@ const docTemplate = `{
                 ],
                 "description": "Update authenticated User with the parameters sent with the request based on the JWT",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -776,16 +702,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "name": "email",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "name",
-                        "in": "query",
-                        "required": true
+                        "description": "PutBodyParams",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.PutBodyParams"
+                        }
                     }
                 ],
                 "responses": {
@@ -834,9 +757,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Delete authenticated User based on the JWT",
-                "consumes": [
-                    "application/x-www-form-urlencoded"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -894,6 +814,23 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "auth.AuthenticateBodyParams": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 8
+                }
+            }
+        },
         "auth.AuthenticateResponse": {
             "type": "object",
             "properties": {
@@ -917,6 +854,30 @@ const docTemplate = `{
                 }
             }
         },
+        "auth.PutPasswordBodyParams": {
+            "type": "object",
+            "required": [
+                "password"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 8
+                }
+            }
+        },
+        "auth.RefreshTokenBodyParams": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
         "auth.RefreshTokenResponse": {
             "type": "object",
             "properties": {
@@ -933,6 +894,55 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "token_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "event.EventBodyParams": {
+            "type": "object",
+            "required": [
+                "end_time",
+                "repeated",
+                "start_time",
+                "timezone",
+                "title"
+            ],
+            "properties": {
+                "end_time": {
+                    "type": "string"
+                },
+                "repeated": {
+                    "type": "string",
+                    "enum": [
+                        "never",
+                        "daily",
+                        "weekly",
+                        "monthly",
+                        "yearly"
+                    ]
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "event.GetUserEventsBodyParams": {
+            "type": "object",
+            "required": [
+                "end_day",
+                "start_day"
+            ],
+            "properties": {
+                "end_day": {
+                    "type": "string"
+                },
+                "start_day": {
                     "type": "string"
                 }
             }
@@ -1006,6 +1016,42 @@ const docTemplate = `{
                 },
                 "data": {},
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.PostBodyParams": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 8
+                }
+            }
+        },
+        "user.PutBodyParams": {
+            "type": "object",
+            "required": [
+                "email",
+                "name"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }

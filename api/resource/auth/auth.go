@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -44,31 +45,32 @@ type RefreshTokenResponse struct {
 // @Summary		Authenticate User
 // @Description	Authenticate User with the parameters sent with the request
 // @Tags			Auth
-// @Accept			application/x-www-form-urlencoded
+// @Accept			json
 // @Produce		json
-// @Param			Query	query		AuthenticateQueryParams	true	"AuthenticateQueryParams"
+// @Param			Body	body		AuthenticateBodyParams	true	"AuthenticateBodyParams"
 // @Success		200		{object}	response.Response{data=AuthenticateResponse}
 // @Failure		400		{object}	response.Error
 // @Failure		401		{object}	response.Error
 // @Failure		500		{object}	response.Error
 // @Router			/auth/login [post]
 func (api *API) Authenticate(w http.ResponseWriter, r *http.Request) {
-	query := AuthenticateQueryParams{
-		Email:    r.FormValue("email"),
-		Password: r.FormValue("password"),
-	}
-
-	if err := api.validator.Struct(query); err != nil {
+	var body AuthenticateBodyParams
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		response.GenericValidationError(w, err)
 		return
 	}
 
-	user := user.GetUser(w, query.Email, api.db)
+	if err := api.validator.Struct(body); err != nil {
+		response.GenericValidationError(w, err)
+		return
+	}
+
+	user := user.GetUser(w, body.Email, api.db)
 	if user == nil {
 		return
 	}
 
-	valid := auth.CheckPasswordHash(query.Password, user.Password)
+	valid := auth.CheckPasswordHash(body.Password, user.Password)
 
 	if !valid {
 		response.HTTPError(w, http.StatusUnauthorized, "Invalid Credentials", response.StatusFail)
@@ -106,9 +108,9 @@ func (api *API) Authenticate(w http.ResponseWriter, r *http.Request) {
 // @Summary		Refresh Access Token
 // @Description	Refresh Access Token with the parameters sent with the request based on the request based on the JWT
 // @Tags			Auth
-// @Accept			application/x-www-form-urlencoded
+// @Accept			json
 // @Produce		json
-// @Param			Query	query		RefreshTokenQueryParams	true	"RefreshTokenQueryParams"
+// @Param			Body	body		RefreshTokenBodyParams	true	"RefreshTokenBodyParams"
 // @Success		200		{object}	response.Response{data=RefreshTokenResponse}
 // @Failure		400		{object}	response.Error
 // @Failure		500		{object}	response.Error
@@ -121,11 +123,13 @@ func (api *API) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := RefreshTokenQueryParams{
-		RefreshToken: r.FormValue("refresh_token"),
+	var body RefreshTokenBodyParams
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		response.GenericValidationError(w, err)
+		return
 	}
 
-	if err := api.validator.Struct(query); err != nil {
+	if err := api.validator.Struct(body); err != nil {
 		response.GenericValidationError(w, err)
 		return
 	}
@@ -140,7 +144,7 @@ func (api *API) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refreshTokenClaim := auth.ParseRefreshToken(w, query.RefreshToken)
+	refreshTokenClaim := auth.ParseRefreshToken(w, body.RefreshToken)
 	if refreshTokenClaim == nil {
 		return
 	}
@@ -173,9 +177,9 @@ func (api *API) RefreshToken(w http.ResponseWriter, r *http.Request) {
 // @Summary		Update User Password
 // @Description	Update authenticated user's Password with the parameters sent with the request based on the JWT
 // @Tags			Auth
-// @Accept			application/x-www-form-urlencoded
+// @Accept			json
 // @Produce		json
-// @Param			Query	query		PutPasswordQueryParams	true	"PutPasswordQueryParams"
+// @Param			Body	body		PutPasswordBodyParams	true	"PutPasswordBodyParams"
 // @Success		200		{object}	response.Response{data=string}
 // @Failure		400		{object}	response.Error
 // @Failure		401		{object}	response.Error
@@ -183,11 +187,18 @@ func (api *API) RefreshToken(w http.ResponseWriter, r *http.Request) {
 // @Security		BearerAuth
 // @Router			/auth/reset-password [put]
 func (api *API) PutPassword(w http.ResponseWriter, r *http.Request) {
-	query := PutPasswordQueryParams{
-		Password: r.FormValue("password"),
+	var body PutPasswordBodyParams
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		response.GenericValidationError(w, err)
+		return
 	}
 
-	if err := api.validator.Struct(query); err != nil {
+	if err := api.validator.Struct(body); err != nil {
+		response.GenericValidationError(w, err)
+		return
+	}
+
+	if err := api.validator.Struct(body); err != nil {
 		response.GenericValidationError(w, err)
 		return
 	}
@@ -197,7 +208,7 @@ func (api *API) PutPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	password, err := auth.HashPassword(query.Password)
+	password, err := auth.HashPassword(body.Password)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return

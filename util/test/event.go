@@ -1,21 +1,27 @@
 package test
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/ushiradineth/cron-be/api/resource/event"
 )
 
-func CreateEventHelper(eventAPI *event.API, t testing.TB, body url.Values, want_code int, want_status string, event event.EventQueryParams, eventId *string, accessToken string) {
+func CreateEventHelper(eventAPI *event.API, t testing.TB, body event.EventBodyParams, want_code int, want_status string, eventId *string, accessToken string) {
 	t.Helper()
-	req, _ := http.NewRequest(http.MethodPost, "/events", strings.NewReader(body.Encode()))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	requestBody, err := json.Marshal(body)
+	if err != nil {
+		t.Fatalf("Failed to marshal body: %v", err)
+	}
+
+	req, _ := http.NewRequest(http.MethodPost, "/events", bytes.NewBuffer(requestBody))
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", accessToken))
 	res := httptest.NewRecorder()
 
@@ -30,19 +36,19 @@ func CreateEventHelper(eventAPI *event.API, t testing.TB, body url.Values, want_
 		assert.NotEmpty(t, dataMap["id"], "Event ID is missing")
 		*eventId = dataMap["id"].(string)
 
-		assert.Equal(t, event.Title, dataMap["title"])
-		assert.Equal(t, event.StartTime, dataMap["start_time"])
-		assert.Equal(t, event.EndTime, dataMap["end_time"])
-		assert.Equal(t, event.Timezone, dataMap["timezone"])
-		assert.Equal(t, event.Repeated, dataMap["repeated"])
+		assert.Equal(t, body.Title, dataMap["title"])
+		assert.Equal(t, body.StartTime, dataMap["start_time"])
+		assert.Equal(t, body.EndTime, dataMap["end_time"])
+		assert.Equal(t, body.Timezone, dataMap["timezone"])
+		assert.Equal(t, body.Repeated, dataMap["repeated"])
 	}
 }
 
-func GetEventHelper(eventAPI *event.API, t testing.TB, want_code int, want_status string, event event.EventQueryParams, eventId string, accessToken string) {
+func GetEventHelper(eventAPI *event.API, t testing.TB, want_code int, want_status string, event event.EventBodyParams, eventId string, accessToken string) {
 	t.Helper()
 	req, _ := http.NewRequest(http.MethodGet, "/events/{event_id}", nil)
 	req.SetPathValue("event_id", eventId)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", accessToken))
 	res := httptest.NewRecorder()
 
@@ -63,11 +69,17 @@ func GetEventHelper(eventAPI *event.API, t testing.TB, want_code int, want_statu
 	}
 }
 
-func UpdateEventHelper(eventAPI *event.API, t testing.TB, body url.Values, want_code int, want_status string, event event.EventQueryParams, eventId string, accessToken string) {
+func UpdateEventHelper(eventAPI *event.API, t testing.TB, body event.EventBodyParams, want_code int, want_status string, eventId string, accessToken string) {
 	t.Helper()
-	req, _ := http.NewRequest(http.MethodPut, "/events/{event_id}", strings.NewReader(body.Encode()))
+
+	requestBody, err := json.Marshal(body)
+	if err != nil {
+		t.Fatalf("Failed to marshal body: %v", err)
+	}
+
+	req, _ := http.NewRequest(http.MethodPut, "/events/{event_id}", bytes.NewBuffer(requestBody))
 	req.SetPathValue("event_id", eventId)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", accessToken))
 	res := httptest.NewRecorder()
 
@@ -80,11 +92,11 @@ func UpdateEventHelper(eventAPI *event.API, t testing.TB, body url.Values, want_
 		assert.True(t, true, ok)
 
 		assert.Equal(t, eventId, dataMap["id"])
-		assert.Equal(t, event.Title, dataMap["title"])
-		assert.Equal(t, event.StartTime, dataMap["start_time"])
-		assert.Equal(t, event.EndTime, dataMap["end_time"])
-		assert.Equal(t, event.Timezone, dataMap["timezone"])
-		assert.Equal(t, event.Repeated, dataMap["repeated"])
+		assert.Equal(t, body.Title, dataMap["title"])
+		assert.Equal(t, body.StartTime, dataMap["start_time"])
+		assert.Equal(t, body.EndTime, dataMap["end_time"])
+		assert.Equal(t, body.Timezone, dataMap["timezone"])
+		assert.Equal(t, body.Repeated, dataMap["repeated"])
 	}
 }
 
@@ -92,7 +104,7 @@ func DeleteEventHelper(eventAPI *event.API, t testing.TB, want_code int, want_st
 	t.Helper()
 	req, _ := http.NewRequest(http.MethodDelete, "/events/{event_id}", nil)
 	req.SetPathValue("event_id", eventId)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", accessToken))
 	res := httptest.NewRecorder()
 
@@ -101,12 +113,17 @@ func DeleteEventHelper(eventAPI *event.API, t testing.TB, want_code int, want_st
 	GenericAssert(t, want_code, want_status, res)
 }
 
-func GetUserEventsHelper(eventAPI *event.API, t testing.TB, body url.Values, want_code int, want_status string, userId string, accessToken string) {
+func GetUserEventsHelper(eventAPI *event.API, t testing.TB, body event.GetUserEventsBodyParams, want_code int, want_status string, userId string, accessToken string) {
 	t.Helper()
-	req, _ := http.NewRequest(http.MethodGet, "/users/{user_id}/events", nil)
-	req.URL.RawQuery = body.Encode()
+
+	requestBody, err := json.Marshal(body)
+	if err != nil {
+		t.Fatalf("Failed to marshal body: %v", err)
+	}
+
+	req, _ := http.NewRequest(http.MethodGet, "/users/{user_id}/events", bytes.NewBuffer(requestBody))
 	req.SetPathValue("user_id", userId)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", accessToken))
 	res := httptest.NewRecorder()
 

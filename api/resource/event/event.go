@@ -1,6 +1,7 @@
 package event
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -66,9 +67,9 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 // @Summary		Create Event
 // @Description	Create Event based on the parameters sent with the request
 // @Tags			Event
-// @Accept			application/x-www-form-urlencoded
+// @Accept			json
 // @Produce		json
-// @Param			Query	query		EventQueryParams	true	"EventQueryParams"
+// @Param			Body	body		EventBodyParams	true	"EventBodyParams"
 // @Success		200		{object}	response.Response{data=models.Event}
 // @Failure		400		{object}	response.Error
 // @Failure		401		{object}	response.Error
@@ -76,15 +77,13 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 // @Security		BearerAuth
 // @Router			/events [post]
 func (api *API) Post(w http.ResponseWriter, r *http.Request) {
-	query := EventQueryParams{
-		Title:     r.FormValue("title"),
-		Timezone:  r.FormValue("timezone"),
-		Repeated:  r.FormValue("repeated"),
-		StartTime: r.FormValue("start_time"),
-		EndTime:   r.FormValue("end_time"),
+	var body EventBodyParams
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		response.GenericValidationError(w, err)
+		return
 	}
 
-	if err := api.validator.Struct(query); err != nil {
+	if err := api.validator.Struct(body); err != nil {
 		response.GenericValidationError(w, err)
 		return
 	}
@@ -94,15 +93,15 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	eventExists := event.DoesEventExist("", query.StartTime, query.EndTime, user.ID.String(), api.db)
+	eventExists := event.DoesEventExist("", body.StartTime, body.EndTime, user.ID.String(), api.db)
 
-	parsedStart, err := time.Parse(time.RFC3339, query.StartTime)
+	parsedStart, err := time.Parse(time.RFC3339, body.StartTime)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
 	}
 
-	parsedEnd, err := time.Parse(time.RFC3339, query.EndTime)
+	parsedEnd, err := time.Parse(time.RFC3339, body.EndTime)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
@@ -120,12 +119,12 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 
 	event := models.Event{
 		ID:       uuid.New(),
-		Title:    query.Title,
+		Title:    body.Title,
 		Start:    parsedStart,
 		End:      parsedEnd,
 		UserID:   user.ID,
-		Timezone: query.Timezone,
-		Repeated: query.Repeated,
+		Timezone: body.Timezone,
+		Repeated: body.Repeated,
 	}
 
 	_, err = api.db.Exec("INSERT INTO events (id, title, start_time, end_time, user_id, timezone, repeated) VALUES ($1, $2, $3, $4, $5, $6, $7)", event.ID, event.Title, event.Start, event.End, event.UserID, event.Timezone, event.Repeated)
@@ -142,10 +141,10 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 // @Summary		Update Event
 // @Description	Update Event based on the parameters sent with the request
 // @Tags			Event
-// @Accept			application/x-www-form-urlencoded
+// @Accept			json
 // @Produce		json
-// @Param			Path	path		EventPathParams		true	"EventPathParams"
-// @Param			Query	query		EventQueryParams	true	"EventQueryParams"
+// @Param			Path	path		EventPathParams	true	"EventPathParams"
+// @Param			Body	body		EventBodyParams	true	"EventBodyParams"
 // @Success		200		{object}	response.Response{data=models.Event}
 // @Failure		400		{object}	response.Error
 // @Failure		401		{object}	response.Error
@@ -157,20 +156,18 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 		EventID: r.PathValue("event_id"),
 	}
 
-	query := EventQueryParams{
-		Title:     r.FormValue("title"),
-		Timezone:  r.FormValue("timezone"),
-		Repeated:  r.FormValue("repeated"),
-		StartTime: r.FormValue("start_time"),
-		EndTime:   r.FormValue("end_time"),
-	}
-
 	if err := api.validator.Struct(path); err != nil {
 		response.GenericValidationError(w, err)
 		return
 	}
 
-	if err := api.validator.Struct(query); err != nil {
+	var body EventBodyParams
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		response.GenericValidationError(w, err)
+		return
+	}
+
+	if err := api.validator.Struct(body); err != nil {
 		response.GenericValidationError(w, err)
 		return
 	}
@@ -186,13 +183,13 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	parsedStart, err := time.Parse(time.RFC3339, query.StartTime)
+	parsedStart, err := time.Parse(time.RFC3339, body.StartTime)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
 	}
 
-	parsedEnd, err := time.Parse(time.RFC3339, query.EndTime)
+	parsedEnd, err := time.Parse(time.RFC3339, body.EndTime)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
@@ -211,12 +208,12 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 
 	event := models.Event{
 		ID:       parsedUUID,
-		Title:    query.Title,
+		Title:    body.Title,
 		Start:    parsedStart,
 		End:      parsedEnd,
 		UserID:   user.ID,
-		Timezone: query.Timezone,
-		Repeated: query.Repeated,
+		Timezone: body.Timezone,
+		Repeated: body.Repeated,
 	}
 
 	_, err = api.db.Exec("UPDATE events SET title=$1, start_time=$2, end_time=$3, timezone=$4, repeated=$5 WHERE id=$6 AND user_id=$7", event.Title, event.Start, event.End, event.Timezone, event.Repeated, event.ID, event.UserID.String())
@@ -233,7 +230,6 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 // @Summary		Delete Event
 // @Description	Delete Event based on the parameters sent with the request
 // @Tags			Event
-// @Accept			application/x-www-form-urlencoded
 // @Produce		json
 // @Param			Path	path		EventPathParams	true	"EventPathParams"
 // @Success		200		{object}	response.Response{data=string}
@@ -282,9 +278,9 @@ func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 // @Summary		Get User Events
 // @Description	Get authenticated user's event based on the JWT sent with the request
 // @Tags			Event
-// @Accept			application/x-www-form-urlencoded
+// @Accept			json
 // @Produce		json
-// @Param			Query	query		GetUserEventsQueryParams	true	"GetUserEventsQueryParams"
+// @Param			Body	body		GetUserEventsBodyParams	true	"GetUserEventsBodyParams"
 // @Success		200		{object}	response.Response{data=[]models.Event}
 // @Failure		400		{object}	response.Error
 // @Failure		401		{object}	response.Error
@@ -292,12 +288,13 @@ func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 // @Security		BearerAuth
 // @Router			/events [get]
 func (api *API) GetUserEvents(w http.ResponseWriter, r *http.Request) {
-	query := GetUserEventsQueryParams{
-		StartDay: r.FormValue("start_day"),
-		EndDay:   r.FormValue("end_day"),
+	var body GetUserEventsBodyParams
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		response.GenericValidationError(w, err)
+		return
 	}
 
-	if err := api.validator.Struct(query); err != nil {
+	if err := api.validator.Struct(body); err != nil {
 		response.GenericValidationError(w, err)
 		return
 	}
@@ -307,13 +304,13 @@ func (api *API) GetUserEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	parsedStart, err := time.Parse("2006-01-02", query.StartDay)
+	parsedStart, err := time.Parse("2006-01-02", body.StartDay)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
 	}
 
-	parsedEnd, err := time.Parse("2006-01-02", query.EndDay)
+	parsedEnd, err := time.Parse("2006-01-02", body.EndDay)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return

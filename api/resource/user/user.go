@@ -1,6 +1,7 @@
 package user
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -67,27 +68,27 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 // @Summary		Create User
 // @Description	Create User with the parameters sent with the request
 // @Tags			User
-// @Accept			application/x-www-form-urlencoded
+// @Accept	  json
 // @Produce		json
-// @Param			Query	query		PostQueryParams	true	"PostQueryParams"
+// @Param			Body	body		PostBodyParams	true	"PostBodyParams"
 // @Success		200		{object}	response.Response{data=models.User}
 // @Failure		400		{object}	response.Error
 // @Failure		401		{object}	response.Error
 // @Failure		500		{object}	response.Error
 // @Router			/users [post]
 func (api *API) Post(w http.ResponseWriter, r *http.Request) {
-	query := PostQueryParams{
-		Name:     r.FormValue("name"),
-		Email:    r.FormValue("email"),
-		Password: r.FormValue("password"),
-	}
-
-	if err := api.validator.Struct(query); err != nil {
+	var body PostBodyParams
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		response.GenericValidationError(w, err)
 		return
 	}
 
-	userExists, _, err := user.DoesUserExist("", query.Email, api.db)
+	if err := api.validator.Struct(body); err != nil {
+		response.GenericValidationError(w, err)
+		return
+	}
+
+	userExists, _, err := user.DoesUserExist("", body.Email, api.db)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
@@ -98,7 +99,7 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPassword, err := auth.HashPassword(query.Password)
+	hashedPassword, err := auth.HashPassword(body.Password)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
@@ -106,8 +107,8 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 
 	user := models.User{
 		ID:        uuid.New(),
-		Name:      query.Name,
-		Email:     query.Email,
+		Name:      body.Name,
+		Email:     body.Email,
 		Password:  hashedPassword,
 		CreatedAt: time.Now(),
 	}
@@ -128,10 +129,10 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 // @Summary		Update User
 // @Description	Update authenticated User with the parameters sent with the request based on the JWT
 // @Tags			User
-// @Accept			application/x-www-form-urlencoded
+// @Accept	  json
 // @Produce		json
 // @Param			Path	path		UserPathParams	true	"UserPathParams"
-// @Param			Query	query		PutQueryParams	true	"PutQueryParams"
+// @Param			Body	body		PutBodyParams	true	"PutBodyParams"
 // @Success		200		{object}	response.Response{data=models.User}
 // @Failure		400		{object}	response.Error
 // @Failure		401		{object}	response.Error
@@ -143,17 +144,18 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 		UserID: r.PathValue("user_id"),
 	}
 
-	query := PutQueryParams{
-		Name:  r.FormValue("name"),
-		Email: r.FormValue("email"),
-	}
-
 	if err := api.validator.Struct(path); err != nil {
 		response.GenericValidationError(w, err)
 		return
 	}
 
-	if err := api.validator.Struct(query); err != nil {
+	var body PutBodyParams
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		response.GenericValidationError(w, err)
+		return
+	}
+
+	if err := api.validator.Struct(body); err != nil {
 		response.GenericValidationError(w, err)
 		return
 	}
@@ -170,8 +172,8 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 
 	newUser := models.User{
 		ID:        existingUser.ID,
-		Name:      query.Name,
-		Email:     query.Email,
+		Name:      body.Name,
+		Email:     body.Email,
 		CreatedAt: existingUser.CreatedAt,
 		Password:  "redacted",
 	}
@@ -201,7 +203,6 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 // @Summary		Delete User
 // @Description	Delete authenticated User based on the JWT
 // @Tags			User
-// @Accept			application/x-www-form-urlencoded
 // @Produce		json
 // @Param			Path	path		UserPathParams	true	"UserPathParams"
 // @Success		200		{object}	response.Response{data=string}

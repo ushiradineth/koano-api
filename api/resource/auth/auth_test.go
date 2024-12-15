@@ -3,7 +3,6 @@ package auth_test
 import (
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -36,16 +35,26 @@ var (
 	eventAPI               *event.API
 )
 
-var user1 user.PostQueryParams = user.PostQueryParams{
+var user1 user.PostBodyParams = user.PostBodyParams{
 	Name:     faker.Name(),
 	Email:    faker.Email(),
 	Password: "UPlow1234!@#",
 }
 
-var user2 user.PostQueryParams = user.PostQueryParams{
+var user2 user.PostBodyParams = user.PostBodyParams{
 	Name:     faker.Name(),
 	Email:    faker.Email(),
 	Password: "lowUP1234!@#",
+}
+
+var user1Auth auth.AuthenticateBodyParams = auth.AuthenticateBodyParams{
+	Email:    user1.Email,
+	Password: user1.Password,
+}
+
+var user2Auth auth.AuthenticateBodyParams = auth.AuthenticateBodyParams{
+	Email:    user2.Email,
+	Password: user2.Password,
 }
 
 func TestInit(t *testing.T) {
@@ -62,23 +71,16 @@ func TestInit(t *testing.T) {
 		eventAPI = event.New(db, v)
 		authAPI = auth.New(db, v)
 
-		body := url.Values{}
-		body.Set("name", user1.Name)
-		body.Set("email", user1.Email)
-		body.Set("password", user1.Password)
 		t.Run("Create User 1", func(t *testing.T) {
-			test.CreateUserHelper(userAPI, t, body, http.StatusOK, response.StatusSuccess, user1)
+			test.CreateUserHelper(userAPI, t, user1, http.StatusOK, response.StatusSuccess)
 		})
 
 		t.Run("Authenticates User 1", func(t *testing.T) {
-			test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
+			test.AuthenticateUserHelper(authAPI, t, user1Auth, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
 		})
 
-		body.Set("name", user2.Name)
-		body.Set("email", user2.Email)
-		body.Set("password", user2.Password)
 		t.Run("Create User 2", func(t *testing.T) {
-			test.CreateUserHelper(userAPI, t, body, http.StatusOK, response.StatusSuccess, user2)
+			test.CreateUserHelper(userAPI, t, user2, http.StatusOK, response.StatusSuccess)
 		})
 
 		userIDUUID, _ := uuid.Parse(user1ID)
@@ -111,49 +113,42 @@ func TestInit(t *testing.T) {
 }
 
 func TestAuthenticateUserHandler(t *testing.T) {
-	body := url.Values{}
-	bodyStruct := user2
-
-	body.Set("email", user2.Email)
-	body.Set("password", user2.Password)
-	bodyStruct.Email = user2.Email
-	bodyStruct.Password = user2.Password
 	t.Run("Authenticate User 2", func(t *testing.T) {
-		test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user2ID, &accessToken, &refreshToken)
+		test.AuthenticateUserHelper(authAPI, t, user2Auth, http.StatusOK, response.StatusSuccess, &user2ID, &accessToken, &refreshToken)
 	})
 
-	body.Set("email", user1.Email)
-	body.Set("password", user1.Password)
-	bodyStruct.Email = user1.Email
-	bodyStruct.Password = user1.Password
 	t.Run("Authenticate User 1", func(t *testing.T) {
-		test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
+		test.AuthenticateUserHelper(authAPI, t, user1Auth, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
 	})
 
-	body.Set("email", "not_an_user@email.com")
-	bodyStruct.Email = "not_an_user@email.com"
+	body := auth.AuthenticateBodyParams{
+		Email:    "not_an_user@email.com",
+		Password: user1.Password,
+	}
 	t.Run("Email is not registered", func(t *testing.T) {
 		test.AuthenticateUserHelper(authAPI, t, body, http.StatusBadRequest, response.StatusFail, &user1ID, &accessToken, &refreshToken)
 	})
 
-	body.Set("email", "not_an_email")
-	bodyStruct.Email = "not_an_email"
+	body = auth.AuthenticateBodyParams{
+		Email:    "not_an_email",
+		Password: user1.Password,
+	}
 	t.Run("Email is invalid", func(t *testing.T) {
 		test.AuthenticateUserHelper(authAPI, t, body, http.StatusBadRequest, response.StatusFail, &user1ID, &accessToken, &refreshToken)
 	})
 
-	body.Set("email", user1.Email)
-	bodyStruct.Email = user1.Email
-	body.Set("password", "not_a_password")
-	bodyStruct.Password = "not_a_password"
+	body = auth.AuthenticateBodyParams{
+		Email:    user1.Email,
+		Password: "not_a_password",
+	}
 	t.Run("Password is invalid", func(t *testing.T) {
 		test.AuthenticateUserHelper(authAPI, t, body, http.StatusBadRequest, response.StatusFail, &user1ID, &accessToken, &refreshToken)
 	})
 
-	body.Set("email", user1.Email)
-	body.Set("password", user2.Password)
-	bodyStruct.Email = user1.Email
-	bodyStruct.Password = user2.Password
+	body = auth.AuthenticateBodyParams{
+		Email:    user1.Email,
+		Password: user2.Password,
+	}
 	t.Run("Wrong credentials", func(t *testing.T) {
 		test.AuthenticateUserHelper(authAPI, t, body, http.StatusUnauthorized, response.StatusFail, &user1ID, &accessToken, &refreshToken)
 	})
@@ -161,20 +156,20 @@ func TestAuthenticateUserHandler(t *testing.T) {
 
 func TestUpdateUserPasswordHandler(t *testing.T) {
 	t.Run("Update User Password", func(t *testing.T) {
-		body := url.Values{}
-		body.Set("email", user1.Email)
-		body.Set("password", user1.Password)
-
 		t.Run("Authenticates user 1", func(t *testing.T) {
-			test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
+			test.AuthenticateUserHelper(authAPI, t, user1Auth, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
 		})
 
-		body.Set("password", user2.Password)
+		body := auth.PutPasswordBodyParams{
+			Password: user2.Password,
+		}
 		t.Run("Update user 1 password", func(t *testing.T) {
 			test.UpdateUserPasswordHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, accessToken)
 		})
 
-		body.Set("password", user1.Password)
+		body = auth.PutPasswordBodyParams{
+			Password: user1.Password,
+		}
 		t.Run("Reset user 1", func(t *testing.T) {
 			test.UpdateUserPasswordHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, accessToken)
 		})
@@ -187,7 +182,9 @@ func TestUpdateUserPasswordHandler(t *testing.T) {
 			test.UpdateUserPasswordHelper(authAPI, t, body, http.StatusUnauthorized, response.StatusFail, expiredAccessToken)
 		})
 
-		body.Set("password", "not_a_password")
+		body = auth.PutPasswordBodyParams{
+			Password: "not_a_valid_password",
+		}
 		t.Run("Password is invalid", func(t *testing.T) {
 			test.UpdateUserPasswordHelper(authAPI, t, body, http.StatusBadRequest, response.StatusFail, accessToken)
 		})
@@ -196,9 +193,9 @@ func TestUpdateUserPasswordHandler(t *testing.T) {
 
 func TestRefreshTokenHandler(t *testing.T) {
 	t.Run("Refresh Token", func(t *testing.T) {
-		body := url.Values{}
-
-		body.Set("refresh_token", refreshToken)
+		body := auth.RefreshTokenBodyParams{
+			RefreshToken: refreshToken,
+		}
 		t.Run("Valid refresh token, Valid access token", func(t *testing.T) {
 			test.RefreshTokenHelper(authAPI, t, body, accessToken, http.StatusBadRequest, response.StatusFail)
 		})
@@ -211,12 +208,12 @@ func TestRefreshTokenHandler(t *testing.T) {
 			test.RefreshTokenHelper(authAPI, t, body, deletedUserAccessToken, http.StatusBadRequest, response.StatusFail)
 		})
 
-		body.Set("refresh_token", "not_a_refresh_token")
+		body.RefreshToken = "not_a_refresh_token"
 		t.Run("Refresh token is invalid", func(t *testing.T) {
 			test.RefreshTokenHelper(authAPI, t, body, accessToken, http.StatusBadRequest, response.StatusFail)
 		})
 
-		body.Set("refresh_token", expiredRefreshToken)
+		body.RefreshToken = expiredRefreshToken
 		t.Run("Expired refresh token, Valid access token", func(t *testing.T) {
 			test.RefreshTokenHelper(authAPI, t, body, accessToken, http.StatusBadRequest, response.StatusFail)
 		})
@@ -236,22 +233,16 @@ func TestRefreshTokenHandler(t *testing.T) {
 }
 
 func TestCleanUp(t *testing.T) {
-	body := url.Values{}
-
-	body.Set("email", user1.Email)
-	body.Set("password", user1.Password)
 	t.Run("Authenticates User 1", func(t *testing.T) {
-		test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
+		test.AuthenticateUserHelper(authAPI, t, user1Auth, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
 	})
 
 	t.Run("Delete User 1", func(t *testing.T) {
 		test.DeleteUserHelper(userAPI, t, http.StatusOK, response.StatusSuccess, user1ID, accessToken)
 	})
 
-	body.Set("email", user2.Email)
-	body.Set("password", user2.Password)
 	t.Run("Authenticate User 2", func(t *testing.T) {
-		test.AuthenticateUserHelper(authAPI, t, body, http.StatusOK, response.StatusSuccess, &user2ID, &accessToken, &refreshToken)
+		test.AuthenticateUserHelper(authAPI, t, user2Auth, http.StatusOK, response.StatusSuccess, &user2ID, &accessToken, &refreshToken)
 	})
 
 	t.Run("Delete User 2", func(t *testing.T) {

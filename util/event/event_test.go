@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -37,13 +36,18 @@ var (
 	authAPI             *auth.API
 )
 
-var user1 user.PostQueryParams = user.PostQueryParams{
+var user1 user.PostBodyParams = user.PostBodyParams{
 	Name:     faker.Name(),
 	Email:    faker.Email(),
 	Password: "UPlow1234!@#",
 }
 
-var event1 event.EventQueryParams = event.EventQueryParams{
+var user1Auth auth.AuthenticateBodyParams = auth.AuthenticateBodyParams{
+	Email:    user1.Email,
+	Password: user1.Password,
+}
+
+var event1 event.EventBodyParams = event.EventBodyParams{
 	Title:     "Test",
 	StartTime: "2020-01-02T15:04:05Z",
 	EndTime:   "2023-01-02T14:04:05Z",
@@ -76,26 +80,16 @@ func TestInit(t *testing.T) {
 		}()
 	})
 
-	user := url.Values{}
-	user.Set("name", user1.Name)
-	user.Set("email", user1.Email)
-	user.Set("password", user1.Password)
-	t.Run("Create User", func(t *testing.T) {
-		test.CreateUserHelper(userAPI, t, user, http.StatusOK, response.StatusSuccess, user1)
+	t.Run("Create User 1", func(t *testing.T) {
+		test.CreateUserHelper(userAPI, t, user1, http.StatusOK, response.StatusSuccess)
 	})
 
 	t.Run("Authenticates user 1", func(t *testing.T) {
-		test.AuthenticateUserHelper(authAPI, t, user, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
+		test.AuthenticateUserHelper(authAPI, t, user1Auth, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
 	})
 
-	body := url.Values{}
-	body.Set("title", event1.Title)
-	body.Set("start_time", event1.StartTime)
-	body.Set("end_time", event1.EndTime)
-	body.Set("timezone", event1.Timezone)
-	body.Set("repeated", event1.Repeated)
 	t.Run("Create Event", func(t *testing.T) {
-		test.CreateEventHelper(eventAPI, t, body, http.StatusOK, response.StatusSuccess, event1, &event1ID, accessToken)
+		test.CreateEventHelper(eventAPI, t, event1, http.StatusOK, response.StatusSuccess, &event1ID, accessToken)
 	})
 }
 
