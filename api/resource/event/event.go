@@ -3,7 +3,6 @@ package event
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/ushiradineth/cron-be/models"
 	"github.com/ushiradineth/cron-be/util/event"
+	logger "github.com/ushiradineth/cron-be/util/log"
 	"github.com/ushiradineth/cron-be/util/response"
 	"github.com/ushiradineth/cron-be/util/user"
 )
@@ -19,12 +19,14 @@ import (
 type API struct {
 	db        *sqlx.DB
 	validator *validator.Validate
+	log       *logger.Logger
 }
 
-func New(db *sqlx.DB, validator *validator.Validate) *API {
+func New(db *sqlx.DB, validator *validator.Validate, log *logger.Logger) *API {
 	return &API{
 		db:        db,
 		validator: validator,
+		log:       log,
 	}
 }
 
@@ -59,7 +61,7 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Event %s has been retrieved by user %s", path.EventID, user.ID)
+	api.log.Info.Printf("Event %s has been retrieved by user %s", path.EventID, user.ID)
 
 	response.HTTPResponse(w, event)
 }
@@ -134,7 +136,7 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Event %s has been created by user %s", event.ID, user.ID)
+	api.log.Info.Printf("Event %s has been created by user %s", event.ID, user.ID)
 
 	response.HTTPResponse(w, event)
 }
@@ -223,7 +225,7 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Event %s has been updated by user %s", path.EventID, user.ID)
+	api.log.Info.Printf("Event %s has been updated by user %s", path.EventID, user.ID)
 
 	response.HTTPResponse(w, event)
 }
@@ -271,7 +273,7 @@ func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Event %s has been deleted by user %s", path.EventID, user.ID)
+	api.log.Info.Printf("Event %s has been deleted by user %s", path.EventID, user.ID)
 
 	response.HTTPResponse(w, "Event has been successfully deleted")
 }
@@ -324,7 +326,7 @@ func (api *API) GetUserEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Events for user %s have been retrieved", user.ID)
+	api.log.Info.Printf("Events for user %s have been retrieved", user.ID)
 
 	response.HTTPResponse(w, events)
 }

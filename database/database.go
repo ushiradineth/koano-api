@@ -2,14 +2,14 @@ package database
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	logger "github.com/ushiradineth/cron-be/util/log"
 )
 
-func New() *sqlx.DB {
+func New(log *logger.Logger) *sqlx.DB {
 	connectionString := fmt.Sprintf(
 		"postgres://%s:%s@%s/%s?sslmode=%s",
 		os.Getenv("PG_USER"),
@@ -21,13 +21,13 @@ func New() *sqlx.DB {
 
 	db, err := sqlx.Connect("postgres", connectionString)
 	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
+		log.Error.Fatalf("Error connecting to database: %v", err)
 	}
 
 	if err := db.Ping(); err != nil {
-		log.Fatalf("Error pinging database: %v", err)
+		log.Error.Fatalf("Error pinging database: %v", err)
 	}
 
-	log.Println("Connected to Postgres Database")
+	log.Info.Println("Connected to Postgres Database")
 	return db
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,7 +13,8 @@ import (
 	"github.com/ushiradineth/cron-be/api/router"
 	"github.com/ushiradineth/cron-be/database"
 	_ "github.com/ushiradineth/cron-be/docs"
-	validatorUtil "github.com/ushiradineth/cron-be/util/validator"
+	logger "github.com/ushiradineth/cron-be/util/log"
+	validator "github.com/ushiradineth/cron-be/util/validator"
 )
 
 // @title						Cron
@@ -38,15 +38,16 @@ func main() {
 func run(ctx context.Context) error {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
+	log := logger.New()
 
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Println("Failed to load env")
+		log.Error.Println("Failed to load env")
 	}
 
-	db := database.New()
-	v := validatorUtil.New()
-	router := router.New(db, v, os.Getenv("FRONTEND_URL"))
+	db := database.New(log)
+	validator := validator.New()
+	router := router.New(db, validator, log, os.Getenv("FRONTEND_URL"))
 
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf(":%s", os.Getenv("PORT")),
@@ -54,11 +55,11 @@ func run(ctx context.Context) error {
 	}
 
 	go func() {
-		log.Printf("Listening on %s\n", httpServer.Addr)
+		log.Info.Printf("Listening on %s\n", httpServer.Addr)
 		err := httpServer.ListenAndServe()
 
 		if err != nil && err != http.ErrServerClosed {
-			fmt.Fprintf(os.Stderr, "Error listening and serving: %s\n", err)
+			log.Error.Printf("Error listening and serving: %s\n", err)
 		}
 	}()
 
@@ -71,7 +72,7 @@ func run(ctx context.Context) error {
 		shutdownCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 		defer cancel()
 		if err := httpServer.Shutdown(shutdownCtx); err != nil {
-			fmt.Fprintf(os.Stderr, "error shutting down http server: %s\n", err)
+			log.Error.Printf("error shutting down http server: %s\n", err)
 		}
 	}()
 

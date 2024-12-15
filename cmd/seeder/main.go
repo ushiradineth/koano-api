@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/ushiradineth/cron-be/database"
 	"github.com/ushiradineth/cron-be/database/seeder"
+	logger "github.com/ushiradineth/cron-be/util/log"
 )
 
 func main() {
@@ -18,12 +18,13 @@ func main() {
 }
 
 func run() error {
+	log := logger.New()
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Println("Failed to load env")
+		log.Error.Println("Failed to load env")
 	}
 
-	db := database.New()
+	db := database.New(log)
 
 	for i := 0; i < 100; i++ {
 		userId := seeder.CreateUser(db)

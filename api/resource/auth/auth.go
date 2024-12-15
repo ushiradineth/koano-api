@@ -2,13 +2,13 @@ package auth
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/jmoiron/sqlx"
 	"github.com/ushiradineth/cron-be/models"
 	"github.com/ushiradineth/cron-be/util/auth"
+	logger "github.com/ushiradineth/cron-be/util/log"
 	"github.com/ushiradineth/cron-be/util/response"
 	"github.com/ushiradineth/cron-be/util/user"
 )
@@ -16,12 +16,14 @@ import (
 type API struct {
 	db        *sqlx.DB
 	validator *validator.Validate
+	log       *logger.Logger
 }
 
-func New(db *sqlx.DB, validator *validator.Validate) *API {
+func New(db *sqlx.DB, validator *validator.Validate, log *logger.Logger) *API {
 	return &API{
 		db:        db,
 		validator: validator,
+		log:       log,
 	}
 }
 
@@ -100,7 +102,7 @@ func (api *API) Authenticate(w http.ResponseWriter, r *http.Request) {
 		RefreshToken: refreshToken,
 	}
 
-	log.Printf("User %s has been authenticated", user.ID)
+	api.log.Info.Printf("User %s has been authenticated", user.ID)
 
 	response.HTTPResponse(w, authenticateResponse)
 }
@@ -169,7 +171,7 @@ func (api *API) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		RefreshToken: newRefreshToken,
 	}
 
-	log.Printf("Access Token for user %s has been refreshed", user.ID)
+	api.log.Info.Printf("Access Token for user %s has been refreshed", user.ID)
 
 	response.HTTPResponse(w, refreshTokenResponse)
 }
@@ -220,7 +222,7 @@ func (api *API) PutPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("User %s has updated their password", user.ID)
+	api.log.Info.Printf("User %s has updated their password", user.ID)
 
 	response.HTTPResponse(w, "Password has being updated")
 }

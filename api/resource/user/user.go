@@ -2,7 +2,6 @@ package user
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/ushiradineth/cron-be/models"
 	"github.com/ushiradineth/cron-be/util/auth"
+	logger "github.com/ushiradineth/cron-be/util/log"
 	"github.com/ushiradineth/cron-be/util/response"
 	"github.com/ushiradineth/cron-be/util/user"
 )
@@ -18,12 +18,14 @@ import (
 type API struct {
 	db        *sqlx.DB
 	validator *validator.Validate
+	log       *logger.Logger
 }
 
-func New(db *sqlx.DB, validator *validator.Validate) *API {
+func New(db *sqlx.DB, validator *validator.Validate, log *logger.Logger) *API {
 	return &API{
 		db:        db,
 		validator: validator,
+		log:       log,
 	}
 }
 
@@ -60,7 +62,7 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 
 	user.Password = "redacted"
 
-	log.Printf("User %s has been retrieved", user.ID)
+	api.log.Info.Printf("User %s has been retrieved", user.ID)
 
 	response.HTTPResponse(w, user)
 }
@@ -121,7 +123,7 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 
 	user.Password = "redacted"
 
-	log.Printf("User %s has been created", user.ID)
+	api.log.Info.Printf("User %s has been created", user.ID)
 
 	response.HTTPResponse(w, user)
 }
@@ -195,7 +197,7 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("User %s has been updated", newUser.ID)
+	api.log.Info.Printf("User %s has been updated", newUser.ID)
 
 	response.HTTPResponse(w, newUser)
 }
@@ -248,7 +250,7 @@ func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("User %s has been deleted", user.ID)
+	api.log.Info.Printf("User %s has been deleted", user.ID)
 
 	response.HTTPResponse(w, "User has been successfully deleted")
 }
