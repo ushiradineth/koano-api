@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -113,17 +114,16 @@ func DeleteEventHelper(eventAPI *event.API, t testing.TB, want_code int, want_st
 	GenericAssert(t, want_code, want_status, res)
 }
 
-func GetUserEventsHelper(eventAPI *event.API, t testing.TB, body event.GetUserEventsBodyParams, want_code int, want_status string, userId string, accessToken string) {
+func GetUserEventsHelper(eventAPI *event.API, t testing.TB, queryParams event.GetUserEventsQueryParams, want_code int, want_status string, userId string, accessToken string) {
 	t.Helper()
-
-	requestBody, err := json.Marshal(body)
-	if err != nil {
-		t.Fatalf("Failed to marshal body: %v", err)
+	query := url.Values{
+		"start_day": []string{queryParams.StartDay},
+		"end_day":   []string{queryParams.EndDay},
 	}
-
-	req, _ := http.NewRequest(http.MethodGet, "/users/{user_id}/events", bytes.NewBuffer(requestBody))
+	req, _ := http.NewRequest(http.MethodGet, "/users/{user_id}/events", nil)
+	req.URL.RawQuery = query.Encode()
 	req.SetPathValue("user_id", userId)
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", accessToken))
 	res := httptest.NewRecorder()
 

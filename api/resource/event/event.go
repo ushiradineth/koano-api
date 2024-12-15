@@ -278,9 +278,9 @@ func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 // @Summary		Get User Events
 // @Description	Get authenticated user's event based on the JWT sent with the request
 // @Tags			Event
-// @Accept			json
+// @Accept			x-www-form-urlencoded
 // @Produce		json
-// @Param			Body	body		GetUserEventsBodyParams	true	"GetUserEventsBodyParams"
+// @Param			Query	query		GetUserEventsQueryParams	true	"GetUserEventsQueryParams"
 // @Success		200		{object}	response.Response{data=[]models.Event}
 // @Failure		400		{object}	response.Error
 // @Failure		401		{object}	response.Error
@@ -288,13 +288,12 @@ func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 // @Security		BearerAuth
 // @Router			/events [get]
 func (api *API) GetUserEvents(w http.ResponseWriter, r *http.Request) {
-	var body GetUserEventsBodyParams
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		response.GenericValidationError(w, err)
-		return
+	query := GetUserEventsQueryParams{
+		StartDay: r.FormValue("start_day"),
+		EndDay:   r.FormValue("end_day"),
 	}
 
-	if err := api.validator.Struct(body); err != nil {
+	if err := api.validator.Struct(query); err != nil {
 		response.GenericValidationError(w, err)
 		return
 	}
@@ -304,13 +303,13 @@ func (api *API) GetUserEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	parsedStart, err := time.Parse("2006-01-02", body.StartDay)
+	parsedStart, err := time.Parse("2006-01-02", query.StartDay)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
 	}
 
-	parsedEnd, err := time.Parse("2006-01-02", body.EndDay)
+	parsedEnd, err := time.Parse("2006-01-02", query.EndDay)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return

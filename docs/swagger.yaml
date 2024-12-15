@@ -81,16 +81,6 @@ definitions:
     - timezone
     - title
     type: object
-  event.GetUserEventsBodyParams:
-    properties:
-      end_day:
-        type: string
-      start_day:
-        type: string
-    required:
-    - end_day
-    - start_day
-    type: object
   models.Event:
     properties:
       created_at:
@@ -295,15 +285,17 @@ paths:
   /events:
     get:
       consumes:
-      - application/json
+      - application/x-www-form-urlencoded
       description: Get authenticated user's event based on the JWT sent with the request
       parameters:
-      - description: GetUserEventsBodyParams
-        in: body
-        name: Body
+      - in: query
+        name: end_day
         required: true
-        schema:
-          $ref: '#/definitions/event.GetUserEventsBodyParams'
+        type: string
+      - in: query
+        name: start_day
+        required: true
+        type: string
       produces:
       - application/json
       responses:

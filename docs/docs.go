@@ -224,7 +224,7 @@ const docTemplate = `{
                 ],
                 "description": "Get authenticated user's event based on the JWT sent with the request",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -235,13 +235,16 @@ const docTemplate = `{
                 "summary": "Get User Events",
                 "parameters": [
                     {
-                        "description": "GetUserEventsBodyParams",
-                        "name": "Body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/event.GetUserEventsBodyParams"
-                        }
+                        "type": "string",
+                        "name": "end_day",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_day",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -928,21 +931,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "event.GetUserEventsBodyParams": {
-            "type": "object",
-            "required": [
-                "end_day",
-                "start_day"
-            ],
-            "properties": {
-                "end_day": {
-                    "type": "string"
-                },
-                "start_day": {
                     "type": "string"
                 }
             }

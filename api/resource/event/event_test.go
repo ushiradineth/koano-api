@@ -245,7 +245,7 @@ func TestGetUserEventsHandler(t *testing.T) {
 		test.AuthenticateUserHelper(authAPI, t, user1Auth, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
 	})
 
-	body := event.GetUserEventsBodyParams{
+	body := event.GetUserEventsQueryParams{
 		StartDay: "not_datetime_with_timezone",
 		EndDay:   "2006-01-02",
 	}

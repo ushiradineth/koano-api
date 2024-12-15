@@ -16,7 +16,7 @@ type EventBodyParams struct {
 	EndTime   string `json:"end_time" validate:"required,datetime=2006-01-02T15:04:05Z"`
 }
 
-type GetUserEventsBodyParams struct {
+type GetUserEventsQueryParams struct {
 	StartDay string `json:"start_day" validate:"required,datetime=2006-01-02"`
 	EndDay   string `json:"end_day" validate:"required,datetime=2006-01-02"`
 }
