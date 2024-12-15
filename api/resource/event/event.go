@@ -118,13 +118,14 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	event := models.Event{
-		ID:       uuid.New(),
-		Title:    body.Title,
-		Start:    parsedStart,
-		End:      parsedEnd,
-		UserID:   user.ID,
-		Timezone: body.Timezone,
-		Repeated: body.Repeated,
+		ID:        uuid.New(),
+		Title:     body.Title,
+		Start:     parsedStart,
+		End:       parsedEnd,
+		UserID:    user.ID,
+		Timezone:  body.Timezone,
+		Repeated:  body.Repeated,
+		CreatedAt: time.Now(),
 	}
 
 	_, err = api.db.Exec("INSERT INTO events (id, title, start_time, end_time, user_id, timezone, repeated) VALUES ($1, $2, $3, $4, $5, $6, $7)", event.ID, event.Title, event.Start, event.End, event.UserID, event.Timezone, event.Repeated)
