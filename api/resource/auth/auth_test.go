@@ -16,6 +16,7 @@ import (
 	"github.com/ushiradineth/cron-be/api/resource/event"
 	"github.com/ushiradineth/cron-be/api/resource/user"
 	authUtil "github.com/ushiradineth/cron-be/util/auth"
+	logger "github.com/ushiradineth/cron-be/util/log"
 	"github.com/ushiradineth/cron-be/util/response"
 	"github.com/ushiradineth/cron-be/util/test"
 	"github.com/ushiradineth/cron-be/util/validator"
@@ -66,10 +67,11 @@ func TestInit(t *testing.T) {
 
 		db = test.NewDB("../../../database/migration")
 		v := validator.New()
+		l := logger.New()
 
-		userAPI = user.New(db, v)
-		eventAPI = event.New(db, v)
-		authAPI = auth.New(db, v)
+		userAPI = user.New(db, v, l)
+		eventAPI = event.New(db, v, l)
+		authAPI = auth.New(db, v, l)
 
 		t.Run("Create User 1", func(t *testing.T) {
 			test.CreateUserHelper(userAPI, t, user1, http.StatusOK, response.StatusSuccess)

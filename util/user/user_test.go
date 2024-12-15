@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/ushiradineth/cron-be/api/resource/auth"
 	"github.com/ushiradineth/cron-be/api/resource/user"
+	logger "github.com/ushiradineth/cron-be/util/log"
 	"github.com/ushiradineth/cron-be/util/response"
 	"github.com/ushiradineth/cron-be/util/test"
 	userUtil "github.com/ushiradineth/cron-be/util/user"
@@ -54,9 +55,10 @@ func TestInit(t *testing.T) {
 
 		db = test.NewDB("../../database/migration")
 		v := validator.New()
+		l := logger.New()
 
-		userAPI = user.New(db, v)
-		authAPI = auth.New(db, v)
+		userAPI = user.New(db, v, l)
+		authAPI = auth.New(db, v, l)
 
 		expiredAccessToken = func() string {
 			token, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{"sub": "1234567890", "iat": time.Now().Unix(), "exp": time.Now().Add(-1 * time.Hour).Unix()}).SignedString([]byte(os.Getenv("JWT_SECRET")))
