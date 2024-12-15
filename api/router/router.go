@@ -15,7 +15,7 @@ import (
 	"github.com/ushiradineth/cron-be/api/resource/user"
 )
 
-func New(db *sqlx.DB, v *validator.Validate, allowedOrigins []string) http.Handler {
+func New(db *sqlx.DB, v *validator.Validate, frontendURL string) http.Handler {
 	router := http.NewServeMux()
 	router.Handle("/", Base())
 
@@ -23,8 +23,10 @@ func New(db *sqlx.DB, v *validator.Validate, allowedOrigins []string) http.Handl
 	router.Handle(fmt.Sprintf("%s/", group), V1(group, db, v))
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   allowedOrigins,
+		AllowedOrigins:   []string{frontendURL},
 		AllowCredentials: true,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 	})
 
 	return c.Handler(router)
