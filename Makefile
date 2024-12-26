@@ -34,7 +34,7 @@ compose_up:
 	docker compose -f deployments/docker-compose.yml --env-file .env up -d
 
 compose_down:
-	docker compose -f deployments/docker-compose.yml --env-file .env down -v
+	docker compose -f deployments/docker-compose.yml --env-file .env down
 
 test:
 	go test -v -cover -failfast ./...
