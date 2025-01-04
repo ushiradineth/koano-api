@@ -16,21 +16,36 @@ import (
 	logger "github.com/ushiradineth/cron-be/util/log"
 )
 
-func New(db *sqlx.DB, validator *validator.Validate, logger *logger.Logger, frontendURL string) http.Handler {
+func New(db *sqlx.DB, validator *validator.Validate, logger *logger.Logger) http.Handler {
 	router := http.NewServeMux()
 	router.Handle("/", Base())
 
 	group := "/api/v1"
 	router.Handle(fmt.Sprintf("%s/", group), V1(group, db, validator, logger))
 
-	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{frontendURL},
-		AllowCredentials: true,
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Authorization", "Content-Type"},
-	})
+	if os.Getenv("CORS_ENABLED") == "true" {
 
-	return c.Handler(router)
+		allowedOrigin := os.Getenv("CORS_ALLOWED_ORIGIN")
+		logger.Info.Println("CORS Enabled")
+		if allowedOrigin == "" {
+			logger.Warn.Println("CORS_ALLOWED_ORIGIN is not set or empty. Defaulting to no CORS.")
+		} else {
+			logger.Info.Printf("CORS Allowed Origin: %s", allowedOrigin)
+		}
+
+		c := cors.New(cors.Options{
+			AllowedOrigins: []string{allowedOrigin},
+			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders: []string{"Authorization", "Content-Type"},
+			Debug:          true,
+			Logger:         logger.Info,
+		})
+
+		return c.Handler(router)
+	}
+
+	logger.Info.Println("CORS Disabled")
+	return router
 }
 
 func Base() http.Handler {

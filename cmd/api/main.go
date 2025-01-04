@@ -47,7 +47,7 @@ func run(ctx context.Context) error {
 
 	db := database.New(log)
 	validator := validator.New()
-	router := router.New(db, validator, log, os.Getenv("FRONTEND_URL"))
+	router := router.New(db, validator, log)
 
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf(":%s", os.Getenv("PORT")),
