@@ -36,7 +36,6 @@ func New(db *sqlx.DB, validator *validator.Validate, logger *logger.Logger) http
 			AllowedOrigins: []string{allowedOrigin},
 			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 			AllowedHeaders: []string{"Authorization", "Content-Type"},
-			Logger:         logger.Info,
 		})
 
 		return c.Handler(router)
