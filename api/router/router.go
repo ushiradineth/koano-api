@@ -24,7 +24,6 @@ func New(db *sqlx.DB, validator *validator.Validate, logger *logger.Logger) http
 	router.Handle(fmt.Sprintf("%s/", group), V1(group, db, validator, logger))
 
 	if os.Getenv("CORS_ENABLED") == "true" {
-
 		allowedOrigin := os.Getenv("CORS_ALLOWED_ORIGIN")
 		logger.Info.Println("CORS Enabled")
 		if allowedOrigin == "" {
@@ -37,7 +36,6 @@ func New(db *sqlx.DB, validator *validator.Validate, logger *logger.Logger) http
 			AllowedOrigins: []string{allowedOrigin},
 			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 			AllowedHeaders: []string{"Authorization", "Content-Type"},
-			Debug:          true,
 			Logger:         logger.Info,
 		})
 
