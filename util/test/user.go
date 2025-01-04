@@ -35,6 +35,9 @@ func CreateUserHelper(userAPI *user.API, t testing.TB, body user.PostBodyParams,
 		assert.Equal(t, body.Name, datamap["name"])
 		assert.Equal(t, body.Email, datamap["email"])
 		assert.Equal(t, "redacted", datamap["password"], "password in response should be redacted")
+		assert.Equal(t, true, datamap["active"])
+		assert.Equal(t, nil, datamap["deleted_at"])
+		assert.Equal(t, datamap["created_at"], datamap["updated_at"])
 	}
 }
 
@@ -58,6 +61,10 @@ func GetUserHelper(userAPI *user.API, t testing.TB, want_code int, want_status s
 		assert.Equal(t, user.Name, datamap["name"])
 		assert.Equal(t, user.Email, datamap["email"])
 		assert.Equal(t, "redacted", datamap["password"], "password in response should be redacted")
+		assert.Equal(t, true, datamap["active"])
+		assert.Equal(t, nil, datamap["deleted_at"])
+		assert.NotNil(t, datamap["created_at"])
+		assert.NotNil(t, datamap["updated_at"])
 	}
 }
 
@@ -77,6 +84,7 @@ func UpdateUserHelper(userAPI *user.API, t testing.TB, body user.PostBodyParams,
 
 	userAPI.Put(res, req)
 
+	fmt.Println(res.Body.String())
 	responseBody := GenericAssert(t, want_code, want_status, res)
 
 	if res.Code == http.StatusOK {
@@ -87,6 +95,11 @@ func UpdateUserHelper(userAPI *user.API, t testing.TB, body user.PostBodyParams,
 		assert.Equal(t, body.Name, datamap["name"])
 		assert.Equal(t, body.Email, datamap["email"])
 		assert.Equal(t, "redacted", datamap["password"], "password in response should be redacted")
+		assert.Equal(t, true, datamap["active"])
+		assert.Equal(t, nil, datamap["deleted_at"])
+		assert.NotEqual(t, datamap["created_at"], datamap["updated_at"])
+		assert.NotNil(t, datamap["created_at"])
+		assert.NotNil(t, datamap["updated_at"])
 	}
 }
 

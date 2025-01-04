@@ -83,7 +83,11 @@ definitions:
     type: object
   models.Event:
     properties:
+      active:
+        type: boolean
       created_at:
+        type: string
+      deleted_at:
         type: string
       end_time:
         type: string
@@ -97,12 +101,18 @@ definitions:
         type: string
       title:
         type: string
+      updated_at:
+        type: string
       user_id:
         type: string
     type: object
   models.User:
     properties:
+      active:
+        type: boolean
       created_at:
+        type: string
+      deleted_at:
         type: string
       email:
         type: string
@@ -111,6 +121,8 @@ definitions:
       name:
         type: string
       password:
+        type: string
+      updated_at:
         type: string
     type: object
   response.Error:

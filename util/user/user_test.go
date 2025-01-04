@@ -1,6 +1,7 @@
 package user_test
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -28,6 +29,7 @@ var (
 	accessToken         string
 	refreshToken        string
 	user1ID             string
+	user2ID             string
 	expiredAccessToken  string
 	expiredRefreshToken string
 	db                  *sqlx.DB
@@ -44,6 +46,17 @@ var user1 user.PostBodyParams = user.PostBodyParams{
 var user1Auth auth.AuthenticateBodyParams = auth.AuthenticateBodyParams{
 	Email:    user1.Email,
 	Password: user1.Password,
+}
+
+var user2 user.PostBodyParams = user.PostBodyParams{
+	Name:     faker.Name(),
+	Email:    faker.Email(),
+	Password: "UPlow1234!@#",
+}
+
+var user2Auth auth.AuthenticateBodyParams = auth.AuthenticateBodyParams{
+	Email:    user2.Email,
+	Password: user2.Password,
 }
 
 func TestInit(t *testing.T) {
@@ -71,71 +84,83 @@ func TestInit(t *testing.T) {
 		}()
 	})
 
-	t.Run("Create User", func(t *testing.T) {
+	t.Run("Create User 2", func(t *testing.T) {
+		test.CreateUserHelper(userAPI, t, user2, http.StatusOK, response.StatusSuccess)
+	})
+
+	t.Run("Authenticates User 2", func(t *testing.T) {
+		test.AuthenticateUserHelper(authAPI, t, user2Auth, http.StatusOK, response.StatusSuccess, &user2ID, &accessToken, &refreshToken)
+	})
+
+	t.Run("Create User 1", func(t *testing.T) {
 		test.CreateUserHelper(userAPI, t, user1, http.StatusOK, response.StatusSuccess)
 	})
 
-	t.Run("Authenticates user 1", func(t *testing.T) {
+	t.Run("Authenticates User 1", func(t *testing.T) {
 		test.AuthenticateUserHelper(authAPI, t, user1Auth, http.StatusOK, response.StatusSuccess, &user1ID, &accessToken, &refreshToken)
 	})
 }
 
-func TestGetUserHelper(t *testing.T) {
+func TestGetUserByEmailHelper(t *testing.T) {
 	t.Run("Get User 1", func(t *testing.T) {
-		response := httptest.NewRecorder()
-		user := userUtil.GetUser(response, user1.Email, db)
+		user, err := userUtil.GetUserByEmail(user1.Email, db)
 		assert.NotNil(t, user, "Error getting user")
+		assert.NoError(t, err, "Error getting user")
 
 		assert.Equal(t, user1.Name, user.Name)
 		assert.Equal(t, user1.Email, user.Email)
 	})
 
 	t.Run("Email does not Exist", func(t *testing.T) {
-		response := httptest.NewRecorder()
-		user := userUtil.GetUser(response, "not_an_user@email.com", db)
+		user, err := userUtil.GetUserByEmail("not_an_user@email.com", db)
 		assert.Nil(t, user, "User should be empty")
+		assert.Equal(t, err, sql.ErrNoRows, "Error should be sql.ErrNoRows")
 	})
 }
 
-func TestDoesUserExistHelper(t *testing.T) {
-	t.Run("Get User 1 with Email", func(t *testing.T) {
-		exists, count, err := userUtil.DoesUserExist("", user1.Email, db)
-
+func TestGetUserByIdHelper(t *testing.T) {
+	t.Run("Get User 1", func(t *testing.T) {
+		user, err := userUtil.GetUserById(user1ID, db)
+		assert.NotNil(t, user, "Error getting user")
 		assert.NoError(t, err, "Error getting user")
-		assert.True(t, exists, "User should exist")
-		assert.Equal(t, 1, count, "Count should be 1")
-	})
 
-	t.Run("Email does not Exist", func(t *testing.T) {
-		exists, count, err := userUtil.DoesUserExist("", "not_an_user@email.com", db)
-
-		assert.NoError(t, err, "Error getting user")
-		assert.False(t, exists, "User should not exist")
-		assert.Equal(t, 0, count, "Count should be 0")
-	})
-
-	t.Run("Get User 1 with ID", func(t *testing.T) {
-		exists, count, err := userUtil.DoesUserExist(user1ID, user1.Email, db)
-
-		assert.NoError(t, err, "Error getting user")
-		assert.True(t, exists, "User should exist")
-		assert.Equal(t, 1, count, "Count should be 1")
+		assert.Equal(t, user1.Name, user.Name)
+		assert.Equal(t, user1.Email, user.Email)
 	})
 
 	t.Run("ID does not Exist", func(t *testing.T) {
-		exists, count, err := userUtil.DoesUserExist(uuid.New().String(), "not_an_user@email.com", db)
-
-		assert.NoError(t, err, "Error getting user")
-		assert.False(t, exists, "User should not exist")
-		assert.Equal(t, 0, count, "Count should be 0")
+		user, err := userUtil.GetUserById(uuid.New().String(), db)
+		assert.Nil(t, user, "User should be empty")
+		assert.Equal(t, err, sql.ErrNoRows, "Error should be sql.ErrNoRows")
 	})
 
 	t.Run("ID is invalid", func(t *testing.T) {
-		exists, count, err := userUtil.DoesUserExist("not_an_uuid", "not_an_user@email.com", db)
-
+		user, err := userUtil.GetUserById("not_an_uuid", db)
+		assert.Nil(t, user, "User should be empty")
 		assert.Error(t, err, "This action should error")
-		assert.False(t, exists, "User should not exist")
-		assert.Equal(t, 0, count, "Count should be 0")
+	})
+}
+
+func TestIsEmailInUseHelper(t *testing.T) {
+	t.Run("Email in use by a different user", func(t *testing.T) {
+		exists, err := userUtil.IsEmailInUse(user2.Email, user1ID, db)
+
+		assert.NoError(t, err, "Error getting user")
+		assert.True(t, exists, "Email should be in use by a different user")
+	})
+
+	t.Run("Email in use by the same user", func(t *testing.T) {
+		exists, err := userUtil.IsEmailInUse(user1.Email, user1ID, db)
+
+		assert.NoError(t, err, "Error getting user")
+		assert.False(t, exists, "Email should be in use by the same user")
+	})
+
+	t.Run("Email is not in use", func(t *testing.T) {
+		exists, err := userUtil.IsEmailInUse("not_in_use@email.com", user1ID, db)
+
+		assert.NoError(t, err, "Error getting user")
+		assert.False(t, exists, "Email should not be in use")
 	})
 }
 

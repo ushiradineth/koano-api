@@ -931,7 +931,13 @@
         "models.Event": {
             "type": "object",
             "properties": {
+                "active": {
+                    "type": "boolean"
+                },
                 "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
                     "type": "string"
                 },
                 "end_time": {
@@ -952,6 +958,9 @@
                 "title": {
                     "type": "string"
                 },
+                "updated_at": {
+                    "type": "string"
+                },
                 "user_id": {
                     "type": "string"
                 }
@@ -960,7 +969,13 @@
         "models.User": {
             "type": "object",
             "properties": {
+                "active": {
+                    "type": "boolean"
+                },
                 "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
                     "type": "string"
                 },
                 "email": {
@@ -973,6 +988,9 @@
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }

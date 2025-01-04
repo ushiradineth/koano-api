@@ -16,7 +16,7 @@ import (
 func GetEvent(w http.ResponseWriter, id string, user_id string, db *sqlx.DB) *models.Event {
 	event := models.Event{}
 
-	err := db.Get(&event, "SELECT * FROM events WHERE id=$1 AND user_id=$2", id, user_id)
+	err := db.Get(&event, "SELECT * FROM events WHERE id=$1 AND user_id=$2 and active=true", id, user_id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			response.GenericBadRequestError(w, fmt.Errorf("Event not found"))
@@ -46,14 +46,14 @@ func DoesEventExist(id string, start_time string, end_time string, user_id strin
 	}
 
 	if id_uuid != uuid.Nil {
-		query = "SELECT COUNT(*) FROM events WHERE id=$1 AND user_id=$2"
+		query = "SELECT COUNT(*) FROM events WHERE id=$1 AND user_id=$2 and active=true"
 		args = append(args, id_uuid, user_id_uuid)
 	} else {
-		query = "SELECT COUNT(*) FROM events WHERE start_time=$1 AND end_time=$2 AND user_id=$3"
+		query = "SELECT COUNT(*) FROM events WHERE start_time=$1 AND end_time=$2 AND user_id=$3 and active=true"
 		args = append(args, start_time, end_time, user_id_uuid)
 	}
 
-	db.Get(&event, query, args...)
+	err = db.Get(&event, query, args...)
 	if err != nil {
 		return false
 	}

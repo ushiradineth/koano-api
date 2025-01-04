@@ -1,7 +1,10 @@
 package auth
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -67,7 +70,17 @@ func (api *API) Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := user.GetUser(w, body.Email, api.db)
+	user, err := user.GetUserByEmail(body.Email, api.db)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			response.GenericBadRequestError(w, fmt.Errorf("User by email %s not found", body.Email))
+			return
+		}
+
+		response.GenericServerError(w, err)
+		return
+	}
+
 	if user == nil {
 		return
 	}
@@ -141,7 +154,17 @@ func (api *API) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := user.GetUser(w, accessTokenClaim.Email, api.db)
+	user, err := user.GetUserByEmail(accessTokenClaim.Email, api.db)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			response.GenericBadRequestError(w, fmt.Errorf("User by email %s not found", accessTokenClaim.Email))
+			return
+		}
+
+		response.GenericServerError(w, err)
+		return
+	}
+
 	if user == nil {
 		return
 	}

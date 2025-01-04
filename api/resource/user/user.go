@@ -1,7 +1,10 @@
 package user
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -90,14 +93,16 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userExists, _, err := user.DoesUserExist("", body.Email, api.db)
+	existingUser, err := user.GetUserByEmail(body.Email, api.db)
 	if err != nil {
-		response.GenericServerError(w, err)
-		return
+		if !errors.Is(err, sql.ErrNoRows) {
+			response.GenericServerError(w, err)
+			return
+		}
 	}
 
-	if userExists {
-		response.HTTPError(w, http.StatusBadRequest, "User already exists", response.StatusFail)
+	if existingUser != nil {
+		response.GenericBadRequestError(w, fmt.Errorf("User already exists"))
 		return
 	}
 
@@ -107,15 +112,15 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := models.User{
-		ID:        uuid.New(),
-		Name:      body.Name,
-		Email:     body.Email,
-		Password:  hashedPassword,
-		CreatedAt: time.Now(),
+	userData := models.User{
+		ID:       uuid.New(),
+		Name:     body.Name,
+		Email:    body.Email,
+		Password: hashedPassword,
 	}
 
-	_, err = api.db.Exec("INSERT INTO users (id, name, email, password) VALUES ($1, $2, $3, $4)", user.ID, user.Name, user.Email, user.Password)
+	var user models.User
+	err = api.db.Get(&user, "INSERT INTO users (id, name, email, password) VALUES ($1, $2, $3, $4) RETURNING *", userData.ID, userData.Name, userData.Email, userData.Password)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
@@ -172,34 +177,35 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUser := models.User{
-		ID:        existingUser.ID,
-		Name:      body.Name,
-		Email:     body.Email,
-		CreatedAt: existingUser.CreatedAt,
-		Password:  "redacted",
+	userData := models.User{
+		ID:    existingUser.ID,
+		Name:  body.Name,
+		Email: body.Email,
 	}
 
-	_, count, err := user.DoesUserExist(newUser.ID.String(), newUser.Email, api.db)
+	emailInUse, err := user.IsEmailInUse(userData.Email, userData.ID.String(), api.db)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
 	}
 
-	if count > 1 {
-		response.HTTPError(w, http.StatusBadRequest, "Email already in use", response.StatusFail)
+	if emailInUse {
+		response.GenericBadRequestError(w, fmt.Errorf("Email already in use"))
 		return
 	}
 
-	_, err = api.db.Exec("UPDATE users SET name=$1, email=$2 WHERE id=$3", newUser.Name, newUser.Email, newUser.ID.String())
+	var user models.User
+	err = api.db.Get(&user, "UPDATE users SET name=$1, email=$2, updated_at=$3 WHERE id=$4 AND active=true RETURNING *", userData.Name, userData.Email, time.Now(), userData.ID.String())
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
 	}
 
-	api.log.Info.Printf("User %s has been updated", newUser.ID)
+	user.Password = "redacted"
 
-	response.HTTPResponse(w, newUser)
+	api.log.Info.Printf("User %s has been updated", user.ID)
+
+	response.HTTPResponse(w, user)
 }
 
 // @Summary		Delete User
@@ -233,7 +239,7 @@ func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := api.db.Exec("DELETE FROM users WHERE id=$1", user.ID)
+	res, err := api.db.Exec("UPDATE users SET active=false, deleted_at=$1 WHERE id=$2", time.Now(), user.ID)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return

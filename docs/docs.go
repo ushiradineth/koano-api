@@ -938,7 +938,13 @@ const docTemplate = `{
         "models.Event": {
             "type": "object",
             "properties": {
+                "active": {
+                    "type": "boolean"
+                },
                 "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
                     "type": "string"
                 },
                 "end_time": {
@@ -959,6 +965,9 @@ const docTemplate = `{
                 "title": {
                     "type": "string"
                 },
+                "updated_at": {
+                    "type": "string"
+                },
                 "user_id": {
                     "type": "string"
                 }
@@ -967,7 +976,13 @@ const docTemplate = `{
         "models.User": {
             "type": "object",
             "properties": {
+                "active": {
+                    "type": "boolean"
+                },
                 "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
                     "type": "string"
                 },
                 "email": {
@@ -980,6 +995,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }

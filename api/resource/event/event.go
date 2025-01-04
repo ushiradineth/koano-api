@@ -119,24 +119,24 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	event := models.Event{
-		ID:        uuid.New(),
-		Title:     body.Title,
-		Start:     parsedStart,
-		End:       parsedEnd,
-		UserID:    user.ID,
-		Timezone:  body.Timezone,
-		Repeated:  body.Repeated,
-		CreatedAt: time.Now(),
+	eventData := models.Event{
+		ID:       uuid.New(),
+		Title:    body.Title,
+		Start:    parsedStart,
+		End:      parsedEnd,
+		UserID:   user.ID,
+		Timezone: body.Timezone,
+		Repeated: body.Repeated,
 	}
 
-	_, err = api.db.Exec("INSERT INTO events (id, title, start_time, end_time, user_id, timezone, repeated) VALUES ($1, $2, $3, $4, $5, $6, $7)", event.ID, event.Title, event.Start, event.End, event.UserID, event.Timezone, event.Repeated)
+	var event models.Event
+	err = api.db.Get(&event, "INSERT INTO events (id, title, start_time, end_time, user_id, timezone, repeated) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *", eventData.ID, eventData.Title, eventData.Start, eventData.End, eventData.UserID, eventData.Timezone, eventData.Repeated)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
 	}
 
-	api.log.Info.Printf("Event %s has been created by user %s", event.ID, user.ID)
+	api.log.Info.Printf("Event %s has been created by user %s", event.ID, event.UserID)
 
 	response.HTTPResponse(w, event)
 }
@@ -209,7 +209,7 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	event := models.Event{
+	eventData := models.Event{
 		ID:       parsedUUID,
 		Title:    body.Title,
 		Start:    parsedStart,
@@ -219,13 +219,14 @@ func (api *API) Put(w http.ResponseWriter, r *http.Request) {
 		Repeated: body.Repeated,
 	}
 
-	_, err = api.db.Exec("UPDATE events SET title=$1, start_time=$2, end_time=$3, timezone=$4, repeated=$5 WHERE id=$6 AND user_id=$7", event.Title, event.Start, event.End, event.Timezone, event.Repeated, event.ID, event.UserID.String())
+	var event models.Event
+	err = api.db.Get(&event, "UPDATE events SET title=$1, start_time=$2, end_time=$3, timezone=$4, repeated=$5 WHERE id=$6 AND user_id=$7 RETURNING *", eventData.Title, eventData.Start, eventData.End, eventData.Timezone, eventData.Repeated, eventData.ID, eventData.UserID.String())
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
 	}
 
-	api.log.Info.Printf("Event %s has been updated by user %s", path.EventID, user.ID)
+	api.log.Info.Printf("Event %s has been updated by user %s", event.ID, event.UserID)
 
 	response.HTTPResponse(w, event)
 }
@@ -256,7 +257,7 @@ func (api *API) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := api.db.Exec("DELETE FROM events WHERE id=$1 AND user_id=$2", path.EventID, user.ID.String())
+	res, err := api.db.Exec("UPDATE events SET active=false, deleted_at=$1 WHERE id=$2 AND user_id=$3", time.Now(), path.EventID, user.ID.String())
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
@@ -320,7 +321,7 @@ func (api *API) GetUserEvents(w http.ResponseWriter, r *http.Request) {
 
 	events := []models.Event{}
 
-	err = api.db.Select(&events, "SELECT * FROM events WHERE user_id=$1 AND start_time >= $2 AND start_time <= $3", user.ID, parsedStart, parsedEnd)
+	err = api.db.Select(&events, "SELECT * FROM events WHERE user_id=$1 AND start_time >= $2 AND start_time <= $3 AND active=true", user.ID, parsedStart, parsedEnd)
 	if err != nil {
 		response.GenericServerError(w, err)
 		return
