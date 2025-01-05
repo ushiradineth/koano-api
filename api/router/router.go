@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/jmoiron/sqlx"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"github.com/ushiradineth/cron-be/api/resource/auth"
@@ -49,6 +50,7 @@ func Base() http.Handler {
 	router := http.NewServeMux()
 
 	router.HandleFunc("GET /health", health.Health)
+	router.Handle("GET /metrics", promhttp.Handler())
 
 	if os.Getenv("ENV") == "DEVELOPMENT" {
 		router.HandleFunc("/swagger/", httpSwagger.Handler(
