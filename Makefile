@@ -43,3 +43,6 @@ install:
 	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 	go install github.com/swaggo/swag/cmd/swag@latest
 	go install github.com/mitranim/gow@latest
+
+fmt:
+	go fmt ./...
