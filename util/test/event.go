@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/ushiradineth/cron-be/api/resource/event"
+	"github.com/ushiradineth/koano-api/api/resource/event"
 )
 
 func CreateEventHelper(eventAPI *event.API, t testing.TB, body event.EventBodyParams, want_code int, want_status string, eventId *string, accessToken string) {

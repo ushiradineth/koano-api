@@ -5,7 +5,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
-	"github.com/ushiradineth/cron-be/util/validator"
+	"github.com/ushiradineth/koano-api/util/validator"
 )
 
 type testCase struct {

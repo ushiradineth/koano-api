@@ -10,11 +10,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
-	"github.com/ushiradineth/cron-be/api/resource/auth"
-	"github.com/ushiradineth/cron-be/api/resource/event"
-	"github.com/ushiradineth/cron-be/api/resource/health"
-	"github.com/ushiradineth/cron-be/api/resource/user"
-	logger "github.com/ushiradineth/cron-be/util/log"
+	"github.com/ushiradineth/koano-api/api/resource/auth"
+	"github.com/ushiradineth/koano-api/api/resource/event"
+	"github.com/ushiradineth/koano-api/api/resource/health"
+	"github.com/ushiradineth/koano-api/api/resource/user"
+	logger "github.com/ushiradineth/koano-api/util/log"
 )
 
 func New(db *sqlx.DB, validator *validator.Validate, logger *logger.Logger) http.Handler {

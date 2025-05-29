@@ -1,7 +1,7 @@
-name: cron
+name: koano
 services:
   postgres:
-    container_name: cron-postgres
+    container_name: koano-postgres
     image: postgres:16-alpine
     restart: unless-stopped
     platform: linux/arm64
@@ -17,7 +17,7 @@ services:
       - postgres:/var/lib/postgres
 
   adminer:
-    container_name: cron-adminer
+    container_name: koano-adminer
     image: adminer
     restart: unless-stopped
     ports:
@@ -28,9 +28,9 @@ services:
     depends_on:
       - postgres
 
-  # cron-be:
-  #   container_name: cron_be
-  #   image: cron-be:dev
+  # koano-api:
+  #   container_name: koano-api
+  #   image: koano-api:dev
   #   build:
   #     context: ../
   #     dockerfile: deployments/Dockerfile
@@ -46,4 +46,4 @@ services:
   #     - "8080"
 
 volumes:
-  postgres:
+  postgres: {}

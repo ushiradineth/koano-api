@@ -25,10 +25,10 @@ run_watch: gen_docs
 	gow run cmd/api/main.go
 
 build:
-	go build -o cron-be cmd/api/main.go
+	go build -o koano-api cmd/api/main.go
 
 build_image:
-	docker build -t cron-be:dev -f deployments/Dockerfile .
+	docker build -t koano-api:dev -f deployments/Dockerfile .
 
 compose_up:
 	docker compose -f deployments/docker-compose.yml --env-file .env up -d

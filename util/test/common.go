@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/ushiradineth/cron-be/util/response"
+	"github.com/ushiradineth/koano-api/util/response"
 )
 
 func GenericAssert(t testing.TB, want_code int, want_status string, res *httptest.ResponseRecorder) response.Response {

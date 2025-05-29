@@ -3,7 +3,7 @@ package health
 import (
 	"net/http"
 
-	"github.com/ushiradineth/cron-be/util/response"
+	"github.com/ushiradineth/koano-api/util/response"
 )
 
 func Health(w http.ResponseWriter, _ *http.Request) {

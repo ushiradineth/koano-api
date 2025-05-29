@@ -10,23 +10,23 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-	"github.com/ushiradineth/cron-be/api/router"
-	"github.com/ushiradineth/cron-be/database"
-	_ "github.com/ushiradineth/cron-be/docs"
-	logger "github.com/ushiradineth/cron-be/util/log"
-	validator "github.com/ushiradineth/cron-be/util/validator"
+	"github.com/ushiradineth/koano-api/api/router"
+	"github.com/ushiradineth/koano-api/database"
+	_ "github.com/ushiradineth/koano-api/docs"
+	logger "github.com/ushiradineth/koano-api/util/log"
+	validator "github.com/ushiradineth/koano-api/util/validator"
 )
 
-// @title						Cron
-// @version					1.0
-// @description				Backend for Cron calendar management app.
-// @contact.name				Ushira Dineth
-// @contact.url				https://ushira.com
-// @contact.email				ushiradineth@gmail.com
-// @BasePath					/api/v1
-// @securityDefinitions.apikey	BearerAuth
-// @in							header
-// @name						Authorization
+//	@title						Koano
+//	@version					1.0
+//	@description				API for Koano.
+//	@contact.name				Ushira Dineth
+//	@contact.url				https://koano.app
+//	@contact.email				ushiradineth@gmail.com
+//	@BasePath					/api/v1
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
 func main() {
 	ctx := context.Background()
 	if err := run(ctx); err != nil {

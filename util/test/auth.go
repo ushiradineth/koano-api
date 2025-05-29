@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/ushiradineth/cron-be/api/resource/auth"
+	"github.com/ushiradineth/koano-api/api/resource/auth"
 )
 
 func AuthenticateUserHelper(authAPI *auth.API, t testing.TB, body auth.AuthenticateBodyParams, want_code int, want_status string, userId *string, accessToken *string, refreshToken *string) {

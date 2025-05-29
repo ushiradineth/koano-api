@@ -1,4 +1,4 @@
-module github.com/ushiradineth/cron-be
+module github.com/ushiradineth/koano-api
 
 go 1.22.2
 

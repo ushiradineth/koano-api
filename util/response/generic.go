@@ -3,7 +3,7 @@ package response
 import (
 	"net/http"
 
-	validatorUtil "github.com/ushiradineth/cron-be/util/validator"
+	validatorUtil "github.com/ushiradineth/koano-api/util/validator"
 )
 
 func GenericServerError(w http.ResponseWriter, err error) {

@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/ushiradineth/cron-be/database"
-	"github.com/ushiradineth/cron-be/database/seeder"
-	logger "github.com/ushiradineth/cron-be/util/log"
+	"github.com/ushiradineth/koano-api/database"
+	"github.com/ushiradineth/koano-api/database/seeder"
+	logger "github.com/ushiradineth/koano-api/util/log"
 )
 
 func main() {

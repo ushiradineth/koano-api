@@ -11,7 +11,7 @@ const docTemplate = `{
         "title": "{{.Title}}",
         "contact": {
             "name": "Ushira Dineth",
-            "url": "https://ushira.com",
+            "url": "https://koano.app",
             "email": "ushiradineth@gmail.com"
         },
         "version": "{{.Version}}"
@@ -1078,8 +1078,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "Cron",
-	Description:      "Backend for Cron calendar management app.",
+	Title:            "Koano",
+	Description:      "API for Koano.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

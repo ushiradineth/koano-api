@@ -10,7 +10,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/ushiradineth/cron-be/util/auth"
+	"github.com/ushiradineth/koano-api/util/auth"
 	"golang.org/x/crypto/bcrypt"
 )
 

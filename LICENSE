@@ -1,0 +1,34 @@
+Business Source License 1.1
+
+Licensor: Ushira Dineth
+
+Licensed Work: Koano (https://github.com/ushiradineth/koano-api)
+
+The Licensed Work is provided under the terms of this Business Source License (the “License”). Use of the Licensed Work is permitted only under the terms of this License.
+
+1. License Grant
+
+Subject to the terms and conditions of this License, you are granted a non-exclusive, worldwide, non-transferable, non-sublicensable license to use, copy, modify, and prepare derivative works of the Licensed Work, for non-production or non-commercial purposes only.
+
+2. Commercial Use
+
+Use of the Licensed Work in any production, commercial, or enterprise setting requires a separate commercial license from the Licensor. Contact the Licensor at [ushiradineth@gmail.com] to obtain a commercial license.
+
+3. Change Date
+
+The Change Date is 4 years from the date of each applicable release commit or published tag. On the Change Date, the Licensed Work will automatically transition to the [Apache License 2.0], provided at the Licensor’s discretion or explicitly specified in the source code.
+
+4. Limitations
+
+You may not:
+- Use the Licensed Work to provide a hosted or commercial version of Koano without a commercial license.
+- Remove or obscure any licensing, attribution, or copyright notices.
+- Redistribute the Licensed Work or derivatives as a paid or monetized product.
+
+5. Disclaimer
+
+THE LICENSED WORK IS PROVIDED “AS IS” AND WITHOUT WARRANTY OF ANY KIND. TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE LICENSOR DISCLAIMS ALL LIABILITY FOR DAMAGES RESULTING FROM THE LICENSED WORK OR ITS USE.
+
+---
+
+For source and format details, see https://mariadb.com/bsl-faq-adopting/

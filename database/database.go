@@ -6,7 +6,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	logger "github.com/ushiradineth/cron-be/util/log"
+	logger "github.com/ushiradineth/koano-api/util/log"
 )
 
 func New(log *logger.Logger) *sqlx.DB {

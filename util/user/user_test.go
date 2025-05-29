@@ -16,13 +16,13 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
-	"github.com/ushiradineth/cron-be/api/resource/auth"
-	"github.com/ushiradineth/cron-be/api/resource/user"
-	logger "github.com/ushiradineth/cron-be/util/log"
-	"github.com/ushiradineth/cron-be/util/response"
-	"github.com/ushiradineth/cron-be/util/test"
-	userUtil "github.com/ushiradineth/cron-be/util/user"
-	"github.com/ushiradineth/cron-be/util/validator"
+	"github.com/ushiradineth/koano-api/api/resource/auth"
+	"github.com/ushiradineth/koano-api/api/resource/user"
+	logger "github.com/ushiradineth/koano-api/util/log"
+	"github.com/ushiradineth/koano-api/util/response"
+	"github.com/ushiradineth/koano-api/util/test"
+	userUtil "github.com/ushiradineth/koano-api/util/user"
+	"github.com/ushiradineth/koano-api/util/validator"
 )
 
 var (

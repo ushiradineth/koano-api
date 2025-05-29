@@ -8,9 +8,9 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"github.com/ushiradineth/cron-be/models"
-	"github.com/ushiradineth/cron-be/util/auth"
-	"github.com/ushiradineth/cron-be/util/response"
+	"github.com/ushiradineth/koano-api/models"
+	"github.com/ushiradineth/koano-api/util/auth"
+	"github.com/ushiradineth/koano-api/util/response"
 )
 
 func GetUserById(id string, db *sqlx.DB) (*models.User, error) {

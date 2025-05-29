@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/ushiradineth/cron-be/models"
-	"github.com/ushiradineth/cron-be/util/response"
+	"github.com/ushiradineth/koano-api/models"
+	"github.com/ushiradineth/koano-api/util/response"
 )
 
 func GetEvent(w http.ResponseWriter, id string, user_id string, db *sqlx.DB) *models.Event {

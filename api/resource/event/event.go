@@ -9,11 +9,11 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/ushiradineth/cron-be/models"
-	"github.com/ushiradineth/cron-be/util/event"
-	logger "github.com/ushiradineth/cron-be/util/log"
-	"github.com/ushiradineth/cron-be/util/response"
-	"github.com/ushiradineth/cron-be/util/user"
+	"github.com/ushiradineth/koano-api/models"
+	"github.com/ushiradineth/koano-api/util/event"
+	logger "github.com/ushiradineth/koano-api/util/log"
+	"github.com/ushiradineth/koano-api/util/response"
+	"github.com/ushiradineth/koano-api/util/user"
 )
 
 type API struct {

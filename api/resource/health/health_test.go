@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/ushiradineth/cron-be/api/resource/health"
+	"github.com/ushiradineth/koano-api/api/resource/health"
 )
 
 func TestHealth(t *testing.T) {

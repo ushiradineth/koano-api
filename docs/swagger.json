@@ -1,11 +1,11 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Backend for Cron calendar management app.",
-        "title": "Cron",
+        "description": "API for Koano.",
+        "title": "Koano",
         "contact": {
             "name": "Ushira Dineth",
-            "url": "https://ushira.com",
+            "url": "https://koano.app",
             "email": "ushiradineth@gmail.com"
         },
         "version": "1.0"

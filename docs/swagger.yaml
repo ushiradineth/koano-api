@@ -170,9 +170,9 @@ info:
   contact:
     email: ushiradineth@gmail.com
     name: Ushira Dineth
-    url: https://ushira.com
-  description: Backend for Cron calendar management app.
-  title: Cron
+    url: https://koano.app
+  description: API for Koano.
+  title: Koano
   version: "1.0"
 paths:
   /auth/login:

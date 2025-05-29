@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/ushiradineth/cron-be/api/resource/user"
+	"github.com/ushiradineth/koano-api/api/resource/user"
 )
 
 func CreateUserHelper(userAPI *user.API, t testing.TB, body user.PostBodyParams, want_code int, want_status string) {
