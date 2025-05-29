@@ -23,9 +23,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -66,7 +63,7 @@ jobs:
       - id: 'deploy'
         uses: 'google-github-actions/deploy-cloudrun@v2'
         with:
-          service: ${{ env.GCP_CLOUD_RUN_SERVICE_NAME }}
+          service: ${{ vars.GCP_CLOUD_RUN_SERVICE_NAME }}
           image: ghcr.io/${{ github.repository }}@${{ steps.push.outputs.digest }}
-          region: ${{ env.GCP_CLOUD_RUN_REGION }}
-
+          region: ${{ vars.GCP_CLOUD_RUN_REGION }}
+          secrets: ${{ secrets.GCP_CLOUD_RUN_SECRETS }}
