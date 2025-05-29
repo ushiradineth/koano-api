@@ -68,4 +68,5 @@ jobs:
         with:
           service: ${{ env.GCP_CLOUD_RUN_SERVICE_NAME }}
           image: ghcr.io/${{ github.repository }}@${{ steps.push.outputs.digest }}
+          region: ${{ env.GCP_CLOUD_RUN_REGION }}
 
