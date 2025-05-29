@@ -14,6 +14,7 @@ locals {
 
 resource "google_cloud_run_service" "api" {
   name     = "api"
+  project  = local.gcp_context.project_id
   location = local.gcp_context.location
 
   template {
@@ -25,6 +26,20 @@ resource "google_cloud_run_service" "api" {
           content {
             name  = env.key
             value = env.value
+          }
+        }
+        startup_probe {
+          initial_delay_seconds = 0
+          timeout_seconds       = 1
+          period_seconds        = 3
+          failure_threshold     = 1
+          tcp_socket {
+            port = 8080
+          }
+        }
+        liveness_probe {
+          http_get {
+            path = "/health"
           }
         }
       }
@@ -44,4 +59,15 @@ resource "google_cloud_run_service" "api" {
   }
 
   depends_on = [google_service_account.github_action]
+}
+
+# To allow Cloud Run to invoke the service without authentication, AKA, Public Access
+resource "google_cloud_run_service_iam_policy" "api" {
+  project  = google_cloud_run_service.api.project
+  location = google_cloud_run_service.api.location
+  service  = google_cloud_run_service.api.name
+
+  policy_data = data.google_iam_policy.noauth.policy_data
+
+  depends_on = [google_cloud_run_service.api, data.google_iam_policy.noauth]
 }
