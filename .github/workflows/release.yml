@@ -66,4 +66,3 @@ jobs:
           service: ${{ vars.GCP_CLOUD_RUN_SERVICE_NAME }}
           image: ghcr.io/${{ github.repository }}@${{ steps.push.outputs.digest }}
           region: ${{ vars.GCP_CLOUD_RUN_REGION }}
-          secrets: ${{ secrets.GCP_CLOUD_RUN_SECRETS }}
