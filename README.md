@@ -1,4 +1,4 @@
-# Koano API (Go Backend)
+# Koano API
 
 [![License: BSL](https://img.shields.io/badge/license-BSL--1.1-blue.svg)](LICENSE)
 
