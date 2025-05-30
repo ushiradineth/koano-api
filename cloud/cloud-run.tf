@@ -20,7 +20,7 @@ resource "google_cloud_run_service" "api" {
   template {
     spec {
       containers {
-        image = "gcr.io/cloudrun/hello" # placeholder
+        image = "gcr.io/cloudrun/hello" # Placeholder, This will be updated by the GitHub Action
         dynamic "env" {
           for_each = local.API_VARIABLES
           content {
